@@ -958,6 +958,8 @@ class PlaylistWindow(TagListWindow):
                 pathname = os.path.join(dir, filename)
                 if VALID_SONG(filename):
                     self.append(PlaylistEntry(pathname))
+                elif VALID_PLAYLIST(filename):
+                    self.add_playlist(pathname)
                 if os.path.isdir(pathname):
                     subdirs.append(pathname)
             map(self.add_dir, subdirs)
