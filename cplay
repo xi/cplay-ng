@@ -177,7 +177,7 @@ class Window:
         except AttributeError: self.w.attr_off(attr)
 
     def newwin(self):
-        return curses.newwin(0, 0, 0, 0)
+        return curses.newwin(curses.tigetnum('lines'), curses.tigetnum('cols'), 0, 0)
 
     def resize(self):
         self.w = self.newwin()
