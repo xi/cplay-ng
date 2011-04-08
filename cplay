@@ -1388,14 +1388,8 @@ class MPlayer(Player):
     re_progress = re.compile("^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
 
     def play(self):
-        if os.path.exists(CONTROL_FIFO + "-mplayer"):
-            os.unlink(CONTROL_FIFO + "-mplayer")
-        os.mkfifo(CONTROL_FIFO + "-mplayer", 0600)
         Player.play(self)
-        fifo = open(CONTROL_FIFO + "-mplayer", 'w')
-        fifo.write("seek %d\n" % self.offset)
-        fifo.flush()
-        fifo.close()
+        self.mplayer_send("seek %d\n" % self.offset)
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1405,6 +1399,20 @@ class MPlayer(Player):
             self.set_position(position, length)
         else:
             logging.debug("Cannot parse mplayer output")
+
+    def mplayer_send(self, arg):
+        logging.debug("Sending command " + arg);
+        if not os.path.exists(CONTROL_FIFO + "-mplayer"):
+            os.mkfifo(CONTROL_FIFO + "-mplayer", 0600)
+
+        if os.path.exists(CONTROL_FIFO + "-mplayer"):
+            try:
+                fifo = open(CONTROL_FIFO + "-mplayer", 'w')
+                fifo.write(arg + "\n")
+                fifo.flush()
+                fifo.close()
+            except IOError:
+                logging.warning("Can't open " + CONTROL_FIFO + "-mplayer" + " for writing.")
 
 # ------------------------------------------
 class Timeout:
