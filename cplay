@@ -81,6 +81,7 @@ except:
 # ------------------------------------------
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
 CONTROL_FIFO = "%s/cplay-control-%s" % (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"])
+SPEED_OFFSET = 0.005
 
 # ------------------------------------------
 def which(program):
@@ -304,7 +305,7 @@ class RootWindow(Window):
         keymap.bind([1, '^'], app.seek, (0, 0)) # C-a
         keymap.bind([5, '$'], app.seek, (-1, 0)) # C-e
         keymap.bind(range(48,58), app.key_volume) # 0123456789
-        keymap.bind(['+', '='], app.mixer, ("cue", 1))
+        keymap.bind(['+'], app.mixer, ("cue", 1))
         keymap.bind('-', app.mixer, ("cue", -1))
         keymap.bind('n', app.next_song, ())
         keymap.bind('p', app.prev_song, ())
@@ -315,6 +316,9 @@ class RootWindow(Window):
         keymap.bind('q', self.command_quit, ())
         keymap.bind('v', app.mixer, ("toggle",))
         keymap.bind(',', app.command_macro, ())
+        keymap.bind('[', app.speed_decr, ())  # FIXME Document this
+        keymap.bind(']', app.speed_incr, ())  # FIXME Document this
+        keymap.bind('=', app.speed_reset, ()) # FIXME Document this
 
     def command_quit(self):
         app.do_input_hook = self.do_quit
@@ -1389,9 +1393,11 @@ class NoOffsetPlayer(Player):
 # ------------------------------------------
 class MPlayer(Player):
     re_progress = re.compile("^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
+    speed = 1.0
 
     def play(self):
         Player.play(self)
+        self.mplayer_send("speed_set %f" % self.speed)
         self.mplayer_send("seek %d\n" % self.offset)
 
     def parse_buf(self):
@@ -1416,6 +1422,11 @@ class MPlayer(Player):
                 fifo.close()
             except IOError:
                 logging.warning("Can't open " + CONTROL_FIFO + "-mplayer" + " for writing.")
+
+    def speed_chg(self, set):
+        self.speed = set
+        self.mplayer_send("speed_set %f" % self.speed)
+        app.status(_("Speed: %s%%") % (self.speed * 100), 1)
 
 # ------------------------------------------
 class Timeout:
@@ -1652,6 +1663,24 @@ class Application:
         if cmd in ["set", "cue"]: set(channel, (arg, arg))
         app.status(_("%s volume %s%%") % (name, get(channel)[0]), 1)
         mixer.close()
+
+    def speed_incr(self):
+        if(isinstance(self.player, MPlayer)):
+            self.player.speed_chg(self.player.speed + SPEED_OFFSET)
+        else:
+            app.status(_("Speed control requires MPlayer"), 1)
+
+    def speed_decr(self):
+        if(isinstance(self.player, MPlayer)):
+            self.player.speed_chg(self.player.speed - SPEED_OFFSET)
+        else:
+            app.status(_("Speed control requires MPlayer"), 1)
+
+    def speed_reset(self):
+        if(isinstance(self.player, MPlayer)):
+            self.player.speed_chg(1.0)
+        else:
+            app.status(_("Speed control requires MPlayer"), 1)
 
     def show_input(self):
         n = len(self.input_prompt)+1
