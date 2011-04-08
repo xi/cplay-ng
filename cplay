@@ -276,8 +276,11 @@ class CounterWindow(Window):
 
     def counter(self, values):
         """Update the counter with [elapsed, remaining] seconds"""
-        self.values = values
-        self.update()
+        if (values[0] < 0 or values[1] < 0):
+            logging.debug("Player reported negative value for (remaining) playing time.")
+        else:
+            self.values = values
+            self.update()
 
     def toggle_mode(self):
         self.mode = not self.mode
