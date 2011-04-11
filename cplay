@@ -1272,7 +1272,7 @@ class Player:
         logging.debug("My offset is %d" % self.offset)
         self.pid = os.fork()
         if self.pid == 0:
-            os.dup2(self.stdin_w, sys.stdin.fileno())
+            os.dup2(self.stdin_r, sys.stdin.fileno())
             os.dup2(self.stdout_w, sys.stdout.fileno())
             os.dup2(self.stderr_w, sys.stderr.fileno())
             os.setpgrp()
@@ -1425,17 +1425,10 @@ class MPlayer(Player):
 
     def mplayer_send(self, arg):
         logging.debug("Sending command " + arg);
-        if not os.path.exists(CONTROL_FIFO + "-mplayer"):
-            os.mkfifo(CONTROL_FIFO + "-mplayer", 0600)
-
-        if os.path.exists(CONTROL_FIFO + "-mplayer"):
-            try:
-                fifo = open(CONTROL_FIFO + "-mplayer", 'w')
-                fifo.write(arg + "\n")
-                fifo.flush()
-                fifo.close()
-            except IOError:
-                logging.warning("Can't open " + CONTROL_FIFO + "-mplayer" + " for writing.")
+        try:
+            os.write(self.stdin_w, arg + "\n")
+        except IOError:
+            logging.warning("Can't write to stdin_w.")
 
     def speed_chg(self, set):
         self.speed = set
@@ -1822,8 +1815,7 @@ def main():
 
 # ------------------------------------------
 PLAYERS = [
-    MPlayer("mplayer -input file=%s -vc null -vo null {file}" %
-                (CONTROL_FIFO + "-mplayer"),
+    MPlayer("mplayer -slave -vc null -vo null {file}",
             "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
                 "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     FrameOffsetPlayer("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
