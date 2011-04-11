@@ -81,6 +81,12 @@ except:
 # ------------------------------------------
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
 CONTROL_FIFO = "%s/cplay-control-%s" % (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"])
+# Ten band graphical equalizers for mplayer, see man (1) mplayer
+# Default: first entry
+EQUALIZERS = [
+            ("0:0:0:0:0:0:0:0:0:0", "flat"), 
+            ("3:3:3:2:0:-1:-1:0:0:1", "rock"), 
+            ]
 SPEED_OFFSET = 0.005
 
 # ------------------------------------------
@@ -322,6 +328,8 @@ class RootWindow(Window):
         keymap.bind('[', app.speed_decr, ())  # FIXME Document this
         keymap.bind(']', app.speed_incr, ())  # FIXME Document this
         keymap.bind('=', app.speed_reset, ()) # FIXME Document this
+        keymap.bind('e', app.eq_next, ()) # FIXME Document this
+        keymap.bind('E', app.eq_prev, ()) # FIXME Document this
 
     def command_quit(self):
         app.do_input_hook = self.do_quit
@@ -1397,10 +1405,13 @@ class NoOffsetPlayer(Player):
 class MPlayer(Player):
     re_progress = re.compile("^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     speed = 1.0
+    eq_cur = 0
+    equalizer = EQUALIZERS[eq_cur][0]
 
     def play(self):
         Player.play(self)
         self.mplayer_send("speed_set %f" % self.speed)
+        self.mplayer_send("af equalizer=" + self.equalizer)
         self.mplayer_send("seek %d\n" % self.offset)
 
     def parse_buf(self):
@@ -1430,6 +1441,15 @@ class MPlayer(Player):
         self.speed = set
         self.mplayer_send("speed_set %f" % self.speed)
         app.status(_("Speed: %s%%") % (self.speed * 100), 1)
+
+    def eq_chg(self, offset):
+        if len(EQUALIZERS) == 0:
+            app.status(_("No equalizers configured"), 2)
+            return
+        self.eq_cur = (self.eq_cur + offset) % (len(EQUALIZERS))
+        self.equalizer = EQUALIZERS[self.eq_cur][0]
+        app.status(_("Equalizer: %s(%s)") % (EQUALIZERS[self.eq_cur][1], self.equalizer), 1)
+        self.mplayer_send("af equalizer=" + self.equalizer);
 
 # ------------------------------------------
 class Timeout:
@@ -1684,6 +1704,18 @@ class Application:
             self.player.speed_chg(1.0)
         else:
             app.status(_("Speed control requires MPlayer"), 1)
+
+    def eq_next(self):
+        if(isinstance(self.player, MPlayer)):
+            self.player.eq_chg(1)
+        else:
+            app.status(_("Equalizer support requires MPlayer"), 1)
+
+    def eq_prev(self):
+        if(isinstance(self.player, MPlayer)):
+            self.player.eq_chg(-1)
+        else:
+            app.status(_("Equalizer support requires MPlayer"), 1)
 
     def show_input(self):
         n = len(self.input_prompt)+1
