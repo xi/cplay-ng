@@ -58,7 +58,6 @@ except:
     pass
 
 import logging
-logging.basicConfig(level=logging.WARNING)
 
 # ------------------------------------------
 _locale_domain = "cplay"
@@ -1219,6 +1218,7 @@ def get_tag(pathname):
             return os.path.basename(pathname)
         f = metaopen(pathname)
     except:
+        logging.debug("Error reading metadata")
         logging.debug(traceback.format_exc())
         app.status("Error reading metadata", 1)
         return os.path.basename(pathname)
@@ -1245,7 +1245,7 @@ class Player:
         self.re_files = re.compile(files, re.I)
         self.fps = fps
         self.entry = None
-        self.stopped = 0
+        self.stopped = 0 # 1 only if stopped manually or playlist ran out
         self.paused = 0
         self.time_setup = None
         self.buf = ''
@@ -1314,7 +1314,10 @@ class Player:
         self.tid or self.parse_progress()
 
     def poll(self):
-        try: os.waitpid(self.pid, os.WNOHANG)
+        try:
+            # Returns (0, 0) when child still running
+            os.waitpid(self.pid, os.WNOHANG)
+            # return None
         except:
             # something broken? try again
             if self.time_setup and (time.time() - self.time_setup) < 2.0:
@@ -1357,6 +1360,7 @@ class Player:
         elif self.paused:
             app.set_default_status(_("Paused: %s") % self.entry.vp())
         else:
+            logging.debug(self.entry.vp())
             app.set_default_status(_("Playing: %s") % self.entry.vp())
 
 # ------------------------------------------
@@ -1569,7 +1573,6 @@ class Application:
         self.player = PLAYERS[0]
         self.timeout = Timeout()
         self.play_tid = None
-        self.kludge = 0
         self.win_filelist.listdir()
         self.control = FIFOControl()
 
@@ -1592,11 +1595,14 @@ class Application:
             self.win_filelist.listdir_maybe(now)
             if not self.player.stopped:
                 timeout = 0.5
-                if self.kludge and self.player.poll():
+                if self.player.poll():
                     self.player.stopped = 1  # end of playlist hack
                     if not self.win_playlist.stop:
                         entry = self.win_playlist.change_active_entry(1)
-                        entry and self.play(entry)
+                        if not entry:
+                            self.player.stopped = 1
+                        else:
+                            self.play(entry)
             R = [sys.stdin, self.player.stdout_r, self.player.stderr_r]
             self.control.fd and R.append(self.control.fd)
             try: r, w, e = select.select(R, [], [], timeout)
@@ -1617,7 +1623,7 @@ class Application:
                 self.control.handle_command()
 
     def play(self, entry, offset = 0):
-        self.kludge = 0
+        logging.debug("Starting to play " + str(entry))
         self.play_tid = None
         if entry is None or offset is None: return
         self.player.stop(quiet=1)
@@ -1626,6 +1632,7 @@ class Application:
                 if self.player.setup(entry, offset): break
         else:
             # FIXME: Needs to report suitable players
+            logging.debug("Player not found")
             app.status(_("Player not found!"), 1)
             self.player.stopped = 0  # keep going
             return
@@ -1782,12 +1789,15 @@ class Application:
 # ------------------------------------------
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "nrRv")
+        opts, args = getopt.getopt(sys.argv[1:], "nrRd:")
     except:
         usage = _("Usage: %s [-mnrRv] [ file | dir | playlist ] ...\n")
         sys.stderr.write(usage % sys.argv[0])
         sys.exit(1)
 
+    for opt, optarg in opts: # FIXME option checking in two places
+        if opt == "-d":
+            logging.basicConfig(filename=optarg, level=logging.DEBUG)
     global app
     app = Application()
 
@@ -1803,7 +1813,6 @@ def main():
             if opt == "-r": app.win_playlist.command_toggle_repeat()
             if opt == "-R": app.win_playlist.command_toggle_random()
             if opt == "-m": app.mixer("toggle")
-            if opt == "-v": logging.getLogger().setLevel(logging.DEBUG)
         logging.debug("Preferred locale is " + str(code))
         if args or playlist:
             for i in args or playlist:
