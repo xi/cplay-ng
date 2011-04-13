@@ -7,23 +7,30 @@ Description:
 
 Requirements:
 
-        - cplay                   http://www.tf.hut.fi/~flu/cplay/
-        - python                  http://www.python.org/
-        - python-oss  (optional)  http://net.indra.com/~tim/ossmodule/
-        - mplayer  (recommended)  http://www.mplayerhq.hu/
-        - mpg321      (optional)  http://sourceforge.net/projects/mpg321/
-        - ogg123      (optional)  http://www.vorbis.com/
-        - mpg123      (optional)  http://www.mpg123.org/
-        - splay       (optional)  http://splay.sourceforge.net/
-        - madplay     (optional)  http://www.mars.org/home/rob/proj/mpeg/
-        - mikmod      (optional)  http://www.mikmod.org/
-        - fintl       (optional)  http://www.python.org/sigs/i18n-sig/
-        - pyncurses   (optional)  http://pyncurses.sourceforge.net/
-        - xmp         (optional)  http://xmp.sf.net/
-        - sox         (optional)  http://sox.sf.net/
-        - speex       (optional)  http://www.speex.org/
-        - mutagen     (optional)  http://code.google.com/p/mutagen/
-        - magic       (optional)  http://www.darwinsys.com/file/
+    - cplay                   http://www.tf.hut.fi/~flu/cplay/
+    - python                  http://www.python.org/
+    - pyncurses               http://pyncurses.sourceforge.net/
+    - pyalsaaudio (optional)  http://pyalsaaudio.sourceforge.net/
+                                For Alsa mixer support
+    - python-oss  (optional)  http://net.indra.com/~tim/ossmodule/
+                                For OSS mixer support
+    - mutagen     (optional)  http://code.google.com/p/mutagen/
+                                For metadata support (IDv3 etc.)
+    - magic       (optional)  http://www.darwinsys.com/file/
+                                For better filetype recognition
+
+For playback either install mplayer (recommended): http://www.mplayerhq.hu/
+or one or more of the following players:
+
+    - mpg321                  http://sourceforge.net/projects/mpg321/
+    - ogg123                  http://www.vorbis.com/
+    - mpg123                  http://www.mpg123.org/
+    - splay                   http://splay.sourceforge.net/
+    - madplay                 http://www.mars.org/home/rob/proj/mpeg/
+    - mikmod                  http://www.mikmod.org/
+    - xmp                     http://xmp.sf.net/
+    - sox                     http://sox.sf.net/
+    - speex                   http://www.speex.org/
 
 Installation:
 
