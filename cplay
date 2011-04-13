@@ -1431,7 +1431,8 @@ class MPlayer(Player):
         try:
             os.write(self.stdin_w, arg + "\n")
         except IOError:
-            logging.warning("Can't write to stdin_w.")
+            logging.debug("Can't write to stdin_w.")
+            app.status(_("ERROR: Cannot send commands to mplayer!"), 3)
 
     def speed_chg(self, set):
         self.speed = set
