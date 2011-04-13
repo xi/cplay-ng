@@ -586,7 +586,7 @@ class ListEntry:
         return self.tagged == 1
 
     def __str__(self):
-        mark = self.is_tagged() and "#" or " "
+        mark = self.is_tagged() and "*" or " "
         return "%s %s%s" % (mark, self.vp(), self.slash)
 
     def vp(self):
