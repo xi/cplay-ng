@@ -1679,7 +1679,7 @@ class Application:
             if cmd is "cue" and arg!=0: # ALSA doesn't do integer increments
                 oldvolume = get()[0]
                 newvol = get()[0]
-                while (get()[0] is oldvolume):
+                while (get()[0] == oldvolume):
                     newvol = min(100, max(0, newvol + arg))
                     set(newvol)
                     if ((oldvolume==0 and arg<0) or
