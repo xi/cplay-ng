@@ -1808,7 +1808,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "nrRd:")
     except:
-        usage = _("Usage: %s [-mnrRv] [ file | dir | playlist ] ...\n")
+        usage = _("Usage: %s [-dFileForDebugOutput] [-mnrR] [ file | dir | playlist ] ...\n")
         sys.stderr.write(usage % sys.argv[0])
         sys.exit(1)
 

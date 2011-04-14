@@ -38,7 +38,7 @@ Installation:
 
 Usage:
 
-        cplay [-mnrRv] [ file | dir | playlist ] ...
+        cplay [-dFileForDebugOutput] [-mnrR] [ file | dir | playlist ] ...
 
         When in doubt, press 'h' for a friendly help page.
 
