@@ -20,3 +20,5 @@ recursive-all recursive-install recursive-clean:
 
 cplayrc: cplay
 	awk '/^PLAYERS/ {p=1} /^$$/ {p=0} {if (p==1) {print}}' cplay > cplayrc
+	awk '/^SPEED_OFFSET/ {p=1} /^$$/ {p=0} {if (p==1) {print}}' cplay >> cplayrc
+	awk '/^EQUALIZER/ {p=1} /^$$/ {p=0} {if (p==1) {print}}' cplay >> cplayrc

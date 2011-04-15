@@ -80,12 +80,14 @@ except:
 # ------------------------------------------
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
 CONTROL_FIFO = "%s/cplay-control-%s" % (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"])
-# Ten band graphical equalizers for mplayer, see man (1) mplayer
-# Default: first entry
+
 EQUALIZERS = [
             ("0:0:0:0:0:0:0:0:0:0", "flat"), 
             ("3:3:3:2:0:-1:-1:0:0:1", "rock"), 
             ]
+# Ten band graphical equalizers for mplayer, see man (1) mplayer
+# Default: first entry
+
 SPEED_OFFSET = 0.005
 
 # ------------------------------------------
