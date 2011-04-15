@@ -315,8 +315,8 @@ class RootWindow(Window):
         keymap.bind(range(48,58), app.key_volume) # 0123456789
         keymap.bind(['+'], app.mixer, ("cue", 1))
         keymap.bind('-', app.mixer, ("cue", -1))
-        keymap.bind('n', app.next_song, ())
-        keymap.bind('p', app.prev_song, ())
+        keymap.bind('n', app.next_prev_song, (+1,))
+        keymap.bind('p', app.next_prev_song, (-1,))
         keymap.bind('z', app.toggle_pause, ())
         keymap.bind('x', app.toggle_stop, ())
         keymap.bind('c', self.win_counter.toggle_mode, ())
@@ -1478,8 +1478,8 @@ class FIFOControl:
     def __init__(self):
         self.commands = {
             "pause" : [app.toggle_pause, []],
-            "next" : [app.next_song, []],
-            "prev" : [app.prev_song, []],
+            "next" : [app.next_prev_song, [+1,]],
+            "prev" : [app.next_prev_song, [-1,]],
             "forward" : [app.seek, [1, 1]],
             "backward" : [app.seek, [-1, 1]],
             "play" : [app.toggle_stop, []],
@@ -1647,20 +1647,11 @@ class Application:
         if self.play_tid: self.timeout.remove(self.play_tid)
         self.play_tid = self.timeout.add(0.5, self.play, (entry, offset))
 
-    def next_song(self):
-        new_entry = self.win_playlist.change_active_entry(1)
+    def next_prev_song(self, direction): 
+        new_entry = self.win_playlist.change_active_entry(direction) 
         self.setup_player(new_entry, 0) # Fixes DB#287871 and DB#303282.
         # The player has to be set-up right away when changing songs.
-        # Otherwise the user can manipulate the old offset value while waiting
-        # for the delayed play to trigger, which causes the next song to play
-        # from a wrong offset instead of its beginning.
-        self.delayed_play(new_entry, 0)
-
-    def prev_song(self):
-        new_entry = self.win_playlist.change_active_entry(-1)
-        self.setup_player(new_entry, 0) # Fixes DB#287871 and DB#303282.
-        # The player has to be set-up right away when changing songs.
-        # Otherwise the user can manipulate the old offset value while waiting
+        # Otherwise the user can manipulate the old offset value while waiting 
         # for the delayed play to trigger, which causes the next song to play
         # from a wrong offset instead of its beginning.
         self.delayed_play(new_entry, 0)
