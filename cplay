@@ -313,7 +313,7 @@ class RootWindow(Window):
         keymap.bind([1, '^'], app.seek, (0, 0)) # C-a
         keymap.bind([5, '$'], app.seek, (-1, 0)) # C-e
         keymap.bind(range(48,58), app.key_volume) # 0123456789
-        keymap.bind(['+'], app.mixer, ("cue", 1))
+        keymap.bind(['+', '='], app.mixer, ("cue", 1))
         keymap.bind('-', app.mixer, ("cue", -1))
         keymap.bind('n', app.next_prev_song, (+1,))
         keymap.bind('p', app.next_prev_song, (-1,))
@@ -324,9 +324,9 @@ class RootWindow(Window):
         keymap.bind('q', self.command_quit, ())
         keymap.bind('v', app.mixer, ("toggle",))
         keymap.bind(',', app.command_macro, ())
-        keymap.bind('[', app.speed_decr, ())  # FIXME Document this
-        keymap.bind(']', app.speed_incr, ())  # FIXME Document this
-        keymap.bind('=', app.speed_reset, ()) # FIXME Document this
+        keymap.bind('[', app.incr_reset_decr_speed, (-1,))  # FIXME Document this
+        keymap.bind(']', app.incr_reset_decr_speed, (+1,))  # FIXME Document this
+        keymap.bind('\\', app.incr_reset_decr_speed, (0,))   # FIXME Document this
         keymap.bind('e', app.next_prev_eq, (+1,)) # FIXME Document this
         keymap.bind('E', app.next_prev_eq, (-1,)) # FIXME Document this
 
@@ -1716,21 +1716,12 @@ class Application:
             app.status(_("%s volume %s%%") % (name, get(channel)[0]), 1)
             mixer.close()
 
-    def speed_incr(self):
+    def incr_reset_decr_speed(self, signum):
         if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(self.player.speed + SPEED_OFFSET)
-        else:
-            app.status(_("Speed control requires MPlayer"), 1)
-
-    def speed_decr(self):
-        if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(self.player.speed - SPEED_OFFSET)
-        else:
-            app.status(_("Speed control requires MPlayer"), 1)
-
-    def speed_reset(self):
-        if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(1.0)
+            if(signum == 0):
+                self.player.speed_chg(1.0)
+            else:
+                self.player.speed_chg(self.player.speed + signum * SPEED_OFFSET)
         else:
             app.status(_("Speed control requires MPlayer"), 1)
 
