@@ -1,3 +1,35 @@
+2011-04-15  Daniel Michalik <cplay-dev@blackamp.de>
+
+        Five years after the last pre-release by Ulf Betlehem some development
+        took place, individually distributed amongst various persons. This
+        version of cplay collects the found fixes and improvements and
+        provides:
+        - proper MPlayer support,
+        - volume control using ALSA and OSS, 
+        - fixes of all known critical bugs, more bug fixes and clean up work.
+        Enjoy your updated cplay experience!
+
+        For you information and entertainment the following list contains the
+        "recent" development history, trying to give proper credits to the
+        developers involved. I tried to be as complete and accurate as possible,
+        please let me know if there is someone I forgot or if there is
+        something that I put down incorrectly.
+
+        - Peter Samuelson fixed the insecure /tmp handling (DB#255768,
+          DB#324913) together with Martin Michlmayr.
+        - Tom Adams collected the complete version history of cplay and
+          published it on github. Furthermore he provided basic MPlayer
+          support, the cnq script and ALSA mixer control.
+        - Tomi Pieviläinen fixed the shell crashing bug (DB#375060), added
+          logging and added mutagen support for reading meta data information
+          from played files (DB#413738). Various other improvements include the
+          removal of the kludge variable and clean up work/commenting.
+        - Adrian C. fixed various small bugs and made cplay ready for ncurses 5.8.
+        - Daniel Michalik replaced the mplayer FIFO by internal pipes to
+          prevent permission and IO blocking problems, added speed control and
+          equalizer support when using MPlayer and fixed some bugs (DB#387871,
+          DB#303282, sanity check of counter values).
+
 2006-05-09  Ulf Betlehem  <flu@iki.fi>
 	
 	*** 1.50pre7 ***
