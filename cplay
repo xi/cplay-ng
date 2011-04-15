@@ -1622,10 +1622,9 @@ class Application:
             if self.control.fd in r:
                 self.control.handle_command()
 
-    def play(self, entry, offset = 0):
-        logging.debug("Starting to play " + str(entry))
-        self.play_tid = None
+    def setup_player(self, entry, offset = 0):
         if entry is None or offset is None: return
+        logging.debug("Setting up player for " + str(entry))
         self.player.stop(quiet=1)
         for self.player in PLAYERS:
             if self.player.re_files.search(entry.pathname):
@@ -1636,6 +1635,12 @@ class Application:
             app.status(_("Player not found!"), 1)
             self.player.stopped = 0  # keep going
             return
+
+    def play(self, entry, offset = 0):
+        self.play_tid = None # Play executed, remove from queue
+        if entry is None or offset is None: return
+        logging.debug("Starting to play " + str(entry))
+        self.setup_player(entry, offset)
         self.player.play()
 
     def delayed_play(self, entry, offset):
@@ -1643,10 +1648,22 @@ class Application:
         self.play_tid = self.timeout.add(0.5, self.play, (entry, offset))
 
     def next_song(self):
-        self.delayed_play(self.win_playlist.change_active_entry(1), 0)
+        new_entry = self.win_playlist.change_active_entry(1)
+        self.setup_player(new_entry, 0) # Fixes DB#287871 and DB#303282.
+        # The player has to be set-up right away when changing songs.
+        # Otherwise the user can manipulate the old offset value while waiting
+        # for the delayed play to trigger, which causes the next song to play
+        # from a wrong offset instead of its beginning.
+        self.delayed_play(new_entry, 0)
 
     def prev_song(self):
-        self.delayed_play(self.win_playlist.change_active_entry(-1), 0)
+        new_entry = self.win_playlist.change_active_entry(-1)
+        self.setup_player(new_entry, 0) # Fixes DB#287871 and DB#303282.
+        # The player has to be set-up right away when changing songs.
+        # Otherwise the user can manipulate the old offset value while waiting
+        # for the delayed play to trigger, which causes the next song to play
+        # from a wrong offset instead of its beginning.
+        self.delayed_play(new_entry, 0)
 
     def seek(self, offset, relative):
         if not self.player.entry: return
