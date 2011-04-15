@@ -1840,15 +1840,15 @@ def main():
 
 # ------------------------------------------
 PLAYERS = [
-    MPlayer("mplayer -slave -vc null -vo null {file}",
-            "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
-                "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     FrameOffsetPlayer("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
     FrameOffsetPlayer("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayer("mpg123 -q -v -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayer("mpg321 -q -v -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayerMpp("mppdec --gain 2 --start {offset} {file}", "\.mp[cp+]$"),
     TimeOffsetPlayer("madplay -v --display-time=remaining -s {offset} {file}", "\.mp[123]$"),
+    MPlayer("mplayer -slave -vc null -vo null {file}",
+            "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
+                "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     NoOffsetPlayer("mikmod -q -p0 {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
     NoOffsetPlayer("xmp -q {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
     NoOffsetPlayer("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),
