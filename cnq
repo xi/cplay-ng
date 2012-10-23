@@ -21,18 +21,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """
 
 import os, sys
+import argparse
 
 CONTROL_FIFO = "%s/cplay-control-%s" % (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"])
 
+parser = argparse.ArgumentParser(description="enqueue files and URLs into cplay")
+parser.add_argument('paths', metavar="path", nargs='+')
+args = parser.parse_args()
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print('Arguments, please.')
-        sys.exit(1)
     if os.path.exists(CONTROL_FIFO):
         fd = open(CONTROL_FIFO, "wb", 0)
-        for a in sys.argv[1:]:
+        for a in args.paths:
             if not a.startswith('http'):
-                a = os.path.abspath(os.path.curdir) + '/' + a
+                a = os.path.abspath(a)
             fd.write('add %s\n' % a)
         fd.close()
     else:
