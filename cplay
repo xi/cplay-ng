@@ -1411,6 +1411,18 @@ class TimeOffsetPlayer(Player):
             self.set_position(head, head+tail)
 
 # ------------------------------------------
+class GSTPlayer(Player):
+    re_progress = re.compile("Time: (\d+):(\d+):(\d+).(\d+) of (\d+):(\d+):(\d+).(\d+)")
+
+    def parse_buf(self):
+        match = self.re_progress.search(self.buf)
+        if match:
+            ph, pm, ps, us, lh, lm, ls, lus = map(string.atoi, match.groups())
+            position = ph*3600+pm*60+ps
+            length = lh*3600+lm*60+ls
+            self.set_position(position, length)
+
+# ------------------------------------------
 class NoOffsetPlayer(Player):
 
     def parse_buf(self):
@@ -1859,6 +1871,7 @@ PLAYERS = [
     MPlayer("mplayer -slave -vc null -vo null {file}",
             "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
                 "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
+    GSTPlayer("gst123 -k {offset} {file}", "\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
     NoOffsetPlayer("mikmod -q -p0 {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
     NoOffsetPlayer("xmp -q {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
     NoOffsetPlayer("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),

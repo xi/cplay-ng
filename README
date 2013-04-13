@@ -18,8 +18,9 @@ Requirements:
     - magic       (optional)  http://www.darwinsys.com/file/
                                 For better filetype recognition
 
-For playback either install mplayer (recommended): http://www.mplayerhq.hu/
-or one or more of the following players:
+For playback either install mplayer (recommended): http://www.mplayerhq.hu/,
+gst123: http://space.twc.de/~stefan/gst123.php or one or more of the
+following players:
 
     - mpg321                  http://sourceforge.net/projects/mpg321/
     - ogg123                  http://www.vorbis.com/
