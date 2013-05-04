@@ -31,7 +31,7 @@ import re
 import signal
 import string
 import select
-from subprocess import call, Popen
+import subprocess
 import traceback
 import locale
 import logging
@@ -332,8 +332,8 @@ class RootWindow(Window):
         keymap.bind([1, '^'], app.player.seek, (0, 0))  # C-a
         keymap.bind([5, '$'], app.player.seek, (-1, 0))  # C-e
         keymap.bind(list(range(48, 58)), app.player.key_volume)  # 0123456789
-        keymap.bind(['+'], app.player.mixer, ("cue", 1))
-        keymap.bind('-', app.player.mixer, ("cue", -1))
+        keymap.bind(['+'], app.player.mixer, ("cue", [1]))
+        keymap.bind('-', app.player.mixer, ("cue", [-1]))
         keymap.bind('n', app.player.next_prev_song, (+1,))
         keymap.bind('p', app.player.next_prev_song, (-1,))
         keymap.bind('z', app.player.toggle_pause, ())
@@ -690,7 +690,7 @@ class TagListWindow(ListWindow):
         argv = [x.pathname for x in self.get_tagged()]
         if not argv and self.current():
             argv.append(self.current().pathname)
-        ret_value = call([s, '--'] + argv, shell=True)
+        ret_value = subprocess.call([s, '--'] + argv, shell=True)
         if ret_value != 0:
             sys.stderr.write("\nshell returned %s, press return!\n" %
                              ret_value)
@@ -1390,8 +1390,10 @@ class Backend:
         logging.debug("Executing " + " ".join(self.argv))
         logging.debug("My offset is %d" % self.offset)
 
-        self._p = Popen(self.argv, stdout=self.stdout_w, stderr=self.stderr_w,
-                        stdin=self.stdin_r)
+        self._p = subprocess.Popen(self.argv,
+                                   stdout=self.stdout_w,
+                                   stderr=self.stderr_w,
+                                   stdin=self.stdin_r)
 
         self.stopped = False
         self.paused = False
@@ -1637,7 +1639,7 @@ class FIFOControl:
 
     def volume(self, s):
         argv = s.split()
-        app.player.mixer(argv[0], int(argv[1]))
+        app.mixer(argv[0], [int(argv[1])])
 
 
 class Player:
@@ -1646,6 +1648,13 @@ class Player:
         self.backend = BACKENDS[0]
         self.channels = []
         self.play_tid = None
+        self._mixer = None
+        for mixer in MIXERS:
+            try:
+                self._mixer = mixer()
+                break
+            except Exception:
+                pass
 
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
@@ -1708,57 +1717,14 @@ class Player:
             self.play(self.backend.entry, self.backend.offset)
 
     def key_volume(self, ch):
-        self.mixer("set", int((ch & 0x0f) * 100 / 9.0))
+        self.mixer("set", [int((ch & 0x0f) * 100 / 9.0)])
 
-    def mixer(self, cmd=None, arg=None):
-        try:
-            self._mixer(cmd, arg)
-        except Exception as e:
-            app.status(e, 2)
-
-    def _mixer(self, cmd, arg):
-        try:  # ALSA
-            import alsaaudio
-            mixer = alsaaudio.Mixer()
-            get, set = mixer.getvolume, mixer.setvolume
-            name = 'MASTER'
-            if cmd is "set":
-                set(arg)
-            # ALSA doesn't do integer increments
-            if cmd is "cue" and arg != 0:
-                oldvolume = get()[0]
-                newvol = get()[0]
-                while (get()[0] == oldvolume):
-                    newvol = min(100, max(0, newvol + arg))
-                    set(newvol)
-                    if ((oldvolume == 0 and arg < 0) or
-                            (oldvolume == 100 and arg > 0)):
-                        break
-            app.status(_("%s volume %s%%") % (name, get()[0]), 1)
-        except:  # OSS
-            try:
-                import ossaudiodev
-                mixer = ossaudiodev.openmixer()
-                get, set = mixer.get, mixer.set
-                self.channels = self.channels or \
-                    [['MASTER', ossaudiodev.SOUND_MIXER_VOLUME],
-                     ['PCM', ossaudiodev.SOUND_MIXER_PCM]]
-            except ImportError:
-                import oss
-                mixer = oss.open_mixer()
-                get, set = mixer.read_channel, mixer.write_channel
-                self.channels = self.channels or \
-                    [['MASTER', oss.SOUND_MIXER_VOLUME],
-                     ['PCM', oss.SOUND_MIXER_PCM]]
-            if cmd == "toggle":
-                self.channels.insert(0, self.channels.pop())
-            name, channel = self.channels[0]
-            if cmd == "cue":
-                arg = min(100, max(0, get(channel)[0] + arg))
-            if cmd in ["set", "cue"]:
-                set(channel, (arg, arg))
-            app.status(_("%s volume %s%%") % (name, get(channel)[0]), 1)
-            mixer.close()
+    def mixer(self, cmd=None, args=[]):
+        if self._mixer is None:
+            app.status(_("No mixer."), 1)
+        else:
+            getattr(self._mixer, cmd)(*args)
+            app.status(str(self._mixer), 1)
 
     def incr_reset_decr_speed(self, signum):
         if (isinstance(self.backend, MPlayer)):
@@ -1967,6 +1933,98 @@ class Application:
         self.quit(1)
 
 
+class Mixer(object):
+    def __init__(self):
+        self.channels = []
+
+    def get(self):
+        raise NotImplementedError
+
+    def set(self, level):
+        raise NotImplementedError
+
+    def cue(self, increment):
+        self.set(self.get() + increment)
+
+    def toggle(self):
+        self.channels.append(self.channels.pop(0))
+
+    def __str__(self):
+        return _("%s volume %s%%") % (self.channels[0][0], self.get())
+
+    def close(self):
+        pass
+
+
+class OssMixer(Mixer):
+    def __init__(self):
+        try:
+            import ossaudiodev as oss
+            self._ossaudiodev = True
+        except ImportError:
+            import oss
+            self._ossaudiodev = False
+        self._mixer = oss.openmixer()
+        self._channels = [
+            ('PCM', oss.SOUND_MIXER_PCM),
+            ('MASTER', oss.SOUND_MIXER_VOLUME),
+        ]
+
+    def get(self):
+        if self._ossaudiodev:
+            return self._mixer.get(self._channels[0][1])[0]
+        else:
+            return self._mixer.read_channel(self._channels[0][1])[0]
+
+    def set(self, level):
+        if self._ossaudiodev:
+            self._mixer.set(self._channels[0][1], (level, level))
+        else:
+            self._mixer.write_channel(self._channels[0][1], (level, level))
+
+    def close(self):
+        self._mixer.close()
+
+
+class AlsaMixer(Mixer):
+    def __init__(self):
+        import alsaaudio
+        self.channels = [
+            ('PCM', alsaaudio.Mixer('PCM')),
+            ('Master', alsaaudio.Mixer('Master')),
+        ]
+
+    def get(self):
+        return self.channels[0][1].getvolume()[0]
+
+    def set(self, level):
+        self.channels[0][1].setvolume(level)
+
+    def close(self):
+        for ch in self.channels:
+            ch[1].close()
+
+
+class PulseMixer(Mixer):
+    def __init__(self):
+        self.channels = [
+            ('Master', 'Master')
+        ]
+        self.set(self.get())
+
+    def get(self):
+        out, err = subprocess.Popen(['pacmd', 'dump-volumes'], shell=False,
+                                    stdout=subprocess.PIPE).communicate()
+        return re.search(r'Sink 0.*current_hw.* ([0-9]+)%', out).group(1)
+
+    def set(self, arg):
+        subprocess.check_call(['pactl', 'set-sink-volume', '0', '--',
+                              '%s%%' % arg])
+
+    def cue(self, arg):
+        self.set('%+d' % arg)
+
+
 def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "mnrRd:")
@@ -2014,6 +2072,7 @@ def main():
         traceback.print_exc()
 
 
+MIXERS = [OssMixer, AlsaMixer, PulseMixer]
 BACKENDS = [
     FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
     FrameOffsetBackend("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)",
