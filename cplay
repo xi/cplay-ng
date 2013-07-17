@@ -1876,6 +1876,7 @@ PLAYERS = [
     NoOffsetPlayer("xmp -q {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
     NoOffsetPlayer("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),
     NoOffsetPlayer("speexdec {file}", "\.spx$"),
+    NoOffsetPlayer("timidity {file}", "\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
     ]
 
 MACRO = {}
