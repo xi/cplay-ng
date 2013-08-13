@@ -23,28 +23,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """
 
-import curses
-import getopt
-import gettext
-import locale
-import logging
 import os
-import re
-import select
-import signal
-import string
-from subprocess import call
 import sys
 import time
+import getopt
+import re
+import signal
+import string
+import select
+from subprocess import call
 import traceback
-import tty
-
-locale.setlocale(locale.LC_ALL, "")
-code = locale.getpreferredencoding()
-
-_locale_domain = "cplay"
-_locale_dir = "/usr/local/share/locale"
-gettext.install(_locale_domain, _locale_dir)
 
 global mg
 try:
@@ -54,7 +42,40 @@ try:
 except ImportError:
     mg = None
 
+try: from ncurses import curses
+except ImportError: import curses
 
+try: import tty
+except ImportError: tty = None
+
+try:
+    import locale
+    locale.setlocale(locale.LC_ALL, "")
+    code = locale.getpreferredencoding()
+except:
+    pass
+
+import logging
+
+# ------------------------------------------
+_locale_domain = "cplay"
+_locale_dir = "/usr/local/share/locale"
+
+try:
+    import gettext  # python 2.0
+    gettext.install(_locale_domain, _locale_dir)
+except ImportError:
+    try:
+        import fintl
+        fintl.bindtextdomain(_locale_domain, _locale_dir)
+        fintl.textdomain(_locale_domain)
+        _ = fintl.gettext
+    except ImportError:
+        def _(s): return s
+except:
+    def _(s): return s
+
+# ------------------------------------------
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
 CONTROL_FIFO = ("%s/cplay-control-%s" %
                 (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"]))
@@ -65,6 +86,15 @@ EQUALIZERS = [
             ("0:0:0:0:0:0:0:0:0:0", "flat"), 
             ("3:3:3:2:0:-1:-1:0:0:1", "rock"), 
             ]
+SPEED_OFFSET = 0.005
+
+EQUALIZERS = [
+            ("0:0:0:0:0:0:0:0:0:0", "flat"), 
+            ("3:3:3:2:0:-1:-1:0:0:1", "rock"), 
+            ]
+# Ten band graphical equalizers for mplayer, see man (1) mplayer
+# Default: first entry
+
 SPEED_OFFSET = 0.005
 
 # ------------------------------------------
@@ -112,7 +142,10 @@ class Keymap:
         self.methods[key] = (method, args)
 
     def process(self, key):
-        if self.methods[key] is None: return 0
+        try:
+            if self.methods[key] is None: return 0
+        except IndexError:
+            return 0
         method, args = self.methods[key]
         if args is None: args = (key,)
         method(*args)
@@ -292,8 +325,8 @@ class RootWindow(Window):
         keymap.bind(range(48,58), app.key_volume) # 0123456789
         keymap.bind(['+'], app.mixer, ("cue", 1))
         keymap.bind('-', app.mixer, ("cue", -1))
-        keymap.bind('n', app.next_song, ())
-        keymap.bind('p', app.prev_song, ())
+        keymap.bind('n', app.next_prev_song, (+1,))
+        keymap.bind('p', app.next_prev_song, (-1,))
         keymap.bind('z', app.toggle_pause, ())
         keymap.bind('x', app.toggle_stop, ())
         keymap.bind('c', self.win_counter.toggle_mode, ())
@@ -301,11 +334,11 @@ class RootWindow(Window):
         keymap.bind('q', self.command_quit, ())
         keymap.bind('v', app.mixer, ("toggle",))
         keymap.bind(',', app.command_macro, ())
-        keymap.bind('[', app.speed_decr, ())  # FIXME Document this
-        keymap.bind(']', app.speed_incr, ())  # FIXME Document this
-        keymap.bind('=', app.speed_reset, ()) # FIXME Document this
-        keymap.bind('e', app.eq_next, ()) # FIXME Document this
-        keymap.bind('E', app.eq_prev, ()) # FIXME Document this
+        keymap.bind('[', app.incr_reset_decr_speed, (-1,))  # FIXME Document this
+        keymap.bind(']', app.incr_reset_decr_speed, (+1,))  # FIXME Document this
+        keymap.bind('\\', app.incr_reset_decr_speed, (0,))   # FIXME Document this
+        keymap.bind('e', app.next_prev_eq, (+1,)) # FIXME Document this
+        keymap.bind('E', app.next_prev_eq, (-1,)) # FIXME Document this
 
     def command_quit(self):
         app.do_input_hook = self.do_quit
@@ -562,7 +595,7 @@ class ListEntry:
         return self.tagged == 1
 
     def __str__(self):
-        mark = self.is_tagged() and "#" or " "
+        mark = self.is_tagged() and "*" or " "
         return "%s %s%s" % (mark, self.vp(), self.slash)
 
     def vp(self):
@@ -627,12 +660,13 @@ class TagListWindow(ListWindow):
         argv or self.current() and argv.append(self.current().pathname)
         ret_value = call([s, '--'] + argv, shell=True)
         if ret_value != 0:
-            sys.stderr.write("\nshell returned %s, press return!\n" % ret_value)
-            sys.stdin.readline()
-        app.win_root.update()
-        app.restore_default_status()
-        if ret_value == 0:
-            app.status(_("Command succesfull"), 3)
+               sys.stderr.write("\nshell returned %s, press return!\n" % ret_value)
+               sys.stdin.readline()
+               app.win_root.update()
+               app.restore_default_status()
+        else:
+               app.status(_("Command successfully executed.\n"), 2)
+               app.win_root.update()
         app.cursor(0)
 
     def complete_shell(self, line):
@@ -1456,8 +1490,8 @@ class FIFOControl:
     def __init__(self):
         self.commands = {
             "pause" : [app.toggle_pause, []],
-            "next" : [app.next_song, []],
-            "prev" : [app.prev_song, []],
+            "next" : [app.next_prev_song, [+1,]],
+            "prev" : [app.next_prev_song, [-1,]],
             "forward" : [app.seek, [1, 1]],
             "backward" : [app.seek, [-1, 1]],
             "play" : [app.toggle_stop, []],
@@ -1600,10 +1634,9 @@ class Application:
             if self.control.fd in r:
                 self.control.handle_command()
 
-    def play(self, entry, offset = 0):
-        logging.debug("Starting to play " + str(entry))
-        self.play_tid = None
+    def setup_player(self, entry, offset = 0):
         if entry is None or offset is None: return
+        logging.debug("Setting up player for " + str(entry))
         self.player.stop(quiet=1)
         for self.player in PLAYERS:
             if self.player.re_files.search(entry.pathname):
@@ -1614,17 +1647,26 @@ class Application:
             app.status(_("Player not found!"), 1)
             self.player.stopped = 0  # keep going
             return
+
+    def play(self, entry, offset = 0):
+        self.play_tid = None # Play executed, remove from queue
+        if entry is None or offset is None: return
+        logging.debug("Starting to play " + str(entry))
+        self.setup_player(entry, offset)
         self.player.play()
 
     def delayed_play(self, entry, offset):
         if self.play_tid: self.timeout.remove(self.play_tid)
         self.play_tid = self.timeout.add(0.5, self.play, (entry, offset))
 
-    def next_song(self):
-        self.delayed_play(self.win_playlist.change_active_entry(1), 0)
-
-    def prev_song(self):
-        self.delayed_play(self.win_playlist.change_active_entry(-1), 0)
+    def next_prev_song(self, direction): 
+        new_entry = self.win_playlist.change_active_entry(direction) 
+        self.setup_player(new_entry, 0) # Fixes DB#287871 and DB#303282.
+        # The player has to be set-up right away when changing songs.
+        # Otherwise the user can manipulate the old offset value while waiting 
+        # for the delayed play to trigger, which causes the next song to play
+        # from a wrong offset instead of its beginning.
+        self.delayed_play(new_entry, 0)
 
     def seek(self, offset, relative):
         if not self.player.entry: return
@@ -1648,82 +1690,56 @@ class Application:
         except Exception, e: app.status(e, 2)
 
     def _mixer(self, cmd, arg):
-        """Give a command to the audio mixer.
-        
-        cmd -- 'toggle' to change mixed channel to next,
-               'set' to set the volume to arg, or
-               'cue' to increase the volume by arg.
-        """
-        try:
-            import ossaudiodev
-            mixer = ossaudiodev.openmixer()
-            get, set = mixer.get, mixer.set
-            self.channels = self.channels or \
-                [['MASTER', ossaudiodev.SOUND_MIXER_VOLUME],
-                 ['PCM', ossaudiodev.SOUND_MIXER_PCM]]
-            if cmd == "toggle": self.channels.insert(0, self.channels.pop())
-            name, channel = self.channels[0]
-            if cmd == "cue": arg = min(100, max(0, get(channel)[0] + arg))
-            if cmd in ["set", "cue"]: set(channel, (arg, arg))
-            app.status(_("%s volume %s%%") % (name, get(channel)[0]), 1)
-            mixer.close()
-            return
-        except IOError:
-            # If /dev/mixer is not available, opening the mixer fails.
-            # Thus, we aren't using OSS.
-            pass
-
-        # FIXME: ALSA is probably the common case, so it should come first
-        # but pyalsaaudio docs don't say what error is thrown if it's used
-        # on a system with no alsa...
         try: # ALSA
             import alsaaudio
             mixer = alsaaudio.Mixer()
             get, set = mixer.getvolume, mixer.setvolume
             name = 'MASTER'
-            # FIXME: No 'toggle' support
             if cmd is "set": set(arg)
             if cmd is "cue" and arg!=0: # ALSA doesn't do integer increments
                 oldvolume = get()[0]
                 newvol = get()[0]
-                while (get()[0] is oldvolume):
+                while (get()[0] == oldvolume):
                     newvol = min(100, max(0, newvol + arg))
                     set(newvol)
                     if ((oldvolume==0 and arg<0) or
                         (oldvolume==100 and arg>0)): 
                         break
             app.status(_("%s volume %s%%") % (name, get()[0]), 1)
-            return
-        except ImportError:
-            app.status(_("Not using OSS and no alsa support available"), 2)
+        except: # OSS
+            try:
+                import ossaudiodev
+                mixer = ossaudiodev.openmixer()
+                get, set = mixer.get, mixer.set
+                self.channels = self.channels or \
+                    [['MASTER', ossaudiodev.SOUND_MIXER_VOLUME],
+                     ['PCM', ossaudiodev.SOUND_MIXER_PCM]]
+            except ImportError:
+                import oss
+                mixer = oss.open_mixer()
+                get, set = mixer.read_channel, mixer.write_channel
+                self.channels = self.channels or \
+                    [['MASTER', oss.SOUND_MIXER_VOLUME],
+                     ['PCM', oss.SOUND_MIXER_PCM]]
+            if cmd == "toggle": self.channels.insert(0, self.channels.pop())
+            name, channel = self.channels[0]
+            if cmd == "cue": arg = min(100, max(0, get(channel)[0] + arg))
+            if cmd in ["set", "cue"]: set(channel, (arg, arg))
+            app.status(_("%s volume %s%%") % (name, get(channel)[0]), 1)
+            mixer.close()
 
-    def speed_incr(self):
+    def incr_reset_decr_speed(self, signum):
         if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(self.player.speed + SPEED_OFFSET)
+            if(signum == 0):
+                self.player.speed_chg(1.0)
+            else:
+                self.player.speed_chg(self.player.speed + signum * SPEED_OFFSET)
         else:
             app.status(_("Speed control requires MPlayer"), 1)
 
-    def speed_decr(self):
+    def next_prev_eq(self, direction):
         if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(self.player.speed - SPEED_OFFSET)
-        else:
-            app.status(_("Speed control requires MPlayer"), 1)
-
-    def speed_reset(self):
-        if(isinstance(self.player, MPlayer)):
-            self.player.speed_chg(1.0)
-        else:
-            app.status(_("Speed control requires MPlayer"), 1)
-
-    def eq_next(self):
-        if(isinstance(self.player, MPlayer)):
-            self.player.eq_chg(1)
-        else:
-            app.status(_("Equalizer support requires MPlayer"), 1)
-
-    def eq_prev(self):
-        if(isinstance(self.player, MPlayer)):
-            self.player.eq_chg(-1)
+            self.player.eq_chg(direction)
         else:
             app.status(_("Equalizer support requires MPlayer"), 1)
 
@@ -1795,10 +1811,9 @@ class Application:
 # ------------------------------------------
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "nrRd:")
+        opts, args = getopt.getopt(sys.argv[1:], "mnrRd:")
     except:
-        usage = _("Usage: %s [-d <filename>] [-nrR]" 
-                  "[ file | dir | playlist ] ...\n")
+        usage = _("Usage: %s [-d <filename>] [-mnrR] [ file | dir | playlist ] ...\n")
         sys.stderr.write(usage % sys.argv[0])
         sys.exit(1)
 
@@ -1819,6 +1834,7 @@ def main():
             if opt == "-n": app.restricted = 1
             if opt == "-r": app.win_playlist.command_toggle_repeat()
             if opt == "-R": app.win_playlist.command_toggle_random()
+            if opt == "-m": app.mixer("toggle")
         logging.debug("Preferred locale is " + str(code))
         if args or playlist:
             for i in args or playlist:
@@ -1834,15 +1850,15 @@ def main():
 
 # ------------------------------------------
 PLAYERS = [
-    MPlayer("mplayer -slave -vc null -vo null {file}",
-            "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
-                "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     FrameOffsetPlayer("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
     FrameOffsetPlayer("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayer("mpg123 -q -v -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayer("mpg321 -q -v -k {offset} {file}", "(^http://|\.mp[123]$)", 38.28),
     FrameOffsetPlayerMpp("mppdec --gain 2 --start {offset} {file}", "\.mp[cp+]$"),
     TimeOffsetPlayer("madplay -v --display-time=remaining -s {offset} {file}", "\.mp[123]$"),
+    MPlayer("mplayer -slave -vc null -vo null {file}",
+            "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|" +
+                "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     NoOffsetPlayer("mikmod -q -p0 {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
     NoOffsetPlayer("xmp -q {file}", "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
     NoOffsetPlayer("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),

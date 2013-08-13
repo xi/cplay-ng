@@ -8,8 +8,11 @@ Description:
 Requirements:
 
     - python                  http://www.python.org/
+    - pyncurses               http://pyncurses.sourceforge.net/
     - pyalsaaudio (optional)  http://pyalsaaudio.sourceforge.net/
                                 For Alsa mixer support
+    - python-oss  (optional)  http://net.indra.com/~tim/ossmodule/
+                                For OSS mixer support
     - mutagen     (optional)  http://code.google.com/p/mutagen/
                                 For metadata support (IDv3 etc.)
     - magic       (optional)  http://www.darwinsys.com/file/
@@ -34,7 +37,7 @@ Installation:
 
 Usage:
 
-        cplay [-d <filename>] [-n] [-r] -[R] [ file | dir | playlist ] ...
+        cplay [-d <filename>] [-nrRm] [ file | dir | playlist ] ...
 
         -d  Enable debugging output to <filename>.
 
@@ -45,6 +48,7 @@ Usage:
 
         -R  Start in random mode.
 
+        -m  Switch channels (oss only)
 
         When in doubt, press 'h' for a friendly help page.
 
