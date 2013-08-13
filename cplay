@@ -1695,7 +1695,7 @@ class Application:
         else: self.play(self.player.entry, self.player.offset)
 
     def key_volume(self, ch):
-        self.mixer("set", (ch & 0x0f)*10)
+        self.mixer("set", int((ch & 0x0f) * 100 / 9.0))
 
     def mixer(self, cmd=None, arg=None):
         try: self._mixer(cmd, arg)
