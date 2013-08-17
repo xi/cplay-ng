@@ -31,7 +31,7 @@ import re
 import signal
 import string
 import select
-from subprocess import call
+from subprocess import call, Popen
 import traceback
 
 global mg
@@ -1260,6 +1260,7 @@ class Player:
         self.time_setup = None
         self.buf = ''
         self.tid = None
+        self._p = None
 
     def setup(self, entry, offset):
         """Ready the player with given ListEntry and seek offset"""
@@ -1283,35 +1284,30 @@ class Player:
     def play(self):
         logging.debug(" ".join(["Executing"] + self.argv))
         logging.debug("My offset is %d" % self.offset)
-        # FIXME: Fork is complicated for no gain. subprocess.call
-        # won't need which() either.
-        self.pid = os.fork()
-        if self.pid == 0:
-            os.dup2(self.stdin_r, sys.stdin.fileno())
-            os.dup2(self.stdout_w, sys.stdout.fileno())
-            os.dup2(self.stderr_w, sys.stderr.fileno())
-            os.setpgrp()
-            try: os.execv(self.argv[0], self.argv)
-            except: os._exit(1)
+
+        self._p = Popen(self.argv, stdout=self.stdout_w, stderr=self.stderr_w,
+            stdin=self.stdin_r)
+
         self.stopped = 0
         self.paused = 0
         self.step = 0
         self.update_status()
 
-    def stop(self, quiet=0):
+    def stop(self, quiet=False):
+        if self._p is None:
+            return
         self.paused and self.toggle_pause(quiet)
         try:
-            while 1:
-                try: os.kill(-self.pid, signal.SIGINT)
-                except os.error: pass
-                os.waitpid(self.pid, os.WNOHANG)
-        except Exception: pass
+            self._p.terminate()
+        except OSError:
+            pass
         self.stopped = 1
         quiet or self.update_status()
 
-    def toggle_pause(self, quiet=0):
-        try: os.kill(-self.pid, [signal.SIGSTOP, signal.SIGCONT][self.paused])
-        except os.error: return
+    def toggle_pause(self, quiet=False):
+        if self._p is None:
+            return
+        self._p.send_signal(signal.SIGCONT if self.paused else signal.SIGSTOP)
         self.paused = not self.paused
         quiet or self.update_status()
 
@@ -1326,15 +1322,10 @@ class Player:
         self.tid or self.parse_progress()
 
     def poll(self):
-        try:
-            # Returns (0, 0) when child still running
-            os.waitpid(self.pid, os.WNOHANG)
-            # return None
-        except:
-            # something broken? try again
-            if self.time_setup and (time.time() - self.time_setup) < 2.0:
-                self.play()
-                return 0
+        if self.stopped or self._p is None:
+            return 0
+        elif self._p.poll() is not None:
+            self._p = None
             app.set_default_status("")
             app.counter([0,0])
             app.progress(0)
