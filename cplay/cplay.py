@@ -351,13 +351,13 @@ class RootWindow(Window):
         keymap.bind('E', app.player.next_prev_eq, (-1,))
 
     def command_quit(self):
-        app.do_input_hook = self.do_quit
-        app.start_input(_("Quit? (y/N)"))
+        app.input.do_hook = self.do_quit
+        app.input.start(_("Quit? (y/N)"))
 
     def do_quit(self, ch):
         if chr(ch) == 'y':
             app.quit()
-        app.stop_input()
+        app.input.stop()
 
 
 class TabWindow(Window):
@@ -509,8 +509,8 @@ class ListWindow(Window):
         return self.buffer[self.bufptr]
 
     def cursor_move(self, ydiff):
-        if app.input_active:
-            app.cancel_input()
+        if app.input.active:
+            app.input.cancel()
         if not self.buffer:
             return
         self.update_line(refresh=False)
@@ -540,41 +540,41 @@ class ListWindow(Window):
     def start_search(self, prompt_text, direction):
         self.search_direction = direction
         self.not_found = False
-        if app.input_active:
-            app.input_prompt = "%s: " % prompt_text
+        if app.input.active:
+            app.input.prompt = "%s: " % prompt_text
             self.do_search(advance=direction)
         else:
-            app.do_input_hook = self.do_search
-            app.stop_input_hook = self.stop_search
-            app.start_input(prompt_text)
+            app.input.do_hook = self.do_search
+            app.input.stop_hook = self.stop_search
+            app.input.start(prompt_text)
 
     def stop_search(self):
-        self.last_search = app.input_string
+        self.last_search = app.input.string
         app.status(_("ok"), 1)
 
     def do_search(self, ch=None, advance=0):
         if ch in [8, 127]:
-            app.input_string = app.input_string[:-1]
+            app.input.string = app.input.string[:-1]
         elif ch:
-            app.input_string = "%s%c" % (app.input_string, ch)
+            app.input.string = "%s%c" % (app.input.string, ch)
         else:
-            app.input_string = app.input_string or self.last_search
+            app.input.string = app.input.string or self.last_search
         index = self.bufptr + advance
         while True:
             if not 0 <= index < len(self.buffer):
-                app.status(_("Not found: %s ") % app.input_string)
+                app.status(_("Not found: %s ") % app.input.string)
                 self.not_found = True
                 break
             line = str(self.buffer[index]).lower()
-            if line.find(app.input_string.lower()) != -1:
-                app.show_input()
+            if line.find(app.input.string.lower()) != -1:
+                app.input.show()
                 self.update_line(refresh=False)
                 self.bufptr = index
                 self.update(force=False)
                 self.not_found = False
                 break
             if self.not_found:
-                app.status(_("Not found: %s ") % app.input_string)
+                app.status(_("Not found: %s ") % app.input.string)
                 break
             index = index + self.search_direction
 
@@ -679,12 +679,12 @@ class TagListWindow(ListWindow):
     def command_shell(self):
         if app.restricted:
             return
-        app.stop_input_hook = self.stop_shell
-        app.complete_input_hook = self.complete_shell
-        app.start_input(_("shell$ "), colon=False)
+        app.input.stop_hook = self.stop_shell
+        app.input.complete_hook = self.complete_shell
+        app.input.start(_("shell$ "), colon=False)
 
     def stop_shell(self):
-        s = app.input_string
+        s = app.input.string
         curses.endwin()
         sys.stderr.write("\n")
         argv = [x.pathname for x in self.get_tagged()]
@@ -756,12 +756,12 @@ class TagListWindow(ListWindow):
 
     def command_tag_regexp(self, value):
         self.tag_value = value
-        app.stop_input_hook = self.stop_tag_regexp
-        app.start_input(_("Tag regexp") if value else _("Untag regexp"))
+        app.input.stop_hook = self.stop_tag_regexp
+        app.input.start(_("Tag regexp") if value else _("Untag regexp"))
 
     def stop_tag_regexp(self):
         try:
-            r = re.compile(app.input_string, re.I)
+            r = re.compile(app.input.string, re.I)
             for entry in self.buffer:
                 if r.search(str(entry)):
                     entry.set_tagged(self.tag_value)
@@ -804,11 +804,11 @@ class FilelistWindow(TagListWindow):
         self.bookmarks = {39: [self.cwd, 0]}
 
     def command_get_bookmark(self):
-        app.do_input_hook = self.do_get_bookmark
-        app.start_input(_("bookmark"))
+        app.input.do_hook = self.do_get_bookmark
+        app.input.start(_("bookmark"))
 
     def do_get_bookmark(self, ch):
-        app.input_string = ch
+        app.input.string = ch
         bookmark = self.bookmarks.get(ch)
         if bookmark:
             self.bookmarks[39] = [self.cwd, self.bufptr]
@@ -820,24 +820,24 @@ class FilelistWindow(TagListWindow):
             app.status(_("ok"), 1)
         else:
             app.status(_("Not found!"), 1)
-        app.stop_input()
+        app.input.stop()
 
     def command_set_bookmark(self):
-        app.do_input_hook = self.do_set_bookmark
-        app.start_input(_("set bookmark"))
+        app.input.do_hook = self.do_set_bookmark
+        app.input.start(_("set bookmark"))
 
     def do_set_bookmark(self, ch):
-        app.input_string = ch
+        app.input.string = ch
         self.bookmarks[ch] = [self.cwd, self.bufptr]
-        app.status(_("ok"), 1) if ch else app.stop_input()
+        app.input.status(_("ok"), 1) if ch else app.stop_input()
 
     def command_search_recursively(self):
-        app.stop_input_hook = self.stop_search_recursively
-        app.start_input(_("search"))
+        app.input.stop_hook = self.stop_search_recursively
+        app.input.start(_("search"))
 
     def stop_search_recursively(self):
         try:
-            re_tmp = re.compile(app.input_string, re.I)
+            re_tmp = re.compile(app.input.string, re.I)
         except re.error as e:
             app.status(e, 2)
             return
@@ -962,12 +962,12 @@ class FilelistWindow(TagListWindow):
     def command_goto(self):
         if app.restricted:
             return
-        app.stop_input_hook = self.stop_goto
-        app.complete_input_hook = self.complete_generic
-        app.start_input(_("goto"))
+        app.input.stop_hook = self.stop_goto
+        app.input.complete_hook = self.complete_generic
+        app.input.start(_("goto"))
 
     def stop_goto(self):
-        dir = os.path.expanduser(app.input_string)
+        dir = os.path.expanduser(app.input.string)
         if dir[0] != '/':
             dir = os.path.join(self.cwd, dir)
         if not os.path.isdir(dir):
@@ -1249,11 +1249,11 @@ class PlaylistWindow(TagListWindow):
         if app.restricted:
             return
         default = self.pathname or "%s/" % app.win_filelist.cwd
-        app.stop_input_hook = self.stop_save_playlist
-        app.start_input(_("Save playlist"), default)
+        app.input.stop_hook = self.stop_save_playlist
+        app.input.start(_("Save playlist"), default)
 
     def stop_save_playlist(self):
-        pathname = app.input_string
+        pathname = app.input.string
         if pathname[0] != '/':
             pathname = os.path.join(app.win_filelist.cwd, pathname)
         if not re.search(b"\.m3u$", pathname, re.I):
@@ -1746,32 +1746,81 @@ class Player:
             app.status(_("Equalizer support requires MPlayer"), 1)
 
 
+class Input:
+    def __init__(self, parent):
+        self.parent = parent
+        self.active = False
+        self.prompt = ""
+        self.string = ""
+        self.do_hook = None
+        self.stop_hook = None
+        self.complete_hook = None
+        self.keymap = Keymap()
+        self.keymap.bind(list(Window.chars), self.do)
+        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8,))
+        self.keymap.bind([21, 23], self.do)
+        self.keymap.bind(['\a', 27], self.cancel, ())
+        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
+
+    def show(self):
+        n = len(self.prompt) + 1
+        s = cut(self.string, self.parent.win_status.cols - n, left=True)
+        app.status("%s%s " % (self.prompt, s))
+
+    def start(self, prompt="", data="", colon=True):
+        self.active = True
+        self.parent.cursor(1)
+        app.keymapstack.push(self.keymap)
+        self.prompt = prompt + (": " if colon else "")
+        self.string = data
+        self.show()
+
+    def do(self, *args):
+        if self.do_hook:
+            return self.do_hook(*args)
+        ch = args[0] if args else None
+        if ch in [8, 127]:  # backspace
+            self.string = self.string[:-1]
+        elif ch == 9 and self.complete_hook:
+            self.string = self.complete_hook(self.string)
+        elif ch == 21:  # C-u
+            self.string = ""
+        elif ch == 23:  # C-w
+            self.string = re.sub("((.* )?)\w.*", "\\1", self.string)
+        elif ch:
+            self.string = "%s%c" % (self.string, ch)
+        self.show()
+
+    def stop(self, *args):
+        self.active = False
+        self.parent.cursor(0)
+        app.keymapstack.pop()
+        if not self.string:
+            app.status(_("cancel"), 1)
+        elif self.stop_hook:
+            self.stop_hook(*args)
+        self.do_hook = None
+        self.stop_hook = None
+        self.complete_hook = None
+
+    def cancel(self):
+        self.string = ""
+        self.stop()
+
+
 class Application:
     def __init__(self):
         self.player = Player(self)
         self.keymapstack = KeymapStack()
         self.tcattr = None
-        self.input_active = False
-        self.input_prompt = ""
-        self.input_string = ""
-        self.do_input_hook = None
-        self.stop_input_hook = None
-        self.complete_input_hook = None
         self.restricted = False
-        self.input_keymap = Keymap()
-        self.input_keymap.bind(list(Window.chars), self.do_input)
-        self.input_keymap.bind([127, curses.KEY_BACKSPACE],
-                               self.do_input, (8,))
-        self.input_keymap.bind([21, 23], self.do_input)
-        self.input_keymap.bind(['\a', 27], self.cancel_input, ())
-        self.input_keymap.bind(['\n', curses.KEY_ENTER], self.stop_input, ())
 
     def command_macro(self):
-        app.do_input_hook = self.do_macro
-        app.start_input(_("macro"))
+        app.input.do_hook = self.do_macro
+        app.input.start(_("macro"))
 
     def do_macro(self, ch):
-        app.stop_input()
+        app.input.stop()
         self.run_macro(chr(ch))
 
     def run_macro(self, c):
@@ -1808,6 +1857,7 @@ class Application:
         self.counter = self.win_root.win_counter.counter
         self.progress = self.win_root.win_progress.progress
         self.timeout = Timeout()
+        self.input = Input(self)
         self.win_filelist.listdir()
         self.control = FIFOControl()
 
@@ -1863,52 +1913,6 @@ class Application:
             # remote
             if self.control.fd in r:
                 self.control.handle_command()
-
-    def show_input(self):
-        n = len(self.input_prompt) + 1
-        s = cut(self.input_string, self.win_status.cols - n, left=True)
-        app.status("%s%s " % (self.input_prompt, s))
-
-    def start_input(self, prompt="", data="", colon=True):
-        self.input_active = True
-        self.cursor(1)
-        app.keymapstack.push(self.input_keymap)
-        self.input_prompt = prompt + (": " if colon else "")
-        self.input_string = data
-        self.show_input()
-
-    def do_input(self, *args):
-        if self.do_input_hook:
-            return self.do_input_hook(*args)
-        ch = args[0] if args else None
-        if ch in [8, 127]:  # backspace
-            self.input_string = self.input_string[:-1]
-        elif ch == 9 and self.complete_input_hook:
-            self.input_string = self.complete_input_hook(self.input_string)
-        elif ch == 21:  # C-u
-            self.input_string = ""
-        elif ch == 23:  # C-w
-            self.input_string = re.sub("((.* )?)\w.*", "\\1",
-                                       self.input_string)
-        elif ch:
-            self.input_string = "%s%c" % (self.input_string, ch)
-        self.show_input()
-
-    def stop_input(self, *args):
-        self.input_active = False
-        self.cursor(0)
-        app.keymapstack.pop()
-        if not self.input_string:
-            app.status(_("cancel"), 1)
-        elif self.stop_input_hook:
-            self.stop_input_hook(*args)
-        self.do_input_hook = None
-        self.stop_input_hook = None
-        self.complete_input_hook = None
-
-    def cancel_input(self):
-        self.input_string = ""
-        self.stop_input()
 
     def cursor(self, visibility):
         try:
