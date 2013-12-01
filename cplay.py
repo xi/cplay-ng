@@ -327,28 +327,28 @@ class RootWindow(Window):
         self.win_counter = CounterWindow(self)
         self.win_tab = TabWindow(self)
         keymap.bind(12, self.update, ())  # C-l
-        keymap.bind([curses.KEY_LEFT, 2], app.seek, (-1, 1))  # C-b
-        keymap.bind([curses.KEY_RIGHT, 6], app.seek, (1, 1))  # C-f
-        keymap.bind([1, '^'], app.seek, (0, 0))  # C-a
-        keymap.bind([5, '$'], app.seek, (-1, 0))  # C-e
-        keymap.bind(list(range(48, 58)), app.key_volume)  # 0123456789
-        keymap.bind(['+'], app.mixer, ("cue", 1))
-        keymap.bind('-', app.mixer, ("cue", -1))
-        keymap.bind('n', app.next_prev_song, (+1,))
-        keymap.bind('p', app.next_prev_song, (-1,))
-        keymap.bind('z', app.toggle_pause, ())
-        keymap.bind('x', app.toggle_stop, ())
+        keymap.bind([curses.KEY_LEFT, 2], app.player.seek, (-1, 1))  # C-b
+        keymap.bind([curses.KEY_RIGHT, 6], app.player.seek, (1, 1))  # C-f
+        keymap.bind([1, '^'], app.player.seek, (0, 0))  # C-a
+        keymap.bind([5, '$'], app.player.seek, (-1, 0))  # C-e
+        keymap.bind(list(range(48, 58)), app.player.key_volume)  # 0123456789
+        keymap.bind(['+'], app.player.mixer, ("cue", 1))
+        keymap.bind('-', app.player.mixer, ("cue", -1))
+        keymap.bind('n', app.player.next_prev_song, (+1,))
+        keymap.bind('p', app.player.next_prev_song, (-1,))
+        keymap.bind('z', app.player.toggle_pause, ())
+        keymap.bind('x', app.player.toggle_stop, ())
         keymap.bind('c', self.win_counter.toggle_mode, ())
         keymap.bind('Q', app.quit, ())
         keymap.bind('q', self.command_quit, ())
-        keymap.bind('v', app.mixer, ("toggle",))
+        keymap.bind('v', app.player.mixer, ("toggle",))
         keymap.bind(',', app.command_macro, ())
         # FIXME Document this
-        keymap.bind('[', app.incr_reset_decr_speed, (-1,))
-        keymap.bind(']', app.incr_reset_decr_speed, (+1,))
-        keymap.bind('\\', app.incr_reset_decr_speed, (0,))
-        keymap.bind('e', app.next_prev_eq, (+1,))
-        keymap.bind('E', app.next_prev_eq, (-1,))
+        keymap.bind('[', app.player.incr_reset_decr_speed, (-1,))
+        keymap.bind(']', app.player.incr_reset_decr_speed, (+1,))
+        keymap.bind('\\', app.player.incr_reset_decr_speed, (0,))
+        keymap.bind('e', app.player.next_prev_eq, (+1,))
+        keymap.bind('E', app.player.next_prev_eq, (-1,))
 
     def command_quit(self):
         app.do_input_hook = self.do_quit
@@ -950,7 +950,7 @@ class FilelistWindow(TagListWindow):
             self.chdir(self.current().pathname)
             self.listdir()
         elif VALID_SONG(self.current().filename):
-            app.play(self.current())
+            app.player.play(self.current())
 
     def command_chparentdir(self):
         if app.restricted and self.cwd == self.startdir:
@@ -1167,7 +1167,7 @@ class PlaylistWindow(TagListWindow):
         entry = self.current()
         entry.set_active(True)
         self.update()
-        app.play(entry)
+        app.player.play(entry)
 
     def command_delete(self):
         if not self.buffer:
@@ -1604,13 +1604,13 @@ class Timeout:
 class FIFOControl:
     def __init__(self):
         self.commands = {
-            "pause": [app.toggle_pause, []],
-            "next": [app.next_prev_song, [+1]],
-            "prev": [app.next_prev_song, [-1]],
-            "forward": [app.seek, [1, 1]],
-            "backward": [app.seek, [-1, 1]],
-            "play": [app.toggle_stop, []],
-            "stop": [app.toggle_stop, []],
+            "pause": [app.player.toggle_pause, []],
+            "next": [app.player.next_prev_song, [+1]],
+            "prev": [app.player.next_prev_song, [-1]],
+            "forward": [app.player.seek, [1, 1]],
+            "backward": [app.player.seek, [-1, 1]],
+            "play": [app.player.toggle_stop, []],
+            "stop": [app.player.toggle_stop, []],
             "volume": [self.volume, None],
             "macro": [app.run_macro, None],
             "add": [app.win_playlist.add, None],
@@ -1637,127 +1637,15 @@ class FIFOControl:
 
     def volume(self, s):
         argv = s.split()
-        app.mixer(argv[0], int(argv[1]))
+        app.player.mixer(argv[0], int(argv[1]))
 
 
-class Application:
-    def __init__(self):
-        self.keymapstack = KeymapStack()
-        self.tcattr = None
-        self.input_active = False
-        self.input_prompt = ""
-        self.input_string = ""
-        self.do_input_hook = None
-        self.stop_input_hook = None
-        self.complete_input_hook = None
-        self.channels = []
-        self.restricted = False
-        self.input_keymap = Keymap()
-        self.input_keymap.bind(list(Window.chars), self.do_input)
-        self.input_keymap.bind([127, curses.KEY_BACKSPACE],
-                               self.do_input, (8,))
-        self.input_keymap.bind([21, 23], self.do_input)
-        self.input_keymap.bind(['\a', 27], self.cancel_input, ())
-        self.input_keymap.bind(['\n', curses.KEY_ENTER], self.stop_input, ())
-
-    def command_macro(self):
-        app.do_input_hook = self.do_macro
-        app.start_input(_("macro"))
-
-    def do_macro(self, ch):
-        app.stop_input()
-        self.run_macro(chr(ch))
-
-    def run_macro(self, c):
-        for i in MACRO.get(c, ""):
-            self.keymapstack.process(ord(i))
-
-    def setup(self):
-        if tty is not None:
-            self.tcattr = tty.tcgetattr(sys.stdin.fileno())
-            tcattr = tty.tcgetattr(sys.stdin.fileno())
-            tcattr[0] = tcattr[0] & ~(tty.IXON)
-            tty.tcsetattr(sys.stdin.fileno(), tty.TCSANOW, tcattr)
-        self.w = curses.initscr()
-        curses.cbreak()
-        curses.noecho()
-        try:
-            curses.meta(1)
-        except:
-            pass
-        self.cursor(0)
-        signal.signal(signal.SIGHUP, self.handler_quit)
-        signal.signal(signal.SIGINT, self.handler_quit)
-        signal.signal(signal.SIGTERM, self.handler_quit)
-        signal.signal(signal.SIGWINCH, self.handler_resize)
-        self.win_root = RootWindow(None)
-        self.win_root.update()
-        self.win_tab = self.win_root.win_tab
-        self.win_filelist = self.win_root.win_tab.win_filelist
-        self.win_playlist = self.win_root.win_tab.win_playlist
-        self.win_status = self.win_root.win_status
-        self.status = self.win_status.status
-        self.set_default_status = self.win_status.set_default_status
-        self.restore_default_status = self.win_status.restore_default_status
-        self.counter = self.win_root.win_counter.counter
-        self.progress = self.win_root.win_progress.progress
+class Player:
+    def __init__(self, parent):
+        self.parent = parent
         self.backend = BACKENDS[0]
-        self.timeout = Timeout()
+        self.channels = []
         self.play_tid = None
-        self.win_filelist.listdir()
-        self.control = FIFOControl()
-
-    def cleanup(self):
-        try:
-            curses.endwin()
-        except curses.error:
-            return
-        if XTERM:
-            sys.stderr.write("\033]0;%s\a" % "xterm")
-        if tty is not None:
-            tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
-        # remove temporary files
-        try:
-            if os.path.exists(CONTROL_FIFO):
-                os.unlink(CONTROL_FIFO)
-        except IOError:
-            pass
-
-    def run(self):
-        while True:
-            now = time.time()
-            timeout = self.timeout.check(now)
-            self.win_filelist.listdir_maybe(now)
-            if not self.backend.stopped:
-                timeout = 0.5
-                if self.backend.poll():
-                    self.backend.stopped = True  # end of playlist hack
-                    if not self.win_playlist.stop:
-                        entry = self.win_playlist.change_active_entry(1)
-                        if not entry:
-                            self.backend.stopped = True
-                        else:
-                            self.play(entry)
-            R = [sys.stdin, self.backend.stdout_r, self.backend.stderr_r]
-            if self.control.fd:
-                R.append(self.control.fd)
-            try:
-                r, w, e = select.select(R, [], [], timeout)
-            except select.error:
-                continue
-            # user
-            if sys.stdin in r:
-                c = self.win_root.getch()
-                self.keymapstack.process(c)
-            # backend
-            if self.backend.stderr_r in r:
-                self.backend.read_fd(self.backend.stderr_r)
-            # backend
-            if self.backend.stdout_r in r:
-                self.backend.read_fd(self.backend.stdout_r)
-            # remote
-            if self.control.fd in r:
-                self.control.handle_command()
 
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
@@ -1786,11 +1674,12 @@ class Application:
 
     def delayed_play(self, entry, offset):
         if self.play_tid:
-            self.timeout.remove(self.play_tid)
-        self.play_tid = self.timeout.add(0.5, self.play, (entry, offset))
+            self.parent.timeout.remove(self.play_tid)
+        self.play_tid = self.parent.timeout.add(0.5, self.play,
+                                                (entry, offset))
 
     def next_prev_song(self, direction):
-        new_entry = self.win_playlist.change_active_entry(direction)
+        new_entry = self.parent.win_playlist.change_active_entry(direction)
         self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
         # The backend has to be set-up right away when changing songs.
         # Otherwise the user can manipulate the old offset value while waiting
@@ -1887,6 +1776,125 @@ class Application:
         else:
             app.status(_("Equalizer support requires MPlayer"), 1)
 
+
+class Application:
+    def __init__(self):
+        self.player = Player(self)
+        self.keymapstack = KeymapStack()
+        self.tcattr = None
+        self.input_active = False
+        self.input_prompt = ""
+        self.input_string = ""
+        self.do_input_hook = None
+        self.stop_input_hook = None
+        self.complete_input_hook = None
+        self.restricted = False
+        self.input_keymap = Keymap()
+        self.input_keymap.bind(list(Window.chars), self.do_input)
+        self.input_keymap.bind([127, curses.KEY_BACKSPACE],
+                               self.do_input, (8,))
+        self.input_keymap.bind([21, 23], self.do_input)
+        self.input_keymap.bind(['\a', 27], self.cancel_input, ())
+        self.input_keymap.bind(['\n', curses.KEY_ENTER], self.stop_input, ())
+
+    def command_macro(self):
+        app.do_input_hook = self.do_macro
+        app.start_input(_("macro"))
+
+    def do_macro(self, ch):
+        app.stop_input()
+        self.run_macro(chr(ch))
+
+    def run_macro(self, c):
+        for i in MACRO.get(c, ""):
+            self.keymapstack.process(ord(i))
+
+    def setup(self):
+        if tty is not None:
+            self.tcattr = tty.tcgetattr(sys.stdin.fileno())
+            tcattr = tty.tcgetattr(sys.stdin.fileno())
+            tcattr[0] = tcattr[0] & ~(tty.IXON)
+            tty.tcsetattr(sys.stdin.fileno(), tty.TCSANOW, tcattr)
+        self.w = curses.initscr()
+        curses.cbreak()
+        curses.noecho()
+        try:
+            curses.meta(1)
+        except:
+            pass
+        self.cursor(0)
+        signal.signal(signal.SIGHUP, self.handler_quit)
+        signal.signal(signal.SIGINT, self.handler_quit)
+        signal.signal(signal.SIGTERM, self.handler_quit)
+        signal.signal(signal.SIGWINCH, self.handler_resize)
+        self.win_root = RootWindow(None)
+        self.win_root.update()
+        self.win_tab = self.win_root.win_tab
+        self.win_filelist = self.win_root.win_tab.win_filelist
+        self.win_playlist = self.win_root.win_tab.win_playlist
+        self.win_status = self.win_root.win_status
+        self.status = self.win_status.status
+        self.set_default_status = self.win_status.set_default_status
+        self.restore_default_status = self.win_status.restore_default_status
+        self.counter = self.win_root.win_counter.counter
+        self.progress = self.win_root.win_progress.progress
+        self.timeout = Timeout()
+        self.win_filelist.listdir()
+        self.control = FIFOControl()
+
+    def cleanup(self):
+        try:
+            curses.endwin()
+        except curses.error:
+            return
+        if XTERM:
+            sys.stderr.write("\033]0;%s\a" % "xterm")
+        if tty is not None:
+            tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
+        # remove temporary files
+        try:
+            if os.path.exists(CONTROL_FIFO):
+                os.unlink(CONTROL_FIFO)
+        except IOError:
+            pass
+
+    def run(self):
+        while True:
+            now = time.time()
+            timeout = self.timeout.check(now)
+            self.win_filelist.listdir_maybe(now)
+            if not self.player.backend.stopped:
+                timeout = 0.5
+                if self.player.backend.poll():
+                    self.player.backend.stopped = True  # end of playlist hack
+                    if not self.win_playlist.stop:
+                        entry = self.win_playlist.change_active_entry(1)
+                        if not entry:
+                            self.player.backend.stopped = True
+                        else:
+                            self.player.play(entry)
+            R = [sys.stdin, self.player.backend.stdout_r,
+                 self.player.backend.stderr_r]
+            if self.control.fd:
+                R.append(self.control.fd)
+            try:
+                r, w, e = select.select(R, [], [], timeout)
+            except select.error:
+                continue
+            # user
+            if sys.stdin in r:
+                c = self.win_root.getch()
+                self.keymapstack.process(c)
+            # backend
+            if self.player.backend.stderr_r in r:
+                self.player.backend.read_fd(self.player.backend.stderr_r)
+            # backend
+            if self.player.backend.stdout_r in r:
+                self.player.backend.read_fd(self.player.backend.stdout_r)
+            # remote
+            if self.control.fd in r:
+                self.control.handle_command()
+
     def show_input(self):
         n = len(self.input_prompt) + 1
         s = cut(self.input_string, self.win_status.cols - n, left=True)
@@ -1940,7 +1948,7 @@ class Application:
             pass
 
     def quit(self, status=0):
-        self.backend.stop(quiet=True)
+        self.player.backend.stop(quiet=True)
         sys.exit(status)
 
     def handler_resize(self, sig, frame):
@@ -1991,7 +1999,7 @@ def main():
             if opt == "-R":
                 app.win_playlist.command_toggle_random()
             if opt == "-m":
-                app.mixer("toggle")
+                app.player.mixer("toggle")
         logging.debug("Preferred locale is " + str(code))
         if args or playlist:
             for i in args or playlist:
