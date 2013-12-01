@@ -300,7 +300,7 @@ class CounterWindow(Window):
     def counter(self, values):
         """Update the counter with [elapsed, remaining] seconds"""
         if (values[0] < 0 or values[1] < 0):
-            logging.debug("Player reported negative value "
+            logging.debug("Backend reported negative value "
                           "for (remaining) playing time.")
         else:
             self.values = values
@@ -733,7 +733,7 @@ class TagListWindow(ListWindow):
     def command_change_viewpoint(self, klass=ListEntry):
         klass.vps.append(klass.vps.pop(0))
         app.status(_("Listing %s") % klass.vps[0][0], 1)
-        app.player.update_status()
+        app.backend.update_status()
         self.update()
 
     def command_invert_tags(self):
@@ -1345,7 +1345,7 @@ def get_tag(pathname):
         return os.path.basename(pathname)
 
 
-class Player:
+class Backend:
 
     stdin_r, stdin_w = os.pipe()
     stdout_r, stdout_w = os.pipe()
@@ -1368,7 +1368,7 @@ class Player:
         self._p = None
 
     def setup(self, entry, offset):
-        """Ready the player with given ListEntry and seek offset"""
+        """Ready the backend with given ListEntry and seek offset"""
 
         self.argv = self.commandline.split()
         self.argv[0] = which(self.argv[0])
@@ -1477,7 +1477,7 @@ class Player:
             app.set_default_status(_("Playing: %s") % self.entry.vp())
 
 
-class FrameOffsetPlayer(Player):
+class FrameOffsetBackend(Backend):
     re_progress = re.compile(b"Time.*\s(\d+):(\d+).*\[(\d+):(\d+)")
 
     def parse_buf(self):
@@ -1488,7 +1488,7 @@ class FrameOffsetPlayer(Player):
             self.set_position(head, head + tail)
 
 
-class FrameOffsetPlayerMpp(Player):
+class FrameOffsetBackendMpp(Backend):
     re_progress = re.compile(b".*\s(\d+):(\d+).*\s(\d+):(\d+)")
 
     def parse_buf(self):
@@ -1500,7 +1500,7 @@ class FrameOffsetPlayerMpp(Player):
             self.set_position(head, head + tail)
 
 
-class TimeOffsetPlayer(Player):
+class TimeOffsetBackend(Backend):
     re_progress = re.compile(b"(\d+):(\d+):(\d+)")
 
     def parse_buf(self):
@@ -1512,7 +1512,7 @@ class TimeOffsetPlayer(Player):
             self.set_position(head, head + tail)
 
 
-class GSTPlayer(Player):
+class GSTBackend(Backend):
     re_progress = re.compile(b"Time: (\d+):(\d+):(\d+).(\d+)"
                              b" of (\d+):(\d+):(\d+).(\d+)")
 
@@ -1525,7 +1525,7 @@ class GSTPlayer(Player):
             self.set_position(position, length)
 
 
-class NoOffsetPlayer(Player):
+class NoOffsetBackend(Backend):
 
     def parse_buf(self):
         head = self.offset + 1
@@ -1535,14 +1535,14 @@ class NoOffsetPlayer(Player):
         pass
 
 
-class MPlayer(Player):
+class MPlayer(Backend):
     re_progress = re.compile(b"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     speed = 1.0
     eq_cur = 0
     equalizer = EQUALIZERS[eq_cur][0]
 
     def play(self):
-        Player.play(self)
+        Backend.play(self)
         self.mplayer_send("speed_set %f" % self.speed)
         self.mplayer_send("af equalizer=" + self.equalizer)
         self.mplayer_send("seek %d\n" % self.offset)
@@ -1701,7 +1701,7 @@ class Application:
         self.restore_default_status = self.win_status.restore_default_status
         self.counter = self.win_root.win_counter.counter
         self.progress = self.win_root.win_progress.progress
-        self.player = PLAYERS[0]
+        self.backend = BACKENDS[0]
         self.timeout = Timeout()
         self.play_tid = None
         self.win_filelist.listdir()
@@ -1728,17 +1728,17 @@ class Application:
             now = time.time()
             timeout = self.timeout.check(now)
             self.win_filelist.listdir_maybe(now)
-            if not self.player.stopped:
+            if not self.backend.stopped:
                 timeout = 0.5
-                if self.player.poll():
-                    self.player.stopped = True  # end of playlist hack
+                if self.backend.poll():
+                    self.backend.stopped = True  # end of playlist hack
                     if not self.win_playlist.stop:
                         entry = self.win_playlist.change_active_entry(1)
                         if not entry:
-                            self.player.stopped = True
+                            self.backend.stopped = True
                         else:
                             self.play(entry)
-            R = [sys.stdin, self.player.stdout_r, self.player.stderr_r]
+            R = [sys.stdin, self.backend.stdout_r, self.backend.stderr_r]
             if self.control.fd:
                 R.append(self.control.fd)
             try:
@@ -1749,30 +1749,30 @@ class Application:
             if sys.stdin in r:
                 c = self.win_root.getch()
                 self.keymapstack.process(c)
-            # player
-            if self.player.stderr_r in r:
-                self.player.read_fd(self.player.stderr_r)
-            # player
-            if self.player.stdout_r in r:
-                self.player.read_fd(self.player.stdout_r)
+            # backend
+            if self.backend.stderr_r in r:
+                self.backend.read_fd(self.backend.stderr_r)
+            # backend
+            if self.backend.stdout_r in r:
+                self.backend.read_fd(self.backend.stdout_r)
             # remote
             if self.control.fd in r:
                 self.control.handle_command()
 
-    def setup_player(self, entry, offset=0):
+    def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
             return
-        logging.debug("Setting up player for " + str(entry))
-        self.player.stop(quiet=True)
-        for self.player in PLAYERS:
-            if self.player.re_files.search(entry.pathname):
-                if self.player.setup(entry, offset):
+        logging.debug("Setting up backend for " + str(entry))
+        self.backend.stop(quiet=True)
+        for self.backend in BACKENDS:
+            if self.backend.re_files.search(entry.pathname):
+                if self.backend.setup(entry, offset):
                     break
         else:
-            # FIXME: Needs to report suitable players
-            logging.debug("Player not found")
-            app.status(_("Player not found!"), 1)
-            self.player.stopped = False  # keep going
+            # FIXME: Needs to report suitable backends
+            logging.debug("Backend not found")
+            app.status(_("Backend not found!"), 1)
+            self.backend.stopped = False  # keep going
             return
 
     def play(self, entry, offset=0):
@@ -1781,8 +1781,8 @@ class Application:
         if entry is None or offset is None:
             return
         logging.debug("Starting to play " + str(entry))
-        self.setup_player(entry, offset)
-        self.player.play()
+        self.setup_backend(entry, offset)
+        self.backend.play()
 
     def delayed_play(self, entry, offset):
         if self.play_tid:
@@ -1791,32 +1791,32 @@ class Application:
 
     def next_prev_song(self, direction):
         new_entry = self.win_playlist.change_active_entry(direction)
-        self.setup_player(new_entry, 0)  # Fixes DB#287871 and DB#303282.
-        # The player has to be set-up right away when changing songs.
+        self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
+        # The backend has to be set-up right away when changing songs.
         # Otherwise the user can manipulate the old offset value while waiting
         # for the delayed play to trigger, which causes the next song to play
         # from a wrong offset instead of its beginning.
         self.delayed_play(new_entry, 0)
 
     def seek(self, offset, relative):
-        if not self.player.entry:
+        if not self.backend.entry:
             return
-        self.player.seek(offset, relative)
-        self.delayed_play(self.player.entry, self.player.offset)
+        self.backend.seek(offset, relative)
+        self.delayed_play(self.backend.entry, self.backend.offset)
 
     def toggle_pause(self):
-        if not self.player.entry:
+        if not self.backend.entry:
             return
-        if not self.player.stopped:
-            self.player.toggle_pause()
+        if not self.backend.stopped:
+            self.backend.toggle_pause()
 
     def toggle_stop(self):
-        if not self.player.entry:
+        if not self.backend.entry:
             return
-        if not self.player.stopped:
-            self.player.stop()
+        if not self.backend.stopped:
+            self.backend.stop()
         else:
-            self.play(self.player.entry, self.player.offset)
+            self.play(self.backend.entry, self.backend.offset)
 
     def key_volume(self, ch):
         self.mixer("set", int((ch & 0x0f) * 100 / 9.0))
@@ -1872,17 +1872,18 @@ class Application:
             mixer.close()
 
     def incr_reset_decr_speed(self, signum):
-        if (isinstance(self.player, MPlayer)):
+        if (isinstance(self.backend, MPlayer)):
             if (signum == 0):
-                self.player.speed_chg(1.0)
+                self.backend.speed_chg(1.0)
             else:
-                self.player.speed_chg(self.player.speed + signum*SPEED_OFFSET)
+                self.backend.speed_chg(self.backend.speed +
+                                       signum*SPEED_OFFSET)
         else:
             app.status(_("Speed control requires MPlayer"), 1)
 
     def next_prev_eq(self, direction):
-        if(isinstance(self.player, MPlayer)):
-            self.player.eq_chg(direction)
+        if(isinstance(self.backend, MPlayer)):
+            self.backend.eq_chg(direction)
         else:
             app.status(_("Equalizer support requires MPlayer"), 1)
 
@@ -1939,7 +1940,7 @@ class Application:
             pass
 
     def quit(self, status=0):
-        self.player.stop(quiet=True)
+        self.backend.stop(quiet=True)
         sys.exit(status)
 
     def handler_resize(self, sig, frame):
@@ -2005,39 +2006,39 @@ def main():
         traceback.print_exc()
 
 
-PLAYERS = [
-    FrameOffsetPlayer("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
-    FrameOffsetPlayer("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)",
-                      38.28),
-    FrameOffsetPlayer("mpg123 -q -v -k {offset} {file}",
-                      "(^http://|\.mp[123]$)", 38.28),
-    FrameOffsetPlayer("mpg321 -q -v -k {offset} {file}",
-                      "(^http://|\.mp[123]$)", 38.28),
-    FrameOffsetPlayerMpp("mppdec --gain 2 --start {offset} {file}",
-                         "\.mp[cp+]$"),
-    TimeOffsetPlayer("madplay -v --display-time=remaining -s {offset} {file}",
-                     "\.mp[123]$"),
+BACKENDS = [
+    FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
+    FrameOffsetBackend("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)",
+                       38.28),
+    FrameOffsetBackend("mpg123 -q -v -k {offset} {file}",
+                       "(^http://|\.mp[123]$)", 38.28),
+    FrameOffsetBackend("mpg321 -q -v -k {offset} {file}",
+                       "(^http://|\.mp[123]$)", 38.28),
+    FrameOffsetBackendMpp("mppdec --gain 2 --start {offset} {file}",
+                          "\.mp[cp+]$"),
+    TimeOffsetBackend("madplay -v --display-time=remaining -s {offset} {file}",
+                      "\.mp[123]$"),
     MPlayer("mplayer -slave -vc null -vo null {file}",
             "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
             "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
-    GSTPlayer("gst123 -k {offset} {file}",
-              "\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
-    NoOffsetPlayer("mikmod -q -p0 {file}",
-                   "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
-    NoOffsetPlayer("xmp -q {file}",
-                   "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
-    NoOffsetPlayer("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),
-    NoOffsetPlayer("speexdec {file}", "\.spx$"),
-    NoOffsetPlayer("timidity {file}",
-                   "\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
+    GSTBackend("gst123 -k {offset} {file}",
+               "\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
+    NoOffsetBackend("mikmod -q -p0 {file}",
+                    "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
+    NoOffsetBackend("xmp -q {file}",
+                    "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
+    NoOffsetBackend("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),
+    NoOffsetBackend("speexdec {file}", "\.spx$"),
+    NoOffsetBackend("timidity {file}",
+                    "\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
 ]
 
 MACRO = {}
 
 
 def VALID_SONG(name):
-    for player in PLAYERS:
-        if player.re_files.search(name):
+    for backend in BACKENDS:
+        if backend.re_files.search(name):
             return True
     return False
 
