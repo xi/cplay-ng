@@ -1,19 +1,19 @@
 Keymap
-------------------------------------------
+======
+
 Filelist: _b_def___________r____w_y_ ABCDEF_HI__LMNOP_RS__VWXYZ
-Playlist: ab__ef________o_________y_ ABC_EF_HI__L_NOP_____VW_YZ 
+Playlist: ab__ef________o_________y_ ABC_EF_HI__L_NOP_____VW_YZ
 Overload: ____________m_____s_______ __________________________
 
 TODO
-------------------------------------------
+====
+
 x - external mixer framework (MIXERS list?)
 x - select player based on magic?
 1 - use 00:00:00 instead of 00h 00m 00s ?
 x - remove inc_volume and dec_volume when control fifo takes args
 4 - support wma (via mplayer?)
 3 - support musepack
-3 - support midi players
-3 - support flac (command line player?)
 3 - support xmms?
 x - replace current playlist (useful when streaming?)
 x - browse bookmarks?
@@ -81,7 +81,8 @@ x - search/tag regex/... on str(entry) or entry.vp() ?
 
 
 misc thoughts
-------------------------------------------
+=============
+
 - use & for delayed commands?
 - import on demand wrapper?
 - mark or delete duplicate or no-longer existing playlist entries
