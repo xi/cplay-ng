@@ -1750,30 +1750,18 @@ class Input:
     def __init__(self, parent):
         self.parent = parent
         self.active = False
-        self.prompt = ""
         self.string = ""
+        # optionally patch these
         self.do_hook = None
         self.stop_hook = None
         self.complete_hook = None
-        self.keymap = Keymap()
-        self.keymap.bind(list(Window.chars), self.do)
-        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8,))
-        self.keymap.bind([21, 23], self.do)
-        self.keymap.bind(['\a', 27], self.cancel, ())
-        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
 
     def show(self):
-        n = len(self.prompt) + 1
-        s = cut(self.string, self.parent.win_status.cols - n, left=True)
-        app.status("%s%s " % (self.prompt, s))
+        pass
 
     def start(self, prompt="", data="", colon=True):
         self.active = True
-        self.parent.cursor(1)
-        app.keymapstack.push(self.keymap)
-        self.prompt = prompt + (": " if colon else "")
         self.string = data
-        self.show()
 
     def do(self, *args):
         if self.do_hook:
@@ -1793,11 +1781,7 @@ class Input:
 
     def stop(self, *args):
         self.active = False
-        self.parent.cursor(0)
-        app.keymapstack.pop()
-        if not self.string:
-            app.status(_("cancel"), 1)
-        elif self.stop_hook:
+        if self.string and self.stop_hook:
             self.stop_hook(*args)
         self.do_hook = None
         self.stop_hook = None
@@ -1806,6 +1790,37 @@ class Input:
     def cancel(self):
         self.string = ""
         self.stop()
+
+
+class UIInput(Input):
+    def __init__(self, parent):
+        Input.__init__(self, parent)
+        self.prompt = ""
+        self.keymap = Keymap()
+        self.keymap.bind(list(Window.chars), self.do)
+        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8,))
+        self.keymap.bind([21, 23], self.do)
+        self.keymap.bind(['\a', 27], self.cancel, ())
+        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
+
+    def show(self):
+        n = len(self.prompt) + 1
+        s = cut(self.string, self.parent.win_status.cols - n, left=True)
+        app.status("%s%s " % (self.prompt, s))
+
+    def start(self, prompt="", data="", colon=True):
+        Input.start(self, prompt=prompt, data=data, colon=colon)
+        app.cursor(1)
+        app.keymapstack.push(self.keymap)
+        self.prompt = prompt + (": " if colon else "")
+        self.show()
+
+    def stop(self, *args):
+        Input.stop(self, *args)
+        app.cursor(0)
+        app.keymapstack.pop()
+        if not self.string:
+            app.status(_("cancel"), 1)
 
 
 class Application:
@@ -1857,7 +1872,7 @@ class Application:
         self.counter = self.win_root.win_counter.counter
         self.progress = self.win_root.win_progress.progress
         self.timeout = Timeout()
-        self.input = Input(self)
+        self.input = UIInput(self)
         self.win_filelist.listdir()
         self.control = FIFOControl()
 
