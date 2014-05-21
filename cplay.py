@@ -109,21 +109,12 @@ def cut(s, n, left=0):
     else: return len(s) > n and "%s>" % s[:n-1] or s
 
 # ------------------------------------------
-class Stack:
-    def __init__(self):
-        self.items = ()
-
+class KeymapStack(list):
     def push(self, item):
-        self.items = (item,) + self.items
+        self.append(item)
 
-    def pop(self):
-        self.items, item = self.items[1:], self.items[0]
-        return item
-
-# ------------------------------------------
-class KeymapStack(Stack):
     def process(self, code):
-        for keymap in self.items:
+        for keymap in reversed(self):
             if keymap and keymap.process(code):
                 break
 
