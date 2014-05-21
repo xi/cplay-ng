@@ -6,7 +6,7 @@ setup(
     name='cplay',
     version='1.50',
     description="A curses front-end for various audio players",
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     url='https://github.com/xi/cplay',
     author='Ulf Betlehem',
     author_email='flu@iki.fi',
