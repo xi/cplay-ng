@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
-"PO-Revision-Date: Sat Jul 22 00:21:05 2000\n"
+"PO-Revision-Date: 2000-07-22 00:21+0100\n"
 "Last-Translator: Martin Michlmayr <tbm@cyrius.com>\n"
 "Language-Team: Martin Michlmayr <tbm@cyrius.com>\n"
 "MIME-Version: 1.0\n"

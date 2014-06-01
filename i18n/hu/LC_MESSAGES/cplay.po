@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
-"PO-Revision-Date: Thu Jun  7 12:29:48 CEST 2001\n"
+"PO-Revision-Date: 2001-07-07 12:29+0100\n"
 "Last-Translator: Gergely Nagy <8@free.bsd.hu>\n"
 "Language-Team: Gergely Nagy <8@free.bsd.hu>\n"
 "MIME-Version: 1.0\n"
