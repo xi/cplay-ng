@@ -18,6 +18,11 @@ setup(
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
+    message_extractors={
+        '.': [
+            ('cplay.py', 'python', None)
+        ],
+    },
     entry_points={'console_scripts': 'cplay=cplay:main'},
     license='GPLv2+',
     classifiers=[
