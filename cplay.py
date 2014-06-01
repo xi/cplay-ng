@@ -59,10 +59,8 @@ except ImportError:
 
 try:
     import magic
-    mg = magic.open(magic.MAGIC_NONE)
-    mg.load()
 except ImportError:
-    mg = None
+    magic = None
 
 app = None
 
@@ -1273,8 +1271,8 @@ class PlaylistWindow(TagListWindow):
 
 
 def get_type(pathname):
-    if mg is not None:
-        mg_string = mg.file(pathname)
+    if magic is not None:
+        mg_string = magic.from_file(pathname)
         logging.debug("Magic type:" + mg_string)
         if re.match("^Ogg data, Vorbis audio.*", mg_string):
             ftype = 'oggvorbis'

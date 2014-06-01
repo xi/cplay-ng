@@ -14,7 +14,7 @@ setup(
     maintainer_email='tobias.bengfort@gmx.net',
     py_modules=['cplay'],
     extras_require={
-        'filetype': ['magic'],
+        'filetype': ['python-magic'],
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
