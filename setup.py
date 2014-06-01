@@ -26,6 +26,10 @@ setup(
     maintainer='Tobias Bengfort',
     maintainer_email='tobias.bengfort@gmx.net',
     py_modules=['cplay'],
+    packages=['i18n'],
+    package_data={
+        'i18n': ['*/LC_MESSAGES/cplay.mo'],
+    },
     extras_require={
         'filetype': ['python-magic'],
         'metadata': ['mutagen'],
