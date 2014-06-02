@@ -33,6 +33,29 @@ import string
 import select
 from subprocess import call, Popen
 import traceback
+import locale
+import logging
+
+try:
+    from ncurses import curses
+except ImportError:
+    import curses
+
+locale.setlocale(locale.LC_ALL, "")
+code = locale.getpreferredencoding()
+
+try:
+    _locale_domain = "cplay"
+    _locale_dir = "/usr/local/share/locale"
+    import gettext
+    gettext.install(_locale_domain, _locale_dir)
+except:
+    _ = lambda s: s
+
+try:
+    import tty
+except ImportError:
+    tty = None
 
 try:
     import magic
@@ -41,43 +64,7 @@ try:
 except ImportError:
     mg = None
 
-try:
-    from ncurses import curses
-except ImportError:
-    import curses
-
-try:
-    import tty
-except ImportError:
-    tty = None
-
-try:
-    import locale
-    locale.setlocale(locale.LC_ALL, "")
-    code = locale.getpreferredencoding()
-except:
-    pass
-
-import logging
-
-_locale_domain = "cplay"
-_locale_dir = "/usr/local/share/locale"
-
 app = None
-
-try:
-    import gettext  # python 2.0
-    gettext.install(_locale_domain, _locale_dir)
-except ImportError:
-    try:
-        import fintl
-        fintl.bindtextdomain(_locale_domain, _locale_dir)
-        fintl.textdomain(_locale_domain)
-        _ = fintl.gettext
-    except ImportError:
-        _ = lambda s: s
-except:
-    _ = lambda s: s
 
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
 CONTROL_FIFO = ("%s/cplay-control-%s" %
@@ -671,11 +658,9 @@ class PlaylistEntry(ListEntry):
         return self.active
 
     def vp_metadata(self):
-        return self.metadata or self.read_metadata()
-
-    def read_metadata(self):
-        self.metadata = get_tag(self.pathname)
-        logging.debug(self.metadata)
+        if self.metadata is None:
+            self.metadata = get_tag(self.pathname)
+            logging.debug(self.metadata)
         return self.metadata
 
     vps = ListEntry.vps[:] + [[_("metadata"), vp_metadata]]
@@ -1241,7 +1226,7 @@ class PlaylistWindow(TagListWindow):
 
     def command_sort(self):
         app.status(_("Working..."))
-        self.buffer.sort(lambda x, y: x.vp() > y.vp() or -1)
+        self.buffer.sort(key=lambda x: x.vp())
         self.bufptr = 0
         self.update()
         app.status(_("Sorted playlist"), 1)
@@ -2068,7 +2053,7 @@ def VALID_PLAYLIST(name):
 
 for rc in [os.path.expanduser("~/.cplayrc"), "/etc/cplayrc"]:
     try:
-        execfile(rc)
+        exec(compile(open(rc).read(), rc, 'exec'))
         break
     except IOError:
         pass
