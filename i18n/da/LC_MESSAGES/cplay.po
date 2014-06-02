@@ -1,0 +1,308 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2014 ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2014-06-01 13:54+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: da <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 1.3\n"
+
+#: cplay.py:607
+msgid ""
+"  Global                               t, T  : tag current/regex\n"
+"  ------                               u, U  : untag current/regex\n"
+"  Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all\n"
+"  PgUp, PgDn, K, J,                    !, ,  : shell, macro\n"
+"  Home, End, g, G : movement\n"
+"  Enter           : chdir or play      Filelist\n"
+"  Tab             : filelist/playlist  --------\n"
+"  n, p            : next/prev track    a     : add (tagged) to playlist\n"
+"  z, x            : toggle pause/stop  s     : recursive search\n"
+"                                       BS, o : goto parent/specified dir\n"
+"  Left, Right,                         m, '  : set/get bookmark\n"
+"  C-f, C-b    : seek forward/backward\n"
+"  C-a, C-e    : restart/end track      Playlist\n"
+"  C-s, C-r, / : isearch                --------\n"
+"  C-g, Esc    : cancel                 d, D  : delete (tagged) "
+"tracks/playlist\n"
+"  1..9, +, -  : volume control         m, M  : move tagged tracks "
+"after/before\n"
+"  c, v        : counter/volume mode    r, R  : toggle repeat/Random mode\n"
+"  <, >        : horizontal scrolling   s, S  : shuffle/Sort playlist\n"
+"  C-l, l      : refresh, list mode     w, @  : write playlist, jump to "
+"active\n"
+"  h, q, Q     : help, quit?, Quit!     X     : stop playlist after each "
+"track\n"
+msgstr ""
+
+#: cplay.py:1976
+#, python-format
+msgid "%s volume %s%%"
+msgstr "%s lydstyrke %s%"
+
+#: cplay.py:1109
+#, python-format
+msgid "Added: %s"
+msgstr "Tilføjede: %s"
+
+#: cplay.py:1003
+msgid "Adding tagged files"
+msgstr ""
+
+#: cplay.py:1689
+#, fuzzy
+msgid "Backend not found!"
+msgstr "Afspiller ikke fundet!"
+
+#: cplay.py:1346
+msgid "Can't read metadata, I don't know this file"
+msgstr ""
+
+#: cplay.py:1328
+msgid "Can't read metadata, module mutagen not available"
+msgstr ""
+
+#: cplay.py:719
+msgid "Command successfully executed.\n"
+msgstr ""
+
+#: cplay.py:332
+#, python-format
+msgid "Counting %s time"
+msgstr "Tæller %s gange"
+
+#: cplay.py:1214
+msgid "Deleted playlist"
+msgstr "Fjernede spilleliste"
+
+#: cplay.py:1585
+msgid "ERROR: Cannot send commands to mplayer!"
+msgstr ""
+
+#: cplay.py:1761
+msgid "Equalizer support requires MPlayer"
+msgstr ""
+
+#: cplay.py:1598
+#, python-format
+msgid "Equalizer: %s(%s)"
+msgstr ""
+
+#: cplay.py:895
+msgid "Filelist: "
+msgstr "Filliste: "
+
+#: cplay.py:605
+msgid "Help"
+msgstr "Hjælp"
+
+#: cplay.py:753
+#, python-format
+msgid "Listing %s"
+msgstr "Sææter %s på liste"
+
+#: cplay.py:1594
+msgid "No equalizers configured"
+msgstr ""
+
+#: cplay.py:1742
+msgid "No mixer."
+msgstr ""
+
+#: cplay.py:992
+msgid "Not a directory!"
+msgstr "Ikke et filkatalog"
+
+#: cplay.py:840
+msgid "Not found!"
+msgstr "Ikke fundet!"
+
+#: cplay.py:581 cplay.py:593
+#, python-format
+msgid "Not found: %s "
+msgstr "%s ikke fundet "
+
+#: cplay.py:1494
+#, python-format
+msgid "Paused: %s"
+msgstr "Sat på pause: %s"
+
+#: cplay.py:1497
+#, python-format
+msgid "Playing: %s"
+msgstr "Spiller: %s"
+
+#: cplay.py:1039
+#, python-format
+msgid "Playlist %s %s %s"
+msgstr "Spilleliste %s %s %s"
+
+#: cplay.py:371
+msgid "Quit? (y/N)"
+msgstr "Afslut? (y/N)"
+
+#: cplay.py:1253
+#, python-format
+msgid "Random: %s"
+msgstr "Tilfældig: %s"
+
+#: cplay.py:911
+msgid "Reading directory..."
+msgstr "Læser filkatalog..."
+
+#: cplay.py:1250
+#, python-format
+msgid "Repeat: %s"
+msgstr "Gentag: %s"
+
+#: cplay.py:1271
+msgid "Save playlist"
+msgstr "Gem spilleliste"
+
+#: cplay.py:862
+msgid "Searching..."
+msgstr "Søger..."
+
+#: cplay.py:1240
+msgid "Shuffled playlist... Oops?"
+msgstr "Blandede spilleliste... Hovsa?"
+
+#: cplay.py:1247
+msgid "Sorted playlist"
+msgstr "Sortérede spilleliste"
+
+#: cplay.py:1755
+msgid "Speed control requires MPlayer"
+msgstr ""
+
+#: cplay.py:1590
+#, fuzzy, python-format
+msgid "Speed: %s%%"
+msgstr "Sat på pause: %s"
+
+#: cplay.py:1259
+#, python-format
+msgid "Stop playlist: %s"
+msgstr "Stop spilleliste"
+
+#: cplay.py:1492
+#, python-format
+msgid "Stopped: %s"
+msgstr "Stoppet: %s"
+
+#: cplay.py:778
+msgid "Tag regexp"
+msgstr "Vælg regexp"
+
+#: cplay.py:778
+msgid "Untag regexp"
+msgstr "Fravælg regexp"
+
+#: cplay.py:2055
+#, fuzzy, python-format
+msgid "Usage: %s [-d <filename>] [-mnrR] [ file | dir | playlist ] ...\n"
+msgstr "Brug: %s [-rRv] [ fil | filkatalog | spilleliste ] ...\n"
+
+#: cplay.py:1098 cplay.py:1243
+msgid "Working..."
+msgstr "Arbejder..."
+
+#: cplay.py:1041
+msgid "[random]"
+msgstr "[tilfældig]"
+
+#: cplay.py:1040
+msgid "[repeat]"
+msgstr "[gentag]"
+
+#: cplay.py:1042
+msgid "[stop]"
+msgstr "[stop]"
+
+#: cplay.py:459
+msgid "backward-isearch"
+msgstr "baglæns-isøgning"
+
+#: cplay.py:826
+msgid "bookmark"
+msgstr "bogmærke"
+
+#: cplay.py:1815
+msgid "cancel"
+msgstr "afbryd"
+
+#: cplay.py:331
+msgid "elapsed"
+msgstr "spillet"
+
+#: cplay.py:657
+msgid "filename"
+msgstr "filnavn"
+
+#: cplay.py:461
+msgid "forward-isearch"
+msgstr "forlæns-isøgning"
+
+#: cplay.py:985
+msgid "goto"
+msgstr "gå til"
+
+#: cplay.py:1836
+msgid "macro"
+msgstr ""
+
+#: cplay.py:681
+msgid "metadata"
+msgstr "metadata"
+
+#: cplay.py:1263
+msgid "off"
+msgstr "fra"
+
+#: cplay.py:569 cplay.py:787 cplay.py:838 cplay.py:850 cplay.py:1285
+msgid "ok"
+msgstr "ok"
+
+#: cplay.py:1263
+msgid "on"
+msgstr "til"
+
+#: cplay.py:658
+msgid "pathname"
+msgstr "stinavn"
+
+#: cplay.py:328
+msgid "remaining"
+msgstr "tilbage"
+
+#: cplay.py:854
+msgid "search"
+msgstr "søg"
+
+#: cplay.py:875
+msgid "search results"
+msgstr "søgnings-resultater"
+
+#: cplay.py:845
+msgid "set bookmark"
+msgstr "sæt bogmærke"
+
+#: cplay.py:702
+msgid "shell$ "
+msgstr "skal$ "
+
+#~ msgid ""
+#~ msgstr ""
+
+#~ msgid "Volume %s%%"
+#~ msgstr "Lydstyrke %s%"
+

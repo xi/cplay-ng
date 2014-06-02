@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 
 from setuptools import setup
+from distutils.command.build import build
+from setuptools.command.install_lib import install_lib
+
+
+class _build(build):
+    sub_commands = [('compile_catalog', None)] + build.sub_commands
+
+
+class _install_lib(install_lib):
+    def run(self):
+        self.run_command('compile_catalog')
+        install_lib.run(self)
+
 
 setup(
     name='cplay',
@@ -13,12 +26,28 @@ setup(
     maintainer='Tobias Bengfort',
     maintainer_email='tobias.bengfort@gmx.net',
     py_modules=['cplay'],
+    packages=['i18n'],
+    package_data={
+        'i18n': ['*/LC_MESSAGES/cplay.mo'],
+    },
     extras_require={
         'filetype': ['python-magic'],
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
+    setup_requires=[
+        'babel',
+    ],
+    message_extractors={
+        '.': [
+            ('cplay.py', 'python', None)
+        ],
+    },
     entry_points={'console_scripts': 'cplay=cplay:main'},
+    cmdclass={
+        'build': _build,
+        'install_lib': _install_lib,
+    },
     license='GPLv2+',
     classifiers=[
         'Development Status :: 7 - Inactive',

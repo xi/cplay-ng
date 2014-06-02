@@ -35,6 +35,7 @@ from subprocess import call, Popen
 import traceback
 import locale
 import logging
+from pkg_resources import resource_filename
 
 try:
     from ncurses import curses
@@ -45,10 +46,8 @@ locale.setlocale(locale.LC_ALL, "")
 code = locale.getpreferredencoding()
 
 try:
-    _locale_domain = "cplay"
-    _locale_dir = "/usr/local/share/locale"
     import gettext
-    gettext.install(_locale_domain, _locale_dir)
+    gettext.install('cplay', resource_filename('cplay', 'i18n'))
 except:
     _ = lambda s: s
 
