@@ -135,8 +135,8 @@ class Keymap:
 
 
 class Window:
-    chars = (string.letters + string.digits + string.punctuation +
-        string.whitespace)
+    chars = (string.ascii_letters + string.digits + string.punctuation +
+             string.whitespace)
 
     def __init__(self, parent):
         self.parent = parent
@@ -331,7 +331,7 @@ class RootWindow(Window):
         keymap.bind([curses.KEY_RIGHT, 6], app.seek, (1, 1))  # C-f
         keymap.bind([1, '^'], app.seek, (0, 0))  # C-a
         keymap.bind([5, '$'], app.seek, (-1, 0))  # C-e
-        keymap.bind(range(48, 58), app.key_volume)  # 0123456789
+        keymap.bind(list(range(48, 58)), app.key_volume)  # 0123456789
         keymap.bind(['+'], app.mixer, ("cue", 1))
         keymap.bind('-', app.mixer, ("cue", -1))
         keymap.bind('n', app.next_prev_song, (+1,))
@@ -687,7 +687,7 @@ class TagListWindow(ListWindow):
         s = app.input_string
         curses.endwin()
         sys.stderr.write("\n")
-        argv = map(lambda x: x.pathname, self.get_tagged())
+        argv = [x.pathname for x in self.get_tagged()]
         if not argv and self.current():
             argv.append(self.current().pathname)
         ret_value = call([s, '--'] + argv, shell=True)
@@ -708,8 +708,8 @@ class TagListWindow(ListWindow):
     def complete_generic(self, line, quote=False):
         import glob
         if quote:
-            s = re.sub('.*[^\\\\][ \'"()\[\]{}$`]', '', line)
-            s, part = re.sub('\\\\', '', s), line[:len(line) - len(s)]
+            s = re.sub(b'.*[^\\\\][ \'"()\[\]{}$`]', '', line)
+            s, part = re.sub(b'\\\\', '', s), line[:len(line) - len(s)]
         else:
             s, part = line, ""
         results = glob.glob(os.path.expanduser(s) + "*")
@@ -727,7 +727,7 @@ class TagListWindow(ListWindow):
                         lm = lm[:i]
                         break
         if quote:
-            lm = re.sub('([ \'"()\[\]{}$`])', '\\\\\\1', lm)
+            lm = re.sub(b'([ \'"()\[\]{}$`])', '\\\\\\1', lm)
         return part + lm
 
     def command_change_viewpoint(self, klass=ListEntry):
@@ -771,10 +771,10 @@ class TagListWindow(ListWindow):
             app.status(e, 2)
 
     def get_tagged(self):
-        return filter(lambda x: x.is_tagged(), self.buffer)
+        return [x for x in self.buffer if x.is_tagged()]
 
     def not_tagged(self, l):
-        return filter(lambda x: not x.is_tagged(), l)
+        return [x for x in l if not x.is_tagged()]
 
 
 class FilelistWindow(TagListWindow):
@@ -1048,9 +1048,9 @@ class PlaylistWindow(TagListWindow):
             app.status(e, 2)
 
     def add_m3u(self, line):
-        if re.match("^(#.*)?$", line):
+        if re.match(b"^(#.*)?$", line):
             return
-        if re.match("^(/|http://)", line):
+        if re.match(b"^(/|http://)", line):
             self.append(PlaylistEntry(self.fix_url(line)))
         else:
             dirname = os.path.dirname(self.pathname)
@@ -1058,15 +1058,15 @@ class PlaylistWindow(TagListWindow):
 
     def add_pls(self, line):
         # todo - support title & length
-        m = re.match("File(\d+)=(.*)", line)
+        m = re.match(b"File(\d+)=(.*)", line)
         if m:
             self.append(PlaylistEntry(self.fix_url(m.group(2))))
 
     def add_playlist(self, pathname):
         self.pathname = pathname
-        if re.search("\.m3u$", pathname, re.I):
+        if re.search(b"\.m3u$", pathname, re.I):
             f = self.add_m3u
-        if re.search("\.pls$", pathname, re.I):
+        if re.search(b"\.pls$", pathname, re.I):
             f = self.add_pls
         file = open(pathname)
         for line in file.readlines():
@@ -1093,7 +1093,7 @@ class PlaylistWindow(TagListWindow):
             app.status(e, 2)
 
     def fix_url(self, url):
-        return re.sub("(http://[^/]+)/?(.*)", "\\1/\\2", url)
+        return re.sub(b"(http://[^/]+)/?(.*)", "\\1/\\2", url)
 
     def putstr(self, entry, *pos):
         if entry.is_active():
@@ -1256,7 +1256,7 @@ class PlaylistWindow(TagListWindow):
         pathname = app.input_string
         if pathname[0] != '/':
             pathname = os.path.join(app.win_filelist.cwd, pathname)
-        if not re.search("\.m3u$", pathname, re.I):
+        if not re.search(b"\.m3u$", pathname, re.I):
             pathname = "%s%s" % (pathname, ".m3u")
         try:
             file = open(pathname, "w")
@@ -1273,27 +1273,27 @@ def get_type(pathname):
     if magic is not None:
         mg_string = magic.from_file(pathname)
         logging.debug("Magic type:" + mg_string)
-        if re.match("^Ogg data, Vorbis audio.*", mg_string):
+        if re.match(b"^Ogg data, Vorbis audio.*", mg_string):
             ftype = 'oggvorbis'
-        elif re.match("^Ogg data, FLAC audio.*", mg_string):
+        elif re.match(b"^Ogg data, FLAC audio.*", mg_string):
             ftype = 'oggflac'
-        elif re.match("FLAC audio bitstream.*", mg_string):
+        elif re.match(b"FLAC audio bitstream.*", mg_string):
             ftype = 'flac'
         # For some reason not all ID3 tagged files return an ID3 identifier,
         # so we just need to look for mp3 files and hope they are also ID3d.
-        elif re.match(".*MPEG ADTS, layer III.*", mg_string):
+        elif re.match(b".*MPEG ADTS, layer III.*", mg_string):
             ftype = 'id3'
         else:
             ftype = "unknown"
         logging.debug("Magic category: " + ftype)
         return ftype
-    if re.match(".*\.ogg$", pathname, re.I):
+    if re.match(b".*\.ogg$", pathname, re.I):
         return 'oggvorbis'
-    elif re.match(".*\.oga$", pathname, re.I):
+    elif re.match(b".*\.oga$", pathname, re.I):
         return 'oggflac'
-    elif re.match(".*\.flac$", pathname, re.I):
+    elif re.match(b".*\.flac$", pathname, re.I):
         return 'flac'
-    elif re.match(".*\.mp3$", pathname, re.I):
+    elif re.match(b".*\.mp3$", pathname, re.I):
         return 'id3'
     return "unknown"
 
@@ -1301,7 +1301,7 @@ def get_type(pathname):
 # FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
 #        in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
-    if re.compile("^http://").match(pathname) or not os.path.exists(pathname):
+    if re.compile(b"^http://").match(pathname) or not os.path.exists(pathname):
         return pathname
     try:
         import mutagen
@@ -1478,7 +1478,7 @@ class Player:
 
 
 class FrameOffsetPlayer(Player):
-    re_progress = re.compile("Time.*\s(\d+):(\d+).*\[(\d+):(\d+)")
+    re_progress = re.compile(b"Time.*\s(\d+):(\d+).*\[(\d+):(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1489,7 +1489,7 @@ class FrameOffsetPlayer(Player):
 
 
 class FrameOffsetPlayerMpp(Player):
-    re_progress = re.compile(".*\s(\d+):(\d+).*\s(\d+):(\d+)")
+    re_progress = re.compile(b".*\s(\d+):(\d+).*\s(\d+):(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1501,7 +1501,7 @@ class FrameOffsetPlayerMpp(Player):
 
 
 class TimeOffsetPlayer(Player):
-    re_progress = re.compile("(\d+):(\d+):(\d+)")
+    re_progress = re.compile(b"(\d+):(\d+):(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1513,8 +1513,8 @@ class TimeOffsetPlayer(Player):
 
 
 class GSTPlayer(Player):
-    re_progress = re.compile("Time: (\d+):(\d+):(\d+).(\d+)"
-                             " of (\d+):(\d+):(\d+).(\d+)")
+    re_progress = re.compile(b"Time: (\d+):(\d+):(\d+).(\d+)"
+                             b" of (\d+):(\d+):(\d+).(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1536,7 +1536,7 @@ class NoOffsetPlayer(Player):
 
 
 class MPlayer(Player):
-    re_progress = re.compile("^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
+    re_progress = re.compile(b"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     speed = 1.0
     eq_cur = 0
     equalizer = EQUALIZERS[eq_cur][0]
@@ -1594,7 +1594,7 @@ class Timeout:
         del self.dict[tid]
 
     def check(self, now):
-        for tid, (func, args, timeout) in self.dict.items():
+        for tid, (func, args, timeout) in list(self.dict.items()):
             if now >= timeout:
                 self.remove(tid)
                 func(*args)
@@ -1621,7 +1621,7 @@ class FIFOControl:
         try:
             if os.path.exists(CONTROL_FIFO):
                 os.unlink(CONTROL_FIFO)
-            os.mkfifo(CONTROL_FIFO, 0600)
+            os.mkfifo(CONTROL_FIFO, 0o600)
             self.fd = open(CONTROL_FIFO, "rb+", 0)
         except IOError:
             # warn that we're disabling the fifo because someone raced us?
