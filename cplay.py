@@ -102,7 +102,7 @@ SPEED_OFFSET = 0.005
 
 
 def which(program):
-    for path in string.split(os.environ["PATH"], ":"):
+    for path in os.environ["PATH"].split(":"):
         if os.path.exists(os.path.join(path, program)):
             return os.path.join(path, program)
 
@@ -574,8 +574,8 @@ class ListWindow(Window):
                 app.status(_("Not found: %s ") % app.input_string)
                 self.not_found = True
                 break
-            line = string.lower(str(self.buffer[index]))
-            if string.find(line, string.lower(app.input_string)) != -1:
+            line = str(self.buffer[index]).lower()
+            if line.find(app.input_string.lower()) != -1:
                 app.show_input()
                 self.update_line(refresh=False)
                 self.bufptr = index
@@ -597,7 +597,7 @@ class HelpWindow(ListWindow):
         ListWindow.__init__(self, parent)
         self.name = _("Help")
         self.keymap.bind('q', self.parent.help, ())
-        self.buffer = string.split(_("""\
+        self.buffer = _("""\
   Global                               t, T  : tag current/regex
   ------                               u, U  : untag current/regex
   Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all
@@ -618,7 +618,7 @@ class HelpWindow(ListWindow):
   <, >        : horizontal scrolling   s, S  : shuffle/Sort playlist
   C-l, l      : refresh, list mode     w, @  : write playlist, jump to active
   h, q, Q     : help, quit?, Quit!     X     : stop playlist after each track
-"""), "\n")
+""").split("\n")
 
 
 class ListEntry:
@@ -1377,7 +1377,7 @@ class Player:
     def setup(self, entry, offset):
         """Ready the player with given ListEntry and seek offset"""
 
-        self.argv = string.split(self.commandline)
+        self.argv = self.commandline.split()
         self.argv[0] = which(self.argv[0])
         for i in range(len(self.argv)):
             if self.argv[i] == "{file}":
@@ -1490,7 +1490,7 @@ class FrameOffsetPlayer(Player):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            m1, s1, m2, s2 = map(string.atoi, match.groups())
+            m1, s1, m2, s2 = map(int, match.groups())
             head, tail = m1*60 + s1, m2*60 + s2
             self.set_position(head, head + tail)
 
@@ -1501,7 +1501,7 @@ class FrameOffsetPlayerMpp(Player):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            m1, s1, m2, s2 = map(string.atoi, match.groups())
+            m1, s1, m2, s2 = map(int, match.groups())
             head = m1*60 + s1
             tail = (m2*60 + s2) - head
             self.set_position(head, head + tail)
@@ -1513,7 +1513,7 @@ class TimeOffsetPlayer(Player):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            h, m, s = map(string.atoi, match.groups())
+            h, m, s = map(int, match.groups())
             tail = h*3600 + m*60 + s
             head = max(self.length, tail) - tail
             self.set_position(head, head + tail)
@@ -1526,7 +1526,7 @@ class GSTPlayer(Player):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            ph, pm, ps, us, lh, lm, ls, lus = map(string.atoi, match.groups())
+            ph, pm, ps, us, lh, lm, ls, lus = map(int, match.groups())
             position = ph*3600 + pm*60 + ps
             length = lh*3600 + lm*60 + ls
             self.set_position(position, length)
@@ -1557,7 +1557,7 @@ class MPlayer(Player):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            curS, totS = map(string.atoi, match.groups())
+            curS, totS = map(int, match.groups())
             position, length = curS, totS
             self.set_position(position, length)
         else:
@@ -1984,7 +1984,7 @@ def main():
 
     playlist = []
     if not sys.stdin.isatty():
-        playlist = map(string.strip, sys.stdin.readlines())
+        playlist = [l.strip() for l in sys.stdin.readlines()]
         os.close(0)
         os.open("/dev/tty", 0)
     try:
