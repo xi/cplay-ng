@@ -290,11 +290,14 @@ class StatusWindow(Window):
 
 
 class CounterWindow(Window):
+    ELAPSED = 0
+    REMAINING = 1
+
     def __init__(self, parent):
         Window.__init__(self, parent)
         # [seconds elapsed, seconds remaining of current track]
         self.values = [0, 0]
-        self.mode = 1
+        self.mode = self.REMAINING
 
     def newwin(self):
         return curses.newwin(1, 11, self.parent.rows - 1,
@@ -320,8 +323,12 @@ class CounterWindow(Window):
             self.update()
 
     def toggle_mode(self):
-        self.mode = not self.mode
-        tmp = [_("elapsed"), _("remaining")][self.mode]
+        if self.mode == self.ELAPSED:
+            self.mode = self.REMAINING
+            tmp = _("remaining")
+        else:
+            self.mode = self.ELAPSED
+            tmp = _("elapsed")
         app.status(_("Counting %s time") % tmp, 1)
         self.update()
 
@@ -518,7 +525,7 @@ class ListWindow(Window):
         return self.buffer[self.bufptr]
 
     def cursor_move(self, ydiff):
-        if app.input_mode:
+        if app.input_active:
             app.cancel_input()
         if not self.buffer:
             return
@@ -549,7 +556,7 @@ class ListWindow(Window):
     def start_search(self, prompt_text, direction):
         self.search_direction = direction
         self.not_found = False
-        if app.input_mode:
+        if app.input_active:
             app.input_prompt = "%s: " % prompt_text
             self.do_search(advance=direction)
         else:
@@ -789,6 +796,9 @@ class TagListWindow(ListWindow):
 
 
 class FilelistWindow(TagListWindow):
+    DIR = 0
+    SEARCH = 1
+
     def __init__(self, parent):
         TagListWindow.__init__(self, parent)
         self.oldposition = {}
@@ -799,6 +809,7 @@ class FilelistWindow(TagListWindow):
         self.startdir = self.cwd
         self.mtime_when = 0
         self.mtime = None
+        self.mode = self.DIR
         self.keymap.bind(['\n', curses.KEY_ENTER],
                          self.command_chdir_or_play, ())
         self.keymap.bind(['.', 127, curses.KEY_BACKSPACE],
@@ -860,9 +871,9 @@ class FilelistWindow(TagListWindow):
                     self.search_recursively(re_tmp, entry.pathname, results)
                 except:
                     pass
-        if not self.search_mode:
-            self.chdir(os.path.join(self.cwd, _("search results")))
-            self.search_mode = 1
+        if self.mode != self.SEARCH:
+            self.chdir(os.path.join(self.cwd, _('search results')))
+            self.mode = self.SEARCH
         self.buffer = results
         self.bufptr = 0
         self.parent.update_title()
@@ -898,7 +909,7 @@ class FilelistWindow(TagListWindow):
     def listdir(self, quiet=False, prevdir=None):
         if not quiet:
             app.status(_("Reading directory..."))
-        self.search_mode = 0
+        self.mode = self.DIR
         dirs = []
         files = []
         try:
@@ -1651,7 +1662,7 @@ class Application:
     def __init__(self):
         self.keymapstack = KeymapStack()
         self.tcattr = None
-        self.input_mode = 0
+        self.input_active = False
         self.input_prompt = ""
         self.input_string = ""
         self.do_input_hook = None
@@ -1899,7 +1910,7 @@ class Application:
         app.status("%s%s " % (self.input_prompt, s))
 
     def start_input(self, prompt="", data="", colon=True):
-        self.input_mode = 1
+        self.input_active = True
         self.cursor(1)
         app.keymapstack.push(self.input_keymap)
         self.input_prompt = prompt + (": " if colon else "")
@@ -1924,7 +1935,7 @@ class Application:
         self.show_input()
 
     def stop_input(self, *args):
-        self.input_mode = 0
+        self.input_active = False
         self.cursor(0)
         app.keymapstack.pop()
         if not self.input_string:
