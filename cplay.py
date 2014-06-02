@@ -677,6 +677,7 @@ class PlaylistEntry(ListEntry):
 class TagListWindow(ListWindow):
     def __init__(self, parent):
         ListWindow.__init__(self, parent)
+        self.tag_value = None
         self.keymap.bind(' ', self.command_tag_untag, ())
         self.keymap.bind('i', self.command_invert_tags, ())
         self.keymap.bind('t', self.command_tag, (True,))
@@ -1359,12 +1360,15 @@ class Player:
 
     def __init__(self, commandline, files, fps=1):
         self.commandline = commandline
+        self.argv = None
         self.re_files = re.compile(files, re.I)
         self.fps = fps
         self.entry = None
         # True only if stopped manually or playlist ran out
         self.stopped = False
         self.paused = False
+        self.offset = 0
+        self.length = 0
         self.time_setup = None
         self.buf = ''
         self.tid = None
@@ -1646,6 +1650,7 @@ class FIFOControl:
 class Application:
     def __init__(self):
         self.keymapstack = KeymapStack()
+        self.tcattr = None
         self.input_mode = 0
         self.input_prompt = ""
         self.input_string = ""
