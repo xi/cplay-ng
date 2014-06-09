@@ -1,4 +1,5 @@
 import unittest
+import os
 import time
 
 try:
@@ -203,6 +204,150 @@ class TestListEntry(unittest.TestCase): pass
 class TestPlaylistEntry(unittest.TestCase): pass
 class TestTagListWindow(unittest.TestCase): pass
 class TestFilelistWindow(unittest.TestCase): pass
+
+
+class TestPlaylist(unittest.TestCase):
+    files = {
+        'dir/file1.mp3': '',
+        'dir/file2.ogg': '',
+        'dir/file3.wav': '',
+        'playlist.pls': """[playlist]
+NumberOfEntries=3
+
+File1=dir/file1.mp3
+File2=dir/file2.ogg
+File3=dir/file3.wav""",
+        'playlist.m3u': """# this is a playlist
+dir/file1.mp3
+dir/file2.ogg
+dir/file3.wav""",
+    }
+
+    def generate_files(self):
+        if self.path is None:
+            self.path = '/tmp/cplay_test_%s' % time.time()
+            os.mkdir(self.path)
+            os.mkdir(os.path.join(self.path, 'dir'))
+            for path, content in self.files.items():
+                f = open(os.path.join(self.path, path), 'w')
+                f.write(content)
+                f.close()
+
+    def delete_files(self):
+        if self.path is not None:
+            for path, content in self.files.items():
+                os.unlink(os.path.join(self.path, path))
+            os.rmdir(os.path.join(self.path, 'dir'))
+            os.rmdir(self.path)
+            self.path = None
+
+    def load_data(self):
+        paths = [
+            'dir/file1.mp3',
+            'dir/file2.ogg',
+            'dir/file3.wav',
+        ]
+        for path in paths:
+            self.playlist.add(path)
+
+    def setUp(self):
+        self.playlist = cplay.Playlist()
+        self.path = None
+        self.generate_files()
+
+    def tearDown(self):
+        self.delete_files()
+
+    def test_add_single(self):
+        files = ['test1', 'test2']
+        for f in files:
+            self.playlist.add(f)
+        self.assertListEqual(
+            [entry.pathname for entry in self.playlist.buffer], files)
+
+    def test_add_pls(self):
+        self.playlist.add(os.path.join(self.path, 'playlist.pls'))
+        self.assertListEqual(
+            [entry.pathname for entry in self.playlist.buffer],
+            ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav'])
+
+    def test_add_m3u(self):
+        self.playlist.add(os.path.join(self.path, 'playlist.m3u'))
+        expected = [os.path.join(self.path, p) for p in
+                    ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav']]
+        actual = [entry.pathname for entry in self.playlist.buffer]
+        self.assertListEqual(actual, expected)
+
+    def test_add_dir(self):
+        self.playlist.add(os.path.join(self.path, 'dir'))
+        expected = [os.path.join(self.path, p) for p in
+                    ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav']]
+        actual = [entry.pathname for entry in self.playlist.buffer]
+        self.assertListEqual(actual, expected)
+
+    def _test_change_active_entry(self):
+        # when the list is empty, no entry should be active
+        self.assertIsNone(self.playlist.change_active_entry(1))
+        self.load_data()
+        new = self.playlist.change_active_entry(1)
+        self.assertIsNotNone(new)
+        self.assertEqual(new, self.playlist.get_active_entry())
+        self.assertNotEqual(new, self.playlist.change_active_entry(1))
+        self.assertNotEqual(new, self.playlist.change_active_entry(1))
+        # if repeat is False, we get None after changing four times
+        self.assertIsNone(self.playlist.change_active_entry(1))
+        self.assertIsNone(self.playlist.change_active_entry(1))
+        self.playlist.repeat = True
+        self.assertIsNotNone(self.playlist.change_active_entry(1))
+
+    def test_change_active_entry(self):
+        self.playlist.random = False
+        self._test_change_active_entry()
+
+    def test_change_active_entry_random(self):
+        self.playlist.random = True
+        self._test_change_active_entry()
+
+    def test_command_delete_all(self):
+        self.load_data()
+        self.playlist.command_delete_all()
+        actual = len(self.playlist.buffer)
+        self.assertEqual(actual, 0)
+
+    def test_command_shuffle(self):
+        self.load_data()
+        self.playlist.command_shuffle()
+        actual = len(self.playlist.buffer)
+        self.assertEqual(actual, 3)
+
+    def test_command_sort(self):
+        self.load_data()
+        self.playlist.command_sort()
+        actual = len(self.playlist.buffer)
+        self.assertEqual(actual, 3)
+
+    def test_command_toggle_repeat(self):
+        self.playlist.repeat = False
+        self.playlist.command_toggle_repeat()
+        self.assertTrue(self.playlist.repeat)
+        self.playlist.command_toggle_repeat()
+        self.assertFalse(self.playlist.repeat)
+
+    def test_command_toggle_random(self):
+        self.playlist.random = False
+        self.playlist.command_toggle_random()
+        self.assertTrue(self.playlist.random)
+        self.playlist.command_toggle_random()
+        self.assertFalse(self.playlist.random)
+
+    def test_command_toggle_stop(self):
+        self.playlist.stop = False
+        self.playlist.command_toggle_stop()
+        self.assertTrue(self.playlist.stop)
+        self.playlist.command_toggle_stop()
+        self.assertFalse(self.playlist.stop)
+
+
 class TestPlaylistWindow(unittest.TestCase): pass
 class TestGetType(unittest.TestCase): pass
 class TestGetTag(unittest.TestCase): pass
