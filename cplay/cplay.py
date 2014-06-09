@@ -342,7 +342,7 @@ class RootWindow(Window):
         keymap.bind('Q', app.quit, ())
         keymap.bind('q', self.command_quit, ())
         keymap.bind('v', app.player.mixer, ("toggle",))
-        keymap.bind(',', app.command_macro, ())
+        keymap.bind(',', app.macro.command_macro, ())
         # FIXME Document this
         keymap.bind('[', app.player.incr_reset_decr_speed, (-1,))
         keymap.bind(']', app.player.incr_reset_decr_speed, (+1,))
@@ -1614,7 +1614,7 @@ class FIFOControl:
             "play": [app.player.toggle_stop, []],
             "stop": [app.player.toggle_stop, []],
             "volume": [self.volume, None],
-            "macro": [app.run_macro, None],
+            "macro": [app.macro.run_macro, None],
             "add": [app.win_playlist.add, None],
             "empty": [app.win_playlist.command_delete_all, []],
             "quit": [app.quit, []]
@@ -1823,13 +1823,7 @@ class UIInput(Input):
             app.status(_("cancel"), 1)
 
 
-class Application:
-    def __init__(self):
-        self.player = Player(self)
-        self.keymapstack = KeymapStack()
-        self.tcattr = None
-        self.restricted = False
-
+class MacroController:
     def command_macro(self):
         app.input.do_hook = self.do_macro
         app.input.start(_("macro"))
@@ -1840,7 +1834,15 @@ class Application:
 
     def run_macro(self, c):
         for i in MACRO.get(c, ""):
-            self.keymapstack.process(ord(i))
+            app.keymapstack.process(ord(i))
+
+
+class Application:
+    def __init__(self):
+        self.player = Player(self)
+        self.keymapstack = KeymapStack()
+        self.tcattr = None
+        self.restricted = False
 
     def setup(self):
         if tty is not None:
@@ -1860,6 +1862,7 @@ class Application:
         signal.signal(signal.SIGINT, self.handler_quit)
         signal.signal(signal.SIGTERM, self.handler_quit)
         signal.signal(signal.SIGWINCH, self.handler_resize)
+        self.macro = MacroController()
         self.win_root = RootWindow(None)
         self.win_root.update()
         self.win_tab = self.win_root.win_tab
