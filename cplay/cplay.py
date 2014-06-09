@@ -27,6 +27,7 @@ import os
 import sys
 import time
 import getopt
+import random
 import re
 import signal
 import string
@@ -480,7 +481,7 @@ class ListWindow(Window):
         self.update_line(curses.A_REVERSE)
 
     def update_line(self, attr=None, refresh=True):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         ypos = self.bufptr - self.scrptr
         if attr:
@@ -519,7 +520,7 @@ class ListWindow(Window):
     def cursor_move(self, ydiff):
         if app.input.active:
             app.input.cancel()
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         self.update_line(refresh=False)
         self.bufptr = (self.bufptr + ydiff) % len(self.buffer)
@@ -645,7 +646,10 @@ class ListEntry:
         return self.vps[0][1](self)
 
     def vp_filename(self):
-        return self.filename or self.pathname
+        if self.filename:
+            return self.filename
+        else:
+            return self.pathname
 
     def vp_pathname(self):
         return self.pathname
@@ -754,14 +758,14 @@ class TagListWindow(ListWindow):
         self.update()
 
     def command_tag_untag(self):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         tmp = self.buffer[self.bufptr]
         tmp.set_tagged(not tmp.is_tagged())
         self.cursor_move(1)
 
     def command_tag(self, value):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         self.buffer[self.bufptr].set_tagged(value)
         self.cursor_move(1)
@@ -957,7 +961,7 @@ class FilelistWindow(TagListWindow):
             pass
 
     def command_chdir_or_play(self):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         if self.current().filename == "..":
             self.command_chparentdir()
@@ -993,7 +997,7 @@ class FilelistWindow(TagListWindow):
 
     def command_add_recursively(self):
         l = self.get_tagged()
-        if not l:
+        if len(l) == 0:
             app.playlist.add(self.current().pathname)
             self.cursor_move(1)
             return
@@ -1045,22 +1049,9 @@ class PlaylistWindow(TagListWindow):
             self.random_left.append(item)
 
     def add_dir(self, dir):
-        try:
-            filenames = os.listdir(dir)
-            filenames.sort()
-            subdirs = []
-            for filename in filenames:
-                pathname = os.path.join(dir, filename)
-                if VALID_SONG(filename):
-                    self.append(PlaylistEntry(pathname))
-                elif VALID_PLAYLIST(filename):
-                    self.add_playlist(pathname)
-                if os.path.isdir(pathname):
-                    subdirs.append(pathname)
-            for d in subdirs:
-                self.add_dir(d)
-        except Exception as e:
-            app.status.status(e, 2)
+        filenames = os.listdir(dir)
+        for filename in sorted(filenames):
+            self._add(os.path.join(dir, filename), quiet=True)
 
     def add_m3u(self, line):
         if re.match(b"^(#.*)?$", line):
@@ -1088,22 +1079,25 @@ class PlaylistWindow(TagListWindow):
             f(line.strip())
         file.close()
 
+    def _add(self, pathname, quiet=False):
+        if os.path.isdir(pathname):
+            if not quiet:
+                app.status.status(_("Working..."))
+            self.add_dir(pathname)
+        elif VALID_PLAYLIST(pathname):
+            self.add_playlist(pathname)
+        else:
+            pathname = self.fix_url(pathname)
+            self.append(PlaylistEntry(pathname))
+        # todo - refactor
+        filename = os.path.basename(pathname) or pathname
+        if not quiet:
+            self.update()
+            app.status.status(_("Added: %s") % filename, 1)
+
     def add(self, pathname, quiet=False):
         try:
-            if os.path.isdir(pathname):
-                if not quiet:
-                    app.status.status(_("Working..."))
-                self.add_dir(pathname)
-            elif VALID_PLAYLIST(pathname):
-                self.add_playlist(pathname)
-            else:
-                pathname = self.fix_url(pathname)
-                self.append(PlaylistEntry(pathname))
-            # todo - refactor
-            filename = os.path.basename(pathname) or pathname
-            if not quiet:
-                self.update()
-                app.status.status(_("Added: %s") % filename, 1)
+            self._add(pathname)
         except Exception as e:
             app.status.status(e, 2)
 
@@ -1118,13 +1112,13 @@ class PlaylistWindow(TagListWindow):
             self.attroff(curses.A_BOLD)
 
     def change_active_entry(self, direction):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         old = self.get_active_entry()
         new = None
         if self.random:
             if direction > 0:
-                if self.random_next:
+                if len(self.random_next) > 0:
                     new = self.random_next.pop()
                 elif self.random_left:
                     pass
@@ -1132,8 +1126,7 @@ class PlaylistWindow(TagListWindow):
                     self.random_left = self.buffer[:]
                 else:
                     return
-                if not new:
-                    import random
+                if new is None:
                     new = random.choice(self.random_left)
                     self.random_left.remove(new)
                 try:
@@ -1168,16 +1161,15 @@ class PlaylistWindow(TagListWindow):
 
     def command_jump_to_active(self):
         entry = self.get_active_entry()
-        if not entry:
-            return
-        self.bufptr = self.buffer.index(entry)
-        self.update()
+        if entry is not None:
+            self.bufptr = self.buffer.index(entry)
+            self.update()
 
     def command_play(self):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
         entry = self.get_active_entry()
-        if entry:
+        if entry is not None:
             entry.set_active(False)
         entry = self.current()
         entry.set_active(True)
@@ -1185,9 +1177,10 @@ class PlaylistWindow(TagListWindow):
         app.player.play(entry)
 
     def command_delete(self):
-        if not self.buffer:
+        if len(self.buffer) == 0:
             return
-        current_entry, n = self.current(), len(self.buffer)
+        current_entry = self.current()
+        n = len(self.buffer)
         self.buffer = self.not_tagged(self.buffer)
         if n > len(self.buffer):
             try:
@@ -1211,27 +1204,22 @@ class PlaylistWindow(TagListWindow):
         app.status.status(_("Deleted playlist"), 1)
         self.update()
 
-    def command_move(self, after):
-        if not self.buffer:
+    def command_move(self, after=False):
+        if len(self.buffer) == 0:
             return
-        current_entry, l = self.current(), self.get_tagged()
-        if not l or current_entry.is_tagged():
+        current_entry = self.current()
+        l = self.get_tagged()
+        if len(l) == 0 or current_entry.is_tagged():
             return
         self.buffer = self.not_tagged(self.buffer)
-        self.bufptr = self.buffer.index(current_entry) + after
+        self.bufptr = self.buffer.index(current_entry)
+        if after:
+            self.bufptr += 1
         self.buffer[self.bufptr:self.bufptr] = l
         self.update()
 
     def command_shuffle(self):
-        import random
-        l = []
-        n = len(self.buffer)
-        while n > 0:
-            n = n - 1
-            r = random.randint(0, n)
-            l.append(self.buffer[r])
-            del self.buffer[r]
-        self.buffer = l
+        random.shuffle(self.buffer)
         self.bufptr = 0
         self.update()
         app.status.status(_("Shuffled playlist... Oops?"), 1)
@@ -1448,7 +1436,7 @@ class Backend:
 
     def read_fd(self, fd):
         self.buf = os.read(fd, 512)
-        if not self.tid:
+        if self.tid is None:
             self.parse_progress()
 
     def poll(self):
@@ -1487,7 +1475,7 @@ class Backend:
                               if self.length else 0)
 
     def update_status(self):
-        if not self.entry:
+        if self.entry is None:
             app.status.set_default_status("")
         elif self.stopped:
             app.status.set_default_status(_("Stopped: %s") % self.entry.vp())
@@ -1717,19 +1705,19 @@ class Player:
         self.delayed_play(new_entry, 0)
 
     def seek(self, offset, relative):
-        if not self.backend.entry:
+        if self.backend.entry is None:
             return
         self.backend.seek(offset, relative)
         self.delayed_play(self.backend.entry, self.backend.offset)
 
     def toggle_pause(self):
-        if not self.backend.entry:
+        if self.backend.entry is None:
             return
         if not self.backend.stopped:
             self.backend.toggle_pause()
 
     def toggle_stop(self):
-        if not self.backend.entry:
+        if self.backend.entry is None:
             return
         if not self.backend.stopped:
             self.backend.stop()
@@ -1924,7 +1912,7 @@ class Application:
                     self.player.backend.stopped = True
                     if not self.playlist.stop:
                         entry = self.playlist.change_active_entry(1)
-                        if not entry:
+                        if entry is None:
                             self.player.backend.stopped = True
                         else:
                             self.player.play(entry)
