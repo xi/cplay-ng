@@ -1008,9 +1008,10 @@ class FilelistWindow(TagListWindow):
         self.update()
 
 
-class PlaylistWindow(TagListWindow):
-    def __init__(self, parent):
-        TagListWindow.__init__(self, parent)
+class Playlist:
+    def __init__(self):
+        self.buffer = []
+        self.bufptr = 0
         self.pathname = None
         self.repeat = False
         self.random = False
@@ -1018,30 +1019,9 @@ class PlaylistWindow(TagListWindow):
         self.random_next = []
         self.random_left = []
         self.stop = False
-        self.keymap.bind(['\n', curses.KEY_ENTER],
-                         self.command_play, ())
-        self.keymap.bind('d', self.command_delete, ())
-        self.keymap.bind('D', self.command_delete_all, ())
-        self.keymap.bind('m', self.command_move, (True,))
-        self.keymap.bind('M', self.command_move, (False,))
-        self.keymap.bind('s', self.command_shuffle, ())
-        self.keymap.bind('S', self.command_sort, ())
-        self.keymap.bind('r', self.command_toggle_repeat, ())
-        self.keymap.bind('R', self.command_toggle_random, ())
-        self.keymap.bind('X', self.command_toggle_stop, ())
-        self.keymap.bind('w', self.command_save_playlist, ())
-        self.keymap.bind('@', self.command_jump_to_active, ())
 
-    def command_change_viewpoint(self, klass=PlaylistEntry):
-        TagListWindow.command_change_viewpoint(self, klass)
-
-    def get_title(self):
-        space_out = lambda value, s: s if value else " " * len(s)
-        self.name = _("Playlist %s %s %s") % (
-            space_out(self.repeat, _("[repeat]")),
-            space_out(self.random, _("[random]")),
-            space_out(self.stop, _("[stop]")))
-        return ListWindow.get_title(self)
+    def update(self):
+        pass
 
     def append(self, item):
         self.buffer.append(item)
@@ -1103,13 +1083,6 @@ class PlaylistWindow(TagListWindow):
 
     def fix_url(self, url):
         return re.sub(b"(http://[^/]+)/?(.*)", "\\1/\\2", url)
-
-    def putstr(self, entry, *pos):
-        if entry.is_active():
-            self.attron(curses.A_BOLD)
-        ListWindow.putstr(self, entry, *pos)
-        if entry.is_active():
-            self.attroff(curses.A_BOLD)
 
     def change_active_entry(self, direction):
         if len(self.buffer) == 0:
@@ -1247,7 +1220,6 @@ class PlaylistWindow(TagListWindow):
         setattr(self, attr, not getattr(self, attr))
         app.status.status(format % (_("on") if getattr(self, attr)
                                     else _("off")), 1)
-        self.parent.update_title()
 
     def command_save_playlist(self):
         if app.restricted:
@@ -1271,6 +1243,46 @@ class PlaylistWindow(TagListWindow):
             app.status.status(_("ok"), 1)
         except IOError as e:
             app.status.status(e, 2)
+
+
+class PlaylistWindow(TagListWindow, Playlist):
+    def __init__(self, parent):
+        Playlist.__init__(self)
+        TagListWindow.__init__(self, parent)
+        self.keymap.bind(['\n', curses.KEY_ENTER], self.command_play, ())
+        self.keymap.bind('d', self.command_delete, ())
+        self.keymap.bind('D', self.command_delete_all, ())
+        self.keymap.bind('m', self.command_move, (True,))
+        self.keymap.bind('M', self.command_move, (False,))
+        self.keymap.bind('s', self.command_shuffle, ())
+        self.keymap.bind('S', self.command_sort, ())
+        self.keymap.bind('r', self.command_toggle_repeat, ())
+        self.keymap.bind('R', self.command_toggle_random, ())
+        self.keymap.bind('X', self.command_toggle_stop, ())
+        self.keymap.bind('w', self.command_save_playlist, ())
+        self.keymap.bind('@', self.command_jump_to_active, ())
+
+    def command_change_viewpoint(self, klass=PlaylistEntry):
+        TagListWindow.command_change_viewpoint(self, klass)
+
+    def get_title(self):
+        space_out = lambda value, s: s if value else " " * len(s)
+        self.name = _("Playlist %s %s %s") % (
+            space_out(self.repeat, _("[repeat]")),
+            space_out(self.random, _("[random]")),
+            space_out(self.stop, _("[stop]")))
+        return ListWindow.get_title(self)
+
+    def putstr(self, entry, *pos):
+        if entry.is_active():
+            self.attron(curses.A_BOLD)
+        ListWindow.putstr(self, entry, *pos)
+        if entry.is_active():
+            self.attroff(curses.A_BOLD)
+
+    def toggle(self, attr, format):
+        Playlist.toggle(self, attr, format)
+        self.parent.update_title()
 
 
 def get_type(pathname):
