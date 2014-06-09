@@ -2,3 +2,4 @@
 cplay.egg-info
 build
 dist
+*.egg
