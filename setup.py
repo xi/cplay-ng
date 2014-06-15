@@ -17,7 +17,7 @@ class _install_lib(install_lib):
 
 setup(
     name='cplay-ng',
-    version='1.50',
+    version='2.0.0',
     description="A curses front-end for various audio players",
     long_description=open('README.rst').read(),
     url='https://github.com/xi/cplay-ng',

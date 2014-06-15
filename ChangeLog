@@ -1,3 +1,32 @@
+2014-06-15  Tobias Bengfort <tobias.bengfort@gmx.net>
+
+  *** 2.0.0 released ***
+
+	cplay has been unmaintained for many years now. I tried to contact the
+	original developers but without luck. So now I am announcing a fork of
+	cplay: cplay-ng.
+
+	My short time goal with this was to be able to install cplay from pypi.
+	This goals has now been reached. Future plans include new features and a
+	test suite.
+
+	* cplay
+	- renamed to cplay-ng
+	- dropped support for python < 2.6
+	- python3 compatibility
+	- pep8 compatibility
+	- setuptools integration
+	- pulse mixer support (Andreas van Cranenburgh)
+	- add gst123 backend which uses gstreamer and therefore supports many audio
+	  formats
+	- midi support through timidity
+	- scale key-volume mapping such that 9 is 100%
+
+	* cnq
+	- renamed to cnq-ng
+	- complete rework to become a full featured remote control for cplay-ng
+
+
 2011-04-27  Tomi Pieviläinen <tomi.pievilainen@iki.fi>
 
 	*** 1.50 released ***
