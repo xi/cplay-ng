@@ -47,7 +47,7 @@ code = locale.getpreferredencoding()
 
 try:
     import gettext
-    gettext.install('cplay', resource_filename('cplay', 'i18n'))
+    gettext.install('cplay', resource_filename(__name__, 'i18n'))
 except:
     _ = lambda s: s
 

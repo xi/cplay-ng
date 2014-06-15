@@ -25,11 +25,8 @@ setup(
     author_email='flu@iki.fi',
     maintainer='Tobias Bengfort',
     maintainer_email='tobias.bengfort@gmx.net',
-    py_modules=['cplay'],
-    packages=['i18n'],
-    package_data={
-        'i18n': ['*/LC_MESSAGES/cplay.mo'],
-    },
+    packages=['cplay'],
+    include_package_data=True,
     extras_require={
         'filetype': ['python-magic'],
         'metadata': ['mutagen'],
@@ -39,11 +36,11 @@ setup(
         'babel',
     ],
     message_extractors={
-        '.': [
-            ('cplay.py', 'python', None)
+        'cplay': [
+            ('**.py', 'python', None)
         ],
     },
-    entry_points={'console_scripts': 'cplay=cplay:main'},
+    entry_points={'console_scripts': 'cplay=cplay.cplay:main'},
     cmdclass={
         'build': _build,
         'install_lib': _install_lib,

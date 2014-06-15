@@ -1,2 +1,2 @@
 include README.rst
-recursive-include i18n *.po
+recursive-include cplay/i18n *.mo
