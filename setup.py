@@ -40,7 +40,10 @@ setup(
             ('**.py', 'python', None)
         ],
     },
-    entry_points={'console_scripts': 'cplay-ng=cplay.cplay:main'},
+    entry_points={'console_scripts': [
+        'cplay-ng=cplay.cplay:main',
+        'cnq-ng=cplay.remote_control:main',
+    ]},
     cmdclass={
         'build': _build,
         'install_lib': _install_lib,

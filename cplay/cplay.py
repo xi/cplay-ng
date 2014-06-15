@@ -1639,7 +1639,10 @@ class FIFOControl:
 
     def volume(self, s):
         argv = s.split()
-        app.mixer(argv[0], [int(argv[1])])
+        try:
+            app.player.mixer(argv[0], [int(argv[1])])
+        except:
+            pass
 
 
 class Player:

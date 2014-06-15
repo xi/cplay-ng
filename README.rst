@@ -73,6 +73,8 @@ Usage
 
     When in doubt, press 'h' for a friendly help page.
 
+You can also use ``cnq-ng`` to remote-control a running cplay-ng.
+
 
 Configuration
 =============
