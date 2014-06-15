@@ -1,5 +1,5 @@
 *.mo
-cplay.egg-info
+*.egg-info
 build
 dist
 *.egg

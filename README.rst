@@ -1,11 +1,14 @@
 Description
 ===========
 
-cplay is a curses front-end for various audio players. It aims to
-provide a power-user-friendly interface with simple filelist and
-playlist control. cplay is written in Python and can use either
-pyncurses or the standard curses module.
+cplay-ng is a curses front-end for various audio players.  It aims to
+provide a power-user-friendly interface with simple filelist and playlist
+control. cplay-ng is written in Python and can use either pyncurses or the
+standard curses module.
 
+The original cplay is no longer maintained.  This fork aims to maintaining
+the original code as well as keeping it up to date with recent
+developments (e.g. python3) and adding new features.
 
 Requirements
 ============
@@ -55,7 +58,7 @@ Usage
 
 ::
 
-    cplay [-d <filename>] [-nrRm] [ file | dir | playlist ] ...
+    cplay-ng [-d <filename>] [-nrRm] [ file | dir | playlist ] ...
 
     -d  Enable debugging output to <filename>.
 
@@ -75,12 +78,12 @@ Configuration
 =============
 
 If you would like to change options passed to the actual players just
-edit the PLAYERS list in the cplay script or put the PLAYERS definition
+edit the PLAYERS list in the cplay-ng script or put the PLAYERS definition
 in either ~/.cplayrc or /etc/cplayrc. If one of these files is
-available, it is executed by cplay before initialization.
+available, it is executed by cplay-ng before initialization.
 
 Macros are defined using the MACRO dictionary, where the key is a key
-and the value is a string of cplay input. For example, the following
+and the value is a string of cplay-ng input. For example, the following
 would make ,d delete tagged (or current) files:
 
 ::
@@ -96,7 +99,7 @@ Miscellaneous
 A playlist can contain URLs, but the playlist itself will have to be
 local. For mpeg streaming, splay is recommended.
 
-It is also possible to pipe a playlist to cplay, as stdin will be
+It is also possible to pipe a playlist to cplay-ng, as stdin will be
 reopened on startup unless it is attached to a tty.
 
 Remote control is available via /var/tmp/cplay\_control-$USER. Create

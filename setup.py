@@ -16,11 +16,11 @@ class _install_lib(install_lib):
 
 
 setup(
-    name='cplay',
+    name='cplay-ng',
     version='1.50',
     description="A curses front-end for various audio players",
     long_description=open('README.rst').read(),
-    url='https://github.com/xi/cplay',
+    url='https://github.com/xi/cplay-ng',
     author='Ulf Betlehem',
     author_email='flu@iki.fi',
     maintainer='Tobias Bengfort',
@@ -40,7 +40,7 @@ setup(
             ('**.py', 'python', None)
         ],
     },
-    entry_points={'console_scripts': 'cplay=cplay.cplay:main'},
+    entry_points={'console_scripts': 'cplay-ng=cplay.cplay:main'},
     cmdclass={
         'build': _build,
         'install_lib': _install_lib,
