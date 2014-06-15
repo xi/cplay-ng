@@ -50,7 +50,7 @@ Installation
 
 ::
 
-    make install
+    pip install cplay-ng
 
 
 Usage
