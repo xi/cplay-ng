@@ -1993,8 +1993,8 @@ class AlsaMixer(Mixer):
     def __init__(self):
         import alsaaudio
         self.channels = [
-            ('PCM', alsaaudio.Mixer('PCM')),
             ('Master', alsaaudio.Mixer('Master')),
+            ('PCM', alsaaudio.Mixer('PCM')),
         ]
 
     def get(self):
