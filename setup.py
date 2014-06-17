@@ -27,6 +27,9 @@ setup(
     maintainer_email='tobias.bengfort@gmx.net',
     packages=['cplay'],
     include_package_data=True,
+    install_requires=[
+        'argparse',
+    ],
     extras_require={
         'filetype': ['python-magic'],
         'metadata': ['mutagen'],
