@@ -1,4 +1,3 @@
-import unittest
 import os
 import time
 
@@ -6,6 +5,11 @@ try:
     from StringIO import StringIO
 except:
     from io import StringIO
+
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from cplay import cplay
 
