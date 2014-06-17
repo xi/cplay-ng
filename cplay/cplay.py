@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os
 import sys
+import glob
 import time
 import getopt
 import random
@@ -722,7 +723,6 @@ class TagListWindow(ListWindow):
         return self.complete_generic(line, quote=True)
 
     def complete_generic(self, line, quote=False):
-        import glob
         if quote:
             s = re.sub('.*[^\\\\][ \'"()\[\]{}$`]', '', line)
             s, part = re.sub('\\\\', '', s), line[:len(line) - len(s)]
