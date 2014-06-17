@@ -4,14 +4,21 @@ from setuptools import setup
 from distutils.command.build import build
 from setuptools.command.install_lib import install_lib
 
+try:
+    import babel
+except:
+    babel = None
 
 class _build(build):
-    sub_commands = [('compile_catalog', None)] + build.sub_commands
+    sub_commands = ([('compile_catalog', None)] + build.sub_commands
+        if babel is not None
+        else build.sub_commands)
 
 
 class _install_lib(install_lib):
     def run(self):
-        self.run_command('compile_catalog')
+        if babel is not None:
+            self.run_command('compile_catalog')
         install_lib.run(self)
 
 
@@ -35,9 +42,6 @@ setup(
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
-    setup_requires=[
-        'babel',
-    ],
     message_extractors={
         'cplay': [
             ('**.py', 'python', None)
