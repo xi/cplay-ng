@@ -1680,19 +1680,19 @@ class Player:
 
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
-            return
+            return False
         logging.debug("Setting up backend for " + str(entry))
         self.backend.stop(quiet=True)
         for self.backend in BACKENDS:
             if self.backend.re_files.search(entry.pathname):
                 if self.backend.setup(entry, offset):
-                    break
+                    return True
         else:
             # FIXME: Needs to report suitable backends
             logging.debug("Backend not found")
             app.status.status(_("Backend not found!"), 1)
             self.backend.stopped = False  # keep going
-            return
+            return False
 
     def play(self, entry, offset=0):
         # Play executed, remove from queue
@@ -1700,8 +1700,10 @@ class Player:
         if entry is None or offset is None:
             return
         logging.debug("Starting to play " + str(entry))
-        self.setup_backend(entry, offset)
-        self.backend.play()
+        if self.setup_backend(entry, offset):
+            self.backend.play()
+        else:
+            app.timeout.add(1, self.next_prev_song, (1,))
 
     def delayed_play(self, entry, offset):
         if self.play_tid:
