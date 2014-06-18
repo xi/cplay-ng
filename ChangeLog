@@ -1,3 +1,19 @@
+2014-06-18  Tobias Bengfort <tobias.bengfort@gmx.net>
+
+  *** 2.0.1 released ***
+
+	This release brings a basic testing environment and some internal
+	restructuring.  The following bugs have been fixed:
+
+	* cplay
+	- fix regular expressions in python3
+	- only add valid songs to playlist
+	- don't crash on missing backend
+	- don't require babel for installation
+
+	* cnq
+	- declare missing argparse dependency
+
 2014-06-15  Tobias Bengfort <tobias.bengfort@gmx.net>
 
   *** 2.0.0 released ***

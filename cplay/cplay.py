@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- python -*-
 
-__version__ = "cplay-ng 2.0.0"
+__version__ = "cplay-ng 2.0.1"
 
 """
 cplay - A curses front-end for various audio players
