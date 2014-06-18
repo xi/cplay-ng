@@ -1066,9 +1066,10 @@ class Playlist:
             self.add_dir(pathname)
         elif VALID_PLAYLIST(pathname):
             self.add_playlist(pathname)
-        else:
-            pathname = self.fix_url(pathname)
+        elif VALID_SONG(pathname):
             self.append(PlaylistEntry(pathname))
+        else:
+            return
         # todo - refactor
         filename = os.path.basename(pathname) or pathname
         if not quiet:

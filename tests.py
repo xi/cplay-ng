@@ -263,11 +263,12 @@ dir/file3.wav""",
         self.delete_files()
 
     def test_add_single(self):
-        files = ['test1', 'test2']
-        for f in files:
+        songs = ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav']
+        non_songs = ['foo', 'foo.xyz', 'ftp://foo.com']
+        for f in songs + non_songs:
             self.playlist.add(f)
         self.assertListEqual(
-            [entry.pathname for entry in self.playlist.buffer], files)
+            [entry.pathname for entry in self.playlist.buffer], songs)
 
     def test_add_pls(self):
         self.playlist.add(os.path.join(self.path, 'playlist.pls'))
