@@ -64,7 +64,7 @@ setup(
     },
     license='GPLv2+',
     classifiers=[
-        'Development Status :: 7 - Inactive',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console :: Curses',
         'Intended Audience :: End Users/Desktop',
         'Natural Language :: English',
