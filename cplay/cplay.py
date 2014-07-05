@@ -112,7 +112,7 @@ class KeymapStack(list):
 
 class Keymap:
     def __init__(self):
-        self.methods = [None] * curses.KEY_MAX
+        self.methods = dict()
 
     def bind(self, key, method, args=None):
         if isinstance(key, (tuple, list)):
@@ -124,10 +124,7 @@ class Keymap:
         self.methods[key] = (method, args)
 
     def process(self, key):
-        try:
-            if self.methods[key] is None:
-                return False
-        except IndexError:
+        if key not in self.methods:
             return False
         method, args = self.methods[key]
         if args is None:
