@@ -29,12 +29,13 @@ try:
 except ImportError:
     argcomplete = None
 
-CONTROL_FIFO = ("%s/cplay-control-%s" %
-                (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"]))
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    parser.add_argument('--fifo',
+        help='FIFO socket to connect to cplay',
+        default="%s/cplay-control-%s" % (os.environ.get("TMPDIR", "/tmp"),
+                                         os.environ["USER"]))
     subparsers = parser.add_subparsers(title='command')
 
     pause_parser = subparsers.add_parser('pause', help="toggle pause")
@@ -87,8 +88,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if os.path.exists(CONTROL_FIFO):
-        with open(CONTROL_FIFO, "wb", 0) as fd:
+    if os.path.exists(args.fifo):
+        with open(args.fifo, "wb", 0) as fd:
             def send_msg(*msg):
                 fd.write(' '.join(str(i) for i in msg) + '\n')
 
@@ -104,7 +105,7 @@ def main():
             else:
                 send_msg(args.cmd)
     else:
-        print('Could not find %s.' % CONTROL_FIFO)
+        print('Could not find %s.' % args.fifo)
         sys.exit(2)
 
 
