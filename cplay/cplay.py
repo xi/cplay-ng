@@ -65,8 +65,6 @@ except ImportError:
 app = None
 
 XTERM = re.search("rxvt|xterm", os.environ["TERM"])
-CONTROL_FIFO = ("%s/cplay-control-%s" %
-                (os.environ.get("TMPDIR", "/tmp"), os.environ["USER"]))
 
 # Ten band graphical equalizers for mplayer, see man (1) mplayer
 # Default: first entry
@@ -1636,14 +1634,14 @@ class FIFOControl:
             "quit": [app.quit, []]
         }
         self.fd = None
-        if not os.path.exists(CONTROL_FIFO):
-            os.mkfifo(CONTROL_FIFO, 0o600)
-            self.fd = open(CONTROL_FIFO, "rb+", 0)
+        if not os.path.exists(app.fifo):
+            os.mkfifo(app.fifo, 0o600)
+            self.fd = open(app.fifo, "rb+", 0)
 
     def cleanup(self):
         if self.fd is not None:
             self.fd.close()
-            os.unlink(CONTROL_FIFO)
+            os.unlink(app.fifo)
 
     def handle_command(self):
         argv = self.fd.readline().strip().split(" ", 1)
@@ -1856,6 +1854,9 @@ class Application:
     def __init__(self):
         self.tcattr = None
         self.restricted = False
+        self.fifo = ("%s/cplay-control-%s" % (
+            os.environ.get("TMPDIR", "/tmp"),
+            os.environ["USER"]))
 
     def setup(self):
         if tty is not None:
@@ -2080,6 +2081,7 @@ def parse_args():
                         help=_('Start in random mode.'))
     parser.add_argument('-m', '--toggle-mixer', action='store_true',
                         help=_('Switch mixer channels.'))
+    parser.add_argument('--fifo', help=_('FIFO socket used by cnq'))
     parser.add_argument('files', metavar=_('file'), nargs='*',
                         help=_('file, dir or playlist'))
     return parser.parse_args()
@@ -2093,6 +2095,9 @@ def main():
 
     global app
     app = Application()
+
+    if args.fifo is not None:
+        app.fifo = args.fifo
 
     playlist = []
     if not sys.stdin.isatty():
