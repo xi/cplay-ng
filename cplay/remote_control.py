@@ -1,9 +1,7 @@
-import os
-import sys
-import argparse
+#!/usr/bin/env python
+# -*- python -*-
 
-"""
-cplay remote control - remote-control a running cplay
+"""cplay remote control - remote-control a running cplay
 Copyright (C) 2009 Tom Adams <tom@holizz.com>
 Copyright (C) 2014 Tobias Bengfort <tobias.bengfort@gmx.net>
 
@@ -22,6 +20,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """
 
+import os
+import sys
+import argparse
+
 try:
     import argcomplete
 except ImportError:
@@ -32,8 +34,7 @@ CONTROL_FIFO = ("%s/cplay-control-%s" %
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="remote-control a running cplay")
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     subparsers = parser.add_subparsers(title='command')
 
     pause_parser = subparsers.add_parser('pause', help="toggle pause")
