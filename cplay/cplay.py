@@ -2069,12 +2069,21 @@ class PulseMixer(Mixer):
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    parser.add_argument('-d', '--debug', metavar=_('logfile'))
-    parser.add_argument('-m', '--toggle-mixer', action='store_true')
-    parser.add_argument('-n', '--restricted', action='store_true')
-    parser.add_argument('-R', '--random', action='store_true')
-    parser.add_argument('-r', '--repeat', action='store_true')
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0],
+                                     epilog=_('When in doubt, press \'h\' for '
+                                              'a friendly help page.'))
+    parser.add_argument('-d', '--debug', metavar=_('filename'),
+                        help=_('Enable debugging output to <filename>.'))
+    parser.add_argument('-n', '--restricted', action='store_true',
+                        help=_('Start in restricted mode: No shell commands, '
+                               'changing directory, goto, or saving '
+                               'playlists.'))
+    parser.add_argument('-r', '--repeat', action='store_true',
+                        help=_('Start in repeat mode.'))
+    parser.add_argument('-R', '--random', action='store_true',
+                        help=_('Start in random mode.'))
+    parser.add_argument('-m', '--toggle-mixer', action='store_true',
+                        help=_('Switch mixer channels.'))
     parser.add_argument('files', metavar=_('file'), nargs='*',
                         help=_('file, dir or playlist'))
     return parser.parse_args()

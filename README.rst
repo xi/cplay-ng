@@ -58,22 +58,13 @@ Usage
 
 ::
 
-    cplay-ng [-d <filename>] [-nrRm] [ file | dir | playlist ] ...
+    cplay-ng [ file | dir | playlist ] ...
 
-    -d  Enable debugging output to <filename>.
+For a full list of command line options, see ``cplay-ng --help``.
+When in doubt about runtime controls, press 'h' for a friendly help page.
 
-    -n  Start in restricted mode: No shell commands, changing directory,
-        goto, or saving playlists.
-
-    -r  Start in repeat mode.
-
-    -R  Start in random mode.
-
-    -m  Switch channels (oss only)
-
-    When in doubt, press 'h' for a friendly help page.
-
-You can also use ``cnq-ng`` to remote-control a running cplay-ng.
+Apart from cplay-ng, this distribution also includes the program
+cnq-ng to remote-control a running cplay-ng.
 
 
 Configuration
