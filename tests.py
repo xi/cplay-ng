@@ -81,6 +81,7 @@ class MockPlaylist(object):
 class MockApp(object):
     def __init__(self):
         self.restricted = None
+        self.fifo = '/tmp/cplay-test'
     def setup(self): pass
     def cleanup(self): pass
     def run(self): pass
@@ -388,7 +389,8 @@ class TestFIFOControl(unittest.TestCase):
     def setUp(self):
         patch_services()
         self.control = cplay.FIFOControl()
-        self.control.fd.close()
+        if self.control.fd is not None:
+            self.control.fd.close()
 
     def test_command(self):
         state = []
