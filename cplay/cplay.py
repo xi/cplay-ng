@@ -1636,14 +1636,14 @@ class FIFOControl:
             "quit": [app.quit, []]
         }
         self.fd = None
-        try:
-            if os.path.exists(CONTROL_FIFO):
-                os.unlink(CONTROL_FIFO)
+        if not os.path.exists(CONTROL_FIFO):
             os.mkfifo(CONTROL_FIFO, 0o600)
             self.fd = open(CONTROL_FIFO, "rb+", 0)
-        except IOError:
-            # warn that we're disabling the fifo because someone raced us?
-            return
+
+    def cleanup(self):
+        if self.fd is not None:
+            self.fd.close()
+            os.unlink(CONTROL_FIFO)
 
     def handle_command(self):
         argv = self.fd.readline().strip().split(" ", 1)
@@ -1905,11 +1905,7 @@ class Application:
         if tty is not None:
             tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
         # remove temporary files
-        try:
-            if os.path.exists(CONTROL_FIFO):
-                os.unlink(CONTROL_FIFO)
-        except IOError:
-            pass
+        self.control.cleanup()
 
     def run(self):
         while True:
