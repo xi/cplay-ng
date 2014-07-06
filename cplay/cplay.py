@@ -26,7 +26,7 @@ import os
 import sys
 import glob
 import time
-import getopt
+import argparse
 import random
 import re
 import signal
@@ -2067,19 +2067,24 @@ class PulseMixer(Mixer):
         self.set('%+d' % arg)
 
 
-def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "mnrRd:")
-    except:
-        usage = _("Usage: %s [-d <filename>] [-mnrR] "
-                  "[ file | dir | playlist ] ...\n")
-        sys.stderr.write(usage % sys.argv[0])
-        sys.exit(1)
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    parser.add_argument('-d', '--debug', metavar=_('logfile'))
+    parser.add_argument('-m', '--toggle-mixer', action='store_true')
+    parser.add_argument('-n', '--restricted', action='store_true')
+    parser.add_argument('-R', '--random', action='store_true')
+    parser.add_argument('-r', '--repeat', action='store_true')
+    parser.add_argument('files', metavar=_('file'), nargs='*',
+                        help=_('file, dir or playlist'))
+    return parser.parse_args()
 
-    # FIXME option checking in two places
-    for opt, optarg in opts:
-        if opt == "-d":
-            logging.basicConfig(filename=optarg, level=logging.DEBUG)
+
+def main():
+    args = parse_args()
+
+    if args.debug is not None:
+        logging.basicConfig(filename=args.debug, level=logging.DEBUG)
 
     global app
     app = Application()
@@ -2091,18 +2096,16 @@ def main():
         os.open("/dev/tty", 0)
     try:
         app.setup()
-        for opt, optarg in opts:
-            if opt == "-n":
-                app.restricted = True
-            if opt == "-r":
-                app.playlist.command_toggle_repeat()
-            if opt == "-R":
-                app.playlist.command_toggle_random()
-            if opt == "-m":
-                app.player.mixer("toggle")
+        app.restricted = args.restricted
+        if args.repeat:
+            app.playlist.command_toggle_repeat()
+        if args.random:
+            app.playlist.command_toggle_random()
+        if args.toggle_mixer:
+            app.player.mixer("toggle")
         logging.debug("Preferred locale is " + str(code))
-        if args or playlist:
-            for i in args or playlist:
+        if args.files or playlist:
+            for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
                 app.playlist.add(i)
             app.window.change_window()
