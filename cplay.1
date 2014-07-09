@@ -3,7 +3,7 @@
 .\" It was originally written for Debian GNU/Linux (but may be used
 .\" by others).
 .\"
-.TH CPLAY 1 "November 2002"
+.TH CPLAY 1 "July 2014"
 
 .SH NAME
 .PP
@@ -36,15 +36,34 @@ Currently, the following audio formats are supported: MP3 (through
 mpg321, splay, mpg123 or madplay), Ogg Vorbis (through ogg123), MIDI
 (through timidity) and various module-formats (through mikmod and xmp).
 
-.SH OPTIONS
-.IP \fB\-n
-Enable \fIrestricted\fI mode
-.IP \fB\-r
-Toggles playlist \fIrepeat\fP mode
-.IP \fB\-R
-Toggles playlist \fIrandom\fP mode
-.IP \fB\-v
-Toggles PCM and MASTER (default) volume control
+.HP
+\fB\-h\fR, \fB\-\-help
+.IP
+show help message and exit
+.HP
+\fB\-d \fIfilename\fP, \fB\-\-debug \fIfilename
+.IP
+Enable debugging output to \fIfilename\fR.
+.HP
+\fB\-n\fR, \fB\-\-restricted
+.IP
+Start in \fIrestricted\fP mode: No shell commands, changing directory, goto, or saving playlists.
+.HP
+\fB\-r\fR, \fB\-\-repeat
+.IP
+Start in \fIrepeat\fP mode.
+.HP
+\fB\-R\fR, \fB\-\-random
+.IP
+Start in \fIrandom\fP mode.
+.HP
+\fB\-m\fR, \fB\-\-toggle-mixer
+.IP
+Switch mixer channels.
+.HP
+\fB\-\-fifo \fIFIFO
+.IP
+FIFO socket used by \fIcnq\fP
 
 .SH SEE ALSO
 .PP
@@ -62,7 +81,7 @@ Toggles PCM and MASTER (default) volume control
 
 .SH FILES
 .PP
-.I /var/tmp/cplay_control 
+.I /var/tmp/cplay_control
 - Optional remote control fifo.
 
 .I /etc/cplayrc
@@ -79,4 +98,3 @@ Ulf Betlehem <flu@iki.fi>
 .PP
 In order for either mp3info (ID3) or ogginfo to work,
 both corresponding python modules have to be installed.
-
