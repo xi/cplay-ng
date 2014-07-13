@@ -1,3 +1,12 @@
+2014-07-13  Tobias Bengfort <tobias.bengfort@gmx.net>
+
+  *** 2.0.2 released ***
+
+	- fix regression where cplay crashed when opened with an argument
+	- replace getopt by argparse which provides a better command line
+	  interface
+	- allow to select a socket for use with cnq
+
 2014-06-18  Tobias Bengfort <tobias.bengfort@gmx.net>
 
   *** 2.0.1 released ***
