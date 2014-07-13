@@ -2118,7 +2118,7 @@ def main():
             for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
                 app.playlist.add(i)
-            app.window.change_window()
+            app.window.win_tab.change_window()
         app.run()
     except SystemExit:
         app.cleanup()
