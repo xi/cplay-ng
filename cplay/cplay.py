@@ -2056,12 +2056,12 @@ class PulseMixer(Mixer):
         self.set(self.get())
 
     def get(self):
-        out, err = subprocess.Popen(['pacmd', 'dump-volumes'], shell=False,
+        out, err = subprocess.Popen(['pactl', 'list', 'sinks'], shell=False,
                                     stdout=subprocess.PIPE).communicate()
-        return re.search(r'Sink 0.*current_hw.* ([0-9]+)%', out).group(1)
+        return int(re.search(r'Volume: .* ([0-9]+)%', out).group(1))
 
     def set(self, arg):
-        subprocess.check_call(['pactl', 'set-sink-volume', '0', '--',
+        subprocess.check_call(['pactl', 'set-sink-volume', '@DEFAULT_SINK@',
                               '%s%%' % arg])
 
     def cue(self, arg):
