@@ -296,13 +296,13 @@ class CounterWindow(Window):
         self.touchwin()
         self.refresh()
 
-    def counter(self, values):
-        """Update the counter with [elapsed, remaining] seconds"""
-        if (values[0] < 0 or values[1] < 0):
+    def counter(self, elapsed, remaining):
+        if (elapsed < 0 or remaining < 0):
             logging.debug("Backend reported negative value "
                           "for (remaining) playing time.")
         else:
-            self.values = values
+            self.values[0] = elapsed
+            self.values[1] = remaining
             self.update()
 
     def toggle_mode(self):
@@ -1452,7 +1452,7 @@ class Backend:
         elif self._p.poll() is not None:
             self._p = None
             app.status.set_default_status("")
-            app.counter.counter([0, 0])
+            app.counter.counter(0, 0)
             app.progress.progress(0)
             return True
 
@@ -1477,7 +1477,7 @@ class Backend:
         self.show_position()
 
     def show_position(self):
-        app.counter.counter((self.offset, self.length - self.offset))
+        app.counter.counter(self.offset, self.length - self.offset)
         app.progress.progress((float(self.offset) / self.length)
                               if self.length else 0)
 
