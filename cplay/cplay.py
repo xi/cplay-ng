@@ -2133,7 +2133,7 @@ def main():
 
 MIXERS = [OssMixer, AlsaMixer, PulseMixer]
 BACKENDS = [
-    FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", "\.(ogg|flac|spx)$"),
+    FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", "\.ogg$"),
     FrameOffsetBackend("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)",
                        38.28),
     FrameOffsetBackend("mpg123 -q -v -k {offset} {file}",
