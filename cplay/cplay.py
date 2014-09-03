@@ -1403,15 +1403,20 @@ class Backend:
         logging.debug("Executing " + " ".join(self.argv))
         logging.debug("My offset is %d" % self.offset)
 
-        self._p = subprocess.Popen(self.argv,
-                                   stdout=self.stdout_w,
-                                   stderr=self.stderr_w,
-                                   stdin=self.stdin_r)
+        try:
+            self._p = subprocess.Popen(self.argv,
+                                       stdout=self.stdout_w,
+                                       stderr=self.stderr_w,
+                                       stdin=self.stdin_r)
+        except OSError as err:
+            app.status.status(err, 2)
+            return False
 
         self.stopped = False
         self.paused = False
         self.step = 0
         self.update_status()
+        return True
 
     def stop(self, quiet=False):
         if self._p is None:
