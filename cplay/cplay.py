@@ -2054,22 +2054,25 @@ class AlsaMixer(Mixer):
 
 class PulseMixer(Mixer):
     def __init__(self):
-        self.channels = [
-            ('Master', 'Master')
-        ]
+        self.channels = ['Master']
+        self._sink = re.search(r'Sink #([0-9]+)', self._list_sinks()).group(1)
         self.set(self.get())
 
+    def _list_sinks(self):
+        return subprocess.Popen(['pactl', 'list', 'sinks'],
+                shell=False, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE).communicate()[0]
+
     def get(self):
-        out, err = subprocess.Popen(['pactl', 'list', 'sinks'], shell=False,
-                                    stdout=subprocess.PIPE).communicate()
-        return int(re.search(r'Volume: .* ([0-9]+)%', out).group(1))
+        return int(re.search(r'Volume: .* ([0-9]+)%',
+                self._list_sinks()).group(1))
 
-    def set(self, arg):
-        subprocess.check_call(['pactl', 'set-sink-volume', '@DEFAULT_SINK@',
-                              '%s%%' % arg])
+    def set(self, vol):
+        subprocess.check_call([
+                'pactl', '--', 'set-sink-volume', self._sink, '%s%%' % vol])
 
-    def cue(self, arg):
-        self.set('%+d' % arg)
+    def cue(self, inc):
+        self.set('%+d' % inc)
 
 
 def parse_args():
