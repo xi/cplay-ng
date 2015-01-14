@@ -627,14 +627,8 @@ class ListEntry:
         self.slash = "/" if dir else ""
         self.tagged = False
 
-    def set_tagged(self, value):
-        self.tagged = value
-
-    def is_tagged(self):
-        return self.tagged
-
     def __str__(self):
-        mark = "*" if self.is_tagged() else " "
+        mark = "*" if self.tagged else " "
         return "%s %s%s" % (mark, self.vp(), self.slash)
 
     def vp(self):
@@ -658,12 +652,6 @@ class PlaylistEntry(ListEntry):
         ListEntry.__init__(self, pathname)
         self.metadata = None
         self.active = False
-
-    def set_active(self, value):
-        self.active = value
-
-    def is_active(self):
-        return self.active
 
     def vp_metadata(self):
         if self.metadata is None:
@@ -748,20 +736,20 @@ class TagListWindow(ListWindow):
 
     def command_invert_tags(self):
         for i in self.buffer:
-            i.set_tagged(not i.is_tagged())
+            i.tagged = not i.tagged
         self.update()
 
     def command_tag_untag(self):
         if len(self.buffer) == 0:
             return
         tmp = self.buffer[self.bufptr]
-        tmp.set_tagged(not tmp.is_tagged())
+        tmp.tagged = not tmp.tagged
         self.cursor_move(1)
 
     def command_tag(self, value):
         if len(self.buffer) == 0:
             return
-        self.buffer[self.bufptr].set_tagged(value)
+        self.buffer[self.bufptr].tagged = value
         self.cursor_move(1)
 
     def command_tag_regexp(self, value):
@@ -774,17 +762,17 @@ class TagListWindow(ListWindow):
             r = re.compile(app.input.string, re.I)
             for entry in self.buffer:
                 if r.search(str(entry)):
-                    entry.set_tagged(self.tag_value)
+                    entry.tagged = self.tag_value
             self.update()
             app.status.status(_("ok"), 1)
         except re.error as e:
             app.status.status(e, 2)
 
     def get_tagged(self):
-        return [x for x in self.buffer if x.is_tagged()]
+        return [x for x in self.buffer if x.tagged]
 
     def not_tagged(self, l):
-        return [x for x in l if not x.is_tagged()]
+        return [x for x in l if not x.tagged]
 
 
 class FilelistWindow(TagListWindow):
@@ -998,7 +986,7 @@ class FilelistWindow(TagListWindow):
         app.status.status(_("Adding tagged files"), 1)
         for entry in l:
             app.playlist.add(entry.pathname, quiet=True)
-            entry.set_tagged(False)
+            entry.tagged = False
         self.update()
 
 
@@ -1109,22 +1097,22 @@ class Playlist:
                 else:
                     return
             if old:
-                old.set_active(False)
+                old.active = False
         elif old:
             index = self.buffer.index(old) + direction
             if not (0 <= index < len(self.buffer) or self.repeat):
                 return
-            old.set_active(False)
+            old.active = False
             new = self.buffer[index % len(self.buffer)]
         else:
             new = self.buffer[0]
-        new.set_active(True)
+        new.active = True
         self.update()
         return new
 
     def get_active_entry(self):
         for entry in self.buffer:
-            if entry.is_active():
+            if entry.active:
                 return entry
 
     def command_jump_to_active(self):
@@ -1138,9 +1126,9 @@ class Playlist:
             return
         entry = self.get_active_entry()
         if entry is not None:
-            entry.set_active(False)
+            entry.active = False
         entry = self.current()
-        entry.set_active(True)
+        entry.active = True
         self.update()
         app.player.play(entry)
 
@@ -1156,7 +1144,7 @@ class Playlist:
             except ValueError:
                 pass
         else:
-            current_entry.set_tagged(True)
+            current_entry.tagged = True
             del self.buffer[self.bufptr]
         if self.random:
             self.random_prev = self.not_tagged(self.random_prev)
@@ -1177,7 +1165,7 @@ class Playlist:
             return
         current_entry = self.current()
         l = self.get_tagged()
-        if len(l) == 0 or current_entry.is_tagged():
+        if len(l) == 0 or current_entry.tagged:
             return
         self.buffer = self.not_tagged(self.buffer)
         self.bufptr = self.buffer.index(current_entry)
@@ -1269,10 +1257,10 @@ class PlaylistWindow(TagListWindow, Playlist):
         return ListWindow.get_title(self)
 
     def putstr(self, entry, *pos):
-        if entry.is_active():
+        if entry.active:
             self.attron(curses.A_BOLD)
         ListWindow.putstr(self, entry, *pos)
-        if entry.is_active():
+        if entry.active:
             self.attroff(curses.A_BOLD)
 
     def toggle(self, attr, format):
