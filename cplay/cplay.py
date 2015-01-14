@@ -1411,10 +1411,11 @@ class Backend:
             return
         if self.paused:
             self.toggle_pause(quiet)
-        try:
-            self._p.terminate()
-        except OSError:
-            pass
+        if self.poll() is None:
+            try:
+                self._p.terminate()
+            except OSError as err:
+                app.status.status(err, 2)
         self.stopped = True
         if not quiet:
             self.update_status()
