@@ -1494,13 +1494,17 @@ class Backend:
 
 
 class FrameOffsetBackend(Backend):
-    re_progress = re.compile(b"Time.*\s(\d+):(\d+).*\[(\d+):(\d+)")
+    re_progress = re.compile(b"Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)")
 
     def parse_buf(self):
+        def parse_time(s):
+            l = reversed(s.split(":"))
+            return sum([int(x) * 60 ** i for i, x in enumerate(l)])
+
         match = self.re_progress.search(self.buf)
         if match:
-            m1, s1, m2, s2 = map(int, match.groups())
-            head, tail = m1*60 + s1, m2*60 + s2
+            head = parse_time(match.group(1))
+            tail = parse_time(match.group(3))
             self.set_position(head, head + tail)
 
 
