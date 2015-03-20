@@ -1570,8 +1570,7 @@ class MPlayer(Backend):
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
-            curS, totS = map(int, match.groups())
-            position, length = curS, totS
+            position, length = map(int, match.groups())
             self.set_position(position, length)
         else:
             logging.debug("Cannot parse mplayer output")
