@@ -2048,17 +2048,19 @@ class PulseMixer(Mixer):
         self.set(self.get())
 
     def _list_sinks(self):
-        return subprocess.Popen(['pactl', 'list', 'sinks'],
-                shell=False, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE).communicate()[0]
+        return subprocess.Popen(
+            ['pactl', 'list', 'sinks'],
+            shell=False, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).communicate()[0]
 
     def get(self):
-        return int(re.search(r'Volume: .* ([0-9]+)%',
-                self._list_sinks()).group(1))
+        return int(re.search(
+            r'Volume: .* ([0-9]+)%',
+            self._list_sinks()).group(1))
 
     def set(self, vol):
         subprocess.check_call([
-                'pactl', '--', 'set-sink-volume', self._sink, '%s%%' % vol])
+            'pactl', '--', 'set-sink-volume', self._sink, '%s%%' % vol])
 
     def cue(self, inc):
         self.set('%+d' % inc)
