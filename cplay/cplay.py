@@ -297,7 +297,7 @@ class CounterWindow(Window):
         self.refresh()
 
     def counter(self, elapsed, remaining):
-        if (elapsed < 0 or remaining < 0):
+        if elapsed < 0 or remaining < 0:
             logging.debug("Backend reported negative value "
                           "for (remaining) playing time.")
         else:
@@ -457,9 +457,9 @@ class ListWindow(Window):
     def update(self, force=True):
         self.bufptr = max(0, min(self.bufptr, len(self.buffer) - 1))
         first, last = self.scrptr, self.scrptr + self.rows - 1
-        if (self.bufptr < first):
+        if self.bufptr < first:
             first = self.bufptr
-        if (self.bufptr > last):
+        if self.bufptr > last:
             first = self.bufptr - self.rows + 1
         if force or self.scrptr != first:
             self.scrptr = first
@@ -1741,8 +1741,8 @@ class Player:
             app.status.status(str(self._mixer), 1)
 
     def incr_reset_decr_speed(self, signum):
-        if (isinstance(self.backend, MPlayer)):
-            if (signum == 0):
+        if isinstance(self.backend, MPlayer):
+            if signum == 0:
                 self.backend.speed_chg(1.0)
             else:
                 self.backend.speed_chg(self.backend.speed +
@@ -1751,7 +1751,7 @@ class Player:
             app.status.status(_("Speed control requires MPlayer"), 1)
 
     def next_prev_eq(self, direction):
-        if(isinstance(self.backend, MPlayer)):
+        if isinstance(self.backend, MPlayer):
             self.backend.eq_chg(direction)
         else:
             app.status.status(_("Equalizer support requires MPlayer"), 1)
