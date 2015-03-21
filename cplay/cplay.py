@@ -869,7 +869,7 @@ class FilelistWindow(TagListWindow):
             if re_tmp.search(filename):
                 if os.path.isdir(pathname):
                     results.append(ListEntry(pathname, 1))
-                elif VALID_PLAYLIST(filename) or VALID_SONG(filename):
+                elif valid_playlist(filename) or valid_song(filename):
                     results.append(ListEntry(pathname))
             elif os.path.isdir(pathname):
                 self.search_recursively(re_tmp, pathname, results)
@@ -906,9 +906,9 @@ class FilelistWindow(TagListWindow):
                 pathname = os.path.join(self.cwd, filename)
                 if os.path.isdir(pathname):
                     dirs.append(pathname)
-                elif VALID_SONG(filename):
+                elif valid_song(filename):
                     files.append(pathname)
-                elif VALID_PLAYLIST(filename):
+                elif valid_playlist(filename):
                     files.append(pathname)
         except os.error:
             pass
@@ -950,7 +950,7 @@ class FilelistWindow(TagListWindow):
         elif os.path.isdir(self.current().pathname):
             self.chdir(self.current().pathname)
             self.listdir()
-        elif VALID_SONG(self.current().filename):
+        elif valid_song(self.current().filename):
             app.player.play(self.current())
 
     def command_chparentdir(self):
@@ -1046,9 +1046,9 @@ class Playlist:
             if not quiet:
                 app.status.status(_("Working..."))
             self.add_dir(pathname)
-        elif VALID_PLAYLIST(pathname):
+        elif valid_playlist(pathname):
             self.add_playlist(pathname)
-        elif VALID_SONG(pathname):
+        elif valid_song(pathname):
             self.append(PlaylistEntry(pathname))
         else:
             return
@@ -2160,14 +2160,14 @@ BACKENDS = [
 MACRO = {}
 
 
-def VALID_SONG(name):
+def valid_song(name):
     for backend in BACKENDS:
         if backend.re_files.search(name):
             return True
     return False
 
 
-def VALID_PLAYLIST(name):
+def valid_playlist(name):
     if re.search("\.(m3u|pls)$", name, re.I):
         return True
     return False
