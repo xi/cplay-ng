@@ -403,8 +403,8 @@ class TabWindow(Window):
         if refresh:
             self.refresh()
 
-    def add(self, Class):
-        win = Class(self)
+    def add(self, cls):
+        win = cls(self)
         win.visible = False
         return win
 
