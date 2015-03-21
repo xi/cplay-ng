@@ -1666,7 +1666,7 @@ class Player:
             try:
                 self._mixer = mixer()
                 break
-            except Exception:
+            except:
                 pass
 
     def setup_backend(self, entry, offset=0):
@@ -2124,7 +2124,7 @@ def main():
         app.run()
     except SystemExit:
         app.cleanup()
-    except Exception:
+    except:
         app.cleanup()
         traceback.print_exc()
 
