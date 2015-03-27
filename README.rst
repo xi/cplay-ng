@@ -1,10 +1,9 @@
 Description
 ===========
 
-cplay-ng is a curses front-end for various audio players.  It aims to
-provide a power-user-friendly interface with simple filelist and playlist
-control. cplay-ng is written in Python and can use either pyncurses or the
-standard curses module.
+cplay-ng is a curses front-end for various audio players written in python.
+It aims to provide a power-user-friendly interface with simple filelist and
+playlist control.
 
 The original cplay is no longer maintained.  This fork aims to maintaining
 the original code as well as keeping it up to date with recent
@@ -14,8 +13,6 @@ Requirements
 ============
 
 -  `python <http://www.python.org/>`_
-
--  `pyncurses <http://pyncurses.sourceforge.net/>`_
 
 -  `pyalsaaudio <http://pyalsaaudio.sourceforge.net/>`_ (optional) For
    Alsa mixer support
