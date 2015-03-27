@@ -60,13 +60,6 @@ XTERM = re.search("rxvt|xterm", os.environ['TERM'])
 MACRO = {}
 APP = None
 
-# Ten band graphical equalizers for mplayer, see man (1) mplayer
-# Default: first entry
-EQUALIZERS = [
-    ("0:0:0:0:0:0:0:0:0:0", "flat"),
-    ("3:3:3:2:0:-1:-1:0:0:1", "rock"),
-]
-
 
 class Application(object):
     def __init__(self):
@@ -381,9 +374,6 @@ class RootWindow(Window):
         self.keymap.bind('q', self.command_quit, ())
         self.keymap.bind('v', APP.player.mixer, ("toggle",))
         self.keymap.bind(',', APP.macro.command_macro, ())
-        # FIXME: Document this
-        self.keymap.bind('e', APP.player.next_prev_eq, (+1,))
-        self.keymap.bind('E', APP.player.next_prev_eq, (-1,))
 
     def command_quit(self):
         APP.input.do_hook = self.do_quit
@@ -1506,11 +1496,9 @@ class NoOffsetBackend(Backend):
 class MPlayer(Backend):
     re_progress = re.compile(r"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     eq_cur = 0
-    equalizer = EQUALIZERS[eq_cur][0]
 
     def play(self):
         Backend.play(self)
-        self.mplayer_send("af equalizer=" + self.equalizer)
         self.mplayer_send("seek %d\n" % self.offset)
 
     def parse_buf(self):
@@ -1528,16 +1516,6 @@ class MPlayer(Backend):
         except IOError:
             logging.debug("Can't write to stdin_w.")
             APP.status.status(_("ERROR: Cannot send commands to mplayer!"), 3)
-
-    def eq_chg(self, offset):
-        if len(EQUALIZERS) == 0:
-            APP.status.status(_("No equalizers configured"), 2)
-            return
-        self.eq_cur = (self.eq_cur + offset) % (len(EQUALIZERS))
-        self.equalizer = EQUALIZERS[self.eq_cur][0]
-        APP.status.status(_("Equalizer: %s(%s)") % (EQUALIZERS[self.eq_cur][1],
-                                                    self.equalizer), 1)
-        self.mplayer_send("af equalizer=" + self.equalizer)
 
 
 class Timeout(object):
@@ -1686,12 +1664,6 @@ class Player(object):
         else:
             getattr(self._mixer, cmd)(*args)
             APP.status.status(str(self._mixer), 1)
-
-    def next_prev_eq(self, direction):
-        if isinstance(self.backend, MPlayer):
-            self.backend.eq_chg(direction)
-        else:
-            APP.status.status(_("Equalizer support requires MPlayer"), 1)
 
 
 class Input(object):
