@@ -48,7 +48,7 @@ msgstr ""
 #: cplay/cplay.py:1778
 #, python-format
 msgid "%s volume %s%%"
-msgstr "%s : volume à %s%%"
+msgstr "%s: volume à %s%%"
 
 #: cplay/cplay.py:1238
 #, python-format
@@ -62,7 +62,7 @@ msgstr "Ajout de la sélection effectué"
 #: cplay/cplay.py:205
 #, fuzzy
 msgid "Backend not found!"
-msgstr "Programme de lecture introuvable pour ce fichier !"
+msgstr "Programme de lecture introuvable pour ce fichier!"
 
 #: cplay/cplay.py:1904
 msgid "Can't read metadata, module mutagen not available"
@@ -95,7 +95,7 @@ msgstr ""
 
 #: cplay/cplay.py:1057
 msgid "Filelist: "
-msgstr "Liste des fichiers : "
+msgstr "Liste des fichiers: "
 
 #: cplay/cplay.py:775
 msgid "Help"
@@ -112,26 +112,26 @@ msgstr ""
 
 #: cplay/cplay.py:1154
 msgid "Not a directory!"
-msgstr "Répertoire introuvable !"
+msgstr "Répertoire introuvable!"
 
 #: cplay/cplay.py:999
 msgid "Not found!"
-msgstr "Marque-page introuvable !"
+msgstr "Marque-page introuvable!"
 
 #: cplay/cplay.py:751 cplay/cplay.py:763
 #, python-format
 msgid "Not found: %s "
-msgstr "Non trouvé : %s"
+msgstr "Non trouvé: %s"
 
 #: cplay/cplay.py:1590
 #, python-format
 msgid "Paused: %s"
-msgstr "Pause : %s"
+msgstr "Pause: %s"
 
 #: cplay/cplay.py:1593
 #, python-format
 msgid "Playing: %s"
-msgstr "Lecture : %s"
+msgstr "Lecture: %s"
 
 #: cplay/cplay.py:1432
 #, python-format
@@ -140,7 +140,7 @@ msgstr "Liste de Lecture %s %s %s"
 
 #: cplay/cplay.py:535
 msgid "Quit? (y/N)"
-msgstr "Quitter ? (y/N)"
+msgstr "Quitter? (y/N)"
 
 #: cplay/cplay.py:1373
 #, python-format
@@ -149,7 +149,7 @@ msgstr "Lecture aléatoire %s"
 
 #: cplay/cplay.py:1073
 msgid "Reading directory..."
-msgstr "Parcours du répertoire ..."
+msgstr "Parcours du répertoire..."
 
 #: cplay/cplay.py:1370
 #, python-format
@@ -158,11 +158,11 @@ msgstr "Lecture en boucle %s"
 
 #: cplay/cplay.py:1391
 msgid "Save playlist"
-msgstr "Enregistrement de la liste "
+msgstr "Enregistrement de la liste"
 
 #: cplay/cplay.py:1024
 msgid "Searching..."
-msgstr "Recherche en cours ..."
+msgstr "Recherche en cours..."
 
 #: cplay/cplay.py:1360
 msgid "Shuffled playlist... Oops?"
@@ -194,7 +194,7 @@ msgstr "Lecture manuelle %s"
 #: cplay/cplay.py:1588
 #, python-format
 msgid "Stopped: %s"
-msgstr "Arrêt : %s"
+msgstr "Arrêt: %s"
 
 #: cplay/cplay.py:1977
 msgid "Switch mixer channels."
@@ -202,11 +202,11 @@ msgstr ""
 
 #: cplay/cplay.py:936
 msgid "Tag regexp"
-msgstr "Sélection "
+msgstr "Sélection"
 
 #: cplay/cplay.py:936
 msgid "Untag regexp"
-msgstr "Déselection "
+msgstr "Déselection"
 
 #: cplay/cplay.py:1964
 msgid "When in doubt, press 'h' for a friendly help page."
@@ -214,7 +214,7 @@ msgstr ""
 
 #: cplay/cplay.py:1226 cplay/cplay.py:1363
 msgid "Working..."
-msgstr "Ajout en cours ..."
+msgstr "Ajout en cours..."
 
 #: cplay/cplay.py:1434
 msgid "[random]"
@@ -230,11 +230,11 @@ msgstr "[manuel]"
 
 #: cplay/cplay.py:625
 msgid "backward-isearch"
-msgstr "Recherche en arrière "
+msgstr "Recherche en arrière"
 
 #: cplay/cplay.py:985
 msgid "bookmark"
-msgstr "Atteindre le marque-page "
+msgstr "Atteindre le marque-page"
 
 #: cplay/cplay.py:338
 msgid "cancel"
@@ -260,11 +260,11 @@ msgstr "fichiers seulement"
 
 #: cplay/cplay.py:627
 msgid "forward-isearch"
-msgstr "Recherche en avant "
+msgstr "Recherche en avant"
 
 #: cplay/cplay.py:1147
 msgid "goto"
-msgstr "Se déplacer vers "
+msgstr "Se déplacer vers"
 
 #: cplay/cplay.py:1750
 msgid "macro"
@@ -297,7 +297,7 @@ msgstr "restant"
 
 #: cplay/cplay.py:1016
 msgid "search"
-msgstr "Recherche récursive "
+msgstr "Recherche récursive"
 
 #: cplay/cplay.py:1037
 msgid "search results"
@@ -305,9 +305,9 @@ msgstr "recherche"
 
 #: cplay/cplay.py:1004
 msgid "set bookmark"
-msgstr "Poser un marque-page "
+msgstr "Poser un marque-page"
 
 #: cplay/cplay.py:861
 msgid "shell$ "
-msgstr "Commande : "
+msgstr "Commande: "
 
