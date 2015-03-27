@@ -1760,7 +1760,7 @@ class MacroController(object):
 
 class Mixer(object):
     def __init__(self):
-        self.channels = []
+        self._channels = []
 
     def get(self):
         raise NotImplementedError
@@ -1772,10 +1772,10 @@ class Mixer(object):
         self.set(self.get() + increment)
 
     def toggle(self):
-        self.channels.append(self.channels.pop(0))
+        self._channels.append(self._channels.pop(0))
 
     def __str__(self):
-        return _("%s volume %s%%") % (self.channels[0][0], self.get())
+        return _("%s volume %s%%") % (self._channels[0][0], self.get())
 
     def close(self):
         pass
@@ -1814,25 +1814,25 @@ class OssMixer(Mixer):
 class AlsaMixer(Mixer):
     def __init__(self):
         import alsaaudio
-        self.channels = [
+        self._channels = [
             ('Master', alsaaudio.Mixer('Master')),
             ('PCM', alsaaudio.Mixer('PCM')),
         ]
 
     def get(self):
-        return self.channels[0][1].getvolume()[0]
+        return self._channels[0][1].getvolume()[0]
 
     def set(self, level):
-        self.channels[0][1].setvolume(level)
+        self._channels[0][1].setvolume(level)
 
     def close(self):
-        for ch in self.channels:
+        for ch in self._channels:
             ch[1].close()
 
 
 class PulseMixer(Mixer):
     def __init__(self):
-        self.channels = ['Master']
+        self._channels = ['Master']
         self._sink = re.search(r'Sink #([0-9]+)', self._list_sinks()).group(1)
         self.set(self.get())
 
