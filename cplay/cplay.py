@@ -29,9 +29,11 @@ import time
 import glob
 import string
 import random
+import curses
 import signal
 import select
 import locale
+import gettext
 import logging
 import argparse
 import traceback
@@ -39,20 +41,9 @@ import subprocess
 from pkg_resources import resource_filename
 
 try:
-    from ncurses import curses
-except ImportError:
-    import curses
-
-try:
     import tty
 except ImportError:
     tty = None
-
-try:
-    import gettext
-    gettext.install('cplay', resource_filename(__name__, 'i18n'))
-except:
-    _ = lambda s: s
 
 try:
     import magic
@@ -61,6 +52,9 @@ except ImportError:
 
 locale.setlocale(locale.LC_ALL, "")
 CODE = locale.getpreferredencoding()
+
+_ = lambda x: x
+gettext.install('cplay', resource_filename(__name__, 'i18n'))
 
 XTERM = re.search("rxvt|xterm", os.environ['TERM'])
 MACRO = {}
