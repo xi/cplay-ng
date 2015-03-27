@@ -45,11 +45,6 @@ try:
 except ImportError:
     tty = None
 
-try:
-    import magic
-except ImportError:
-    magic = None
-
 locale.setlocale(locale.LC_ALL, "")
 CODE = locale.getpreferredencoding()
 
@@ -1889,82 +1884,38 @@ class Keymap(object):
         return True
 
 
-def get_type(pathname):
-    if magic is not None:
-        mg_string = magic.from_file(pathname)
-        logging.debug("Magic type:" + mg_string)
-        if re.match(r"^Ogg data, Vorbis audio.*", mg_string):
-            ftype = 'oggvorbis'
-        elif re.match(r"^Ogg data, FLAC audio.*", mg_string):
-            ftype = 'oggflac'
-        elif re.match(r"FLAC audio bitstream.*", mg_string):
-            ftype = 'flac'
-        # For some reason not all ID3 tagged files return an ID3 identifier,
-        # so we just need to look for mp3 files and hope they are also ID3d.
-        elif re.match(r".*MPEG ADTS, layer III.*", mg_string):
-            ftype = 'id3'
-        else:
-            ftype = "unknown"
-        logging.debug("Magic category: " + ftype)
-        return ftype
-    if re.match(r".*\.ogg$", pathname, re.I):
-        return 'oggvorbis'
-    elif re.match(r".*\.oga$", pathname, re.I):
-        return 'oggflac'
-    elif re.match(r".*\.flac$", pathname, re.I):
-        return 'flac'
-    elif re.match(r".*\.mp3$", pathname, re.I):
-        return 'id3'
-    return "unknown"
-
-
 # FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
 #        in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
+    fallback = os.path.basename(pathname)
     if re.compile(r"^http://").match(pathname) or not os.path.exists(pathname):
-        return pathname
+        return fallback
     try:
         import mutagen
     except ImportError:
         logging.debug("No mutagen available")
         APP.status.status(_("Can't read metadata, module mutagen not "
                             "available"), 2)
-        return pathname
+        return fallback
 
-    ftype = get_type(pathname)
     try:
-        if ftype == 'oggvorbis':
-            import mutagen.oggvorbis
-            metaopen = mutagen.oggvorbis.Open
-        elif ftype == 'id3':
-            import mutagen.easyid3
-            metaopen = mutagen.easyid3.Open
-        elif ftype == 'flac':
-            import mutagen.flac
-            metaopen = mutagen.flac.Open
-        elif ftype == 'oggflac':
-            import mutagen.oggflac
-            metaopen = mutagen.oggflac.Open
-        else:
-            APP.status.status(_("Can't read metadata, I don't know "
-                                "this file"), 1)
-            return os.path.basename(pathname)
-        f = metaopen(pathname)
+        metadata = mutagen.File(pathname, easy=True)
     except:
         logging.debug("Error reading metadata")
         logging.debug(traceback.format_exc())
         APP.status.status("Error reading metadata", 1)
-        return os.path.basename(pathname)
+        return fallback
 
     # FIXME: Allow user to configure metadata view
     try:
-        return (" ".join(f.get('artist', ('?',))) + " - " +
-                " ".join(f.get('album', ('?',))) + " - " +
-                " ".join(f.get('tracknumber', ('?',))) + " " +
-                " ".join(f.get('title', ('?',)))).encode(CODE, 'replace')
+        get = lambda key: " ".join(metadata.get(key, ('?', )))
+        return (get('artist') + " - " +
+                get('album') + " - " +
+                get('tracknumber') + " " +
+                get('title')).encode(CODE, 'replace')
     except:
         logging.debug(traceback.format_exc())
-        return os.path.basename(pathname)
+        return fallback
 
 
 def valid_song(name):

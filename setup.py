@@ -45,7 +45,6 @@ setup(
         'argparse',
     ],
     extras_require={
-        'filetype': ['python-magic'],
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
