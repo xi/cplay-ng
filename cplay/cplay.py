@@ -178,6 +178,166 @@ class Application(object):
         self.quit(1)
 
 
+class Player(object):
+    def __init__(self):
+        self.backend = BACKENDS[0]
+        self.channels = []
+        self.play_tid = None
+        self._mixer = None
+        for mixer in MIXERS:
+            try:
+                self._mixer = mixer()
+                break
+            except:
+                pass
+
+    def setup_backend(self, entry, offset=0):
+        if entry is None or offset is None:
+            return False
+        logging.debug("Setting up backend for " + str(entry))
+        self.backend.stop(quiet=True)
+        for self.backend in BACKENDS:
+            if self.backend.re_files.search(entry.pathname):
+                if self.backend.setup(entry, offset):
+                    return True
+        # FIXME: Needs to report suitable backends
+        logging.debug("Backend not found")
+        APP.status.status(_("Backend not found!"), 1)
+        self.backend.stopped = False  # keep going
+        return False
+
+    def play(self, entry, offset=0):
+        # Play executed, remove from queue
+        self.play_tid = None
+        if entry is None or offset is None:
+            return
+        logging.debug("Starting to play " + str(entry))
+        if self.setup_backend(entry, offset):
+            self.backend.play()
+        else:
+            APP.timeout.add(1, self.next_prev_song, (1, ))
+
+    def delayed_play(self, entry, offset):
+        if self.play_tid:
+            APP.timeout.remove(self.play_tid)
+        self.play_tid = APP.timeout.add(0.5, self.play, (entry, offset))
+
+    def next_prev_song(self, direction):
+        new_entry = APP.playlist.change_active_entry(direction)
+        self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
+        # The backend has to be set-up right away when changing songs.
+        # Otherwise the user can manipulate the old offset value while waiting
+        # for the delayed play to trigger, which causes the next song to play
+        # from a wrong offset instead of its beginning.
+        self.delayed_play(new_entry, 0)
+
+    def seek(self, offset, relative):
+        if self.backend.entry is None:
+            return
+        self.backend.seek(offset, relative)
+        self.delayed_play(self.backend.entry, self.backend.offset)
+
+    def toggle_pause(self):
+        if self.backend.entry is None:
+            return
+        if not self.backend.stopped:
+            self.backend.toggle_pause()
+
+    def toggle_stop(self):
+        if self.backend.entry is None:
+            return
+        if not self.backend.stopped:
+            self.backend.stop()
+        else:
+            self.play(self.backend.entry, self.backend.offset)
+
+    def key_volume(self, ch):
+        self.mixer("set", [int((ch & 0x0f) * 100 / 9.0)])
+
+    def mixer(self, cmd=None, args=[]):
+        if self._mixer is None:
+            APP.status.status(_("No mixer."), 1)
+        else:
+            getattr(self._mixer, cmd)(*args)
+            APP.status.status(str(self._mixer), 1)
+
+
+class Input(object):
+    def __init__(self):
+        self.active = False
+        self.string = ""
+        # optionally patch these
+        self.do_hook = None
+        self.stop_hook = None
+        self.complete_hook = None
+
+    def show(self):
+        pass
+
+    def start(self, prompt="", data="", colon=True):
+        self.active = True
+        self.string = data
+
+    def do(self, *args):
+        if self.do_hook:
+            return self.do_hook(*args)
+        ch = args[0] if args else None
+        if ch in [8, 127]:  # backspace
+            self.string = self.string[:-1]
+        elif ch == 9 and self.complete_hook:
+            self.string = self.complete_hook(self.string)
+        elif ch == 21:  # C-u
+            self.string = ""
+        elif ch == 23:  # C-w
+            self.string = re.sub(r"((.* )?)\w.*", r"\1", self.string)
+        elif ch:
+            self.string = "%s%c" % (self.string, ch)
+        self.show()
+
+    def stop(self, *args):
+        self.active = False
+        if self.string and self.stop_hook:
+            self.stop_hook(*args)
+        self.do_hook = None
+        self.stop_hook = None
+        self.complete_hook = None
+
+    def cancel(self):
+        self.string = ""
+        self.stop()
+
+
+class UIInput(Input):
+    def __init__(self):
+        Input.__init__(self)
+        self.prompt = ""
+        self.keymap = Keymap()
+        self.keymap.bind(list(Window.chars), self.do)
+        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8, ))
+        self.keymap.bind([21, 23], self.do)
+        self.keymap.bind(['\a', 27], self.cancel, ())
+        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
+
+    def show(self):
+        n = len(self.prompt) + 1
+        s = cut(self.string, APP.status.length() - n, left=True)
+        APP.status.status("%s%s " % (self.prompt, s))
+
+    def start(self, prompt="", data="", colon=True):
+        Input.start(self, prompt=prompt, data=data, colon=colon)
+        APP.cursor(1)
+        APP.keymapstack.push(self.keymap)
+        self.prompt = prompt + (": " if colon else "")
+        self.show()
+
+    def stop(self, *args):
+        Input.stop(self, *args)
+        APP.cursor(0)
+        APP.keymapstack.pop()
+        if not self.string:
+            APP.status.status(_("cancel"), 1)
+
+
 class Window(object):
     chars = (string.ascii_letters + string.digits + string.punctuation +
              string.whitespace)
@@ -1582,166 +1742,6 @@ class FIFOControl(object):
             APP.player.mixer(argv[0], [int(argv[1])])
         except:
             pass
-
-
-class Player(object):
-    def __init__(self):
-        self.backend = BACKENDS[0]
-        self.channels = []
-        self.play_tid = None
-        self._mixer = None
-        for mixer in MIXERS:
-            try:
-                self._mixer = mixer()
-                break
-            except:
-                pass
-
-    def setup_backend(self, entry, offset=0):
-        if entry is None or offset is None:
-            return False
-        logging.debug("Setting up backend for " + str(entry))
-        self.backend.stop(quiet=True)
-        for self.backend in BACKENDS:
-            if self.backend.re_files.search(entry.pathname):
-                if self.backend.setup(entry, offset):
-                    return True
-        # FIXME: Needs to report suitable backends
-        logging.debug("Backend not found")
-        APP.status.status(_("Backend not found!"), 1)
-        self.backend.stopped = False  # keep going
-        return False
-
-    def play(self, entry, offset=0):
-        # Play executed, remove from queue
-        self.play_tid = None
-        if entry is None or offset is None:
-            return
-        logging.debug("Starting to play " + str(entry))
-        if self.setup_backend(entry, offset):
-            self.backend.play()
-        else:
-            APP.timeout.add(1, self.next_prev_song, (1,))
-
-    def delayed_play(self, entry, offset):
-        if self.play_tid:
-            APP.timeout.remove(self.play_tid)
-        self.play_tid = APP.timeout.add(0.5, self.play, (entry, offset))
-
-    def next_prev_song(self, direction):
-        new_entry = APP.playlist.change_active_entry(direction)
-        self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
-        # The backend has to be set-up right away when changing songs.
-        # Otherwise the user can manipulate the old offset value while waiting
-        # for the delayed play to trigger, which causes the next song to play
-        # from a wrong offset instead of its beginning.
-        self.delayed_play(new_entry, 0)
-
-    def seek(self, offset, relative):
-        if self.backend.entry is None:
-            return
-        self.backend.seek(offset, relative)
-        self.delayed_play(self.backend.entry, self.backend.offset)
-
-    def toggle_pause(self):
-        if self.backend.entry is None:
-            return
-        if not self.backend.stopped:
-            self.backend.toggle_pause()
-
-    def toggle_stop(self):
-        if self.backend.entry is None:
-            return
-        if not self.backend.stopped:
-            self.backend.stop()
-        else:
-            self.play(self.backend.entry, self.backend.offset)
-
-    def key_volume(self, ch):
-        self.mixer("set", [int((ch & 0x0f) * 100 / 9.0)])
-
-    def mixer(self, cmd=None, args=[]):
-        if self._mixer is None:
-            APP.status.status(_("No mixer."), 1)
-        else:
-            getattr(self._mixer, cmd)(*args)
-            APP.status.status(str(self._mixer), 1)
-
-
-class Input(object):
-    def __init__(self):
-        self.active = False
-        self.string = ""
-        # optionally patch these
-        self.do_hook = None
-        self.stop_hook = None
-        self.complete_hook = None
-
-    def show(self):
-        pass
-
-    def start(self, prompt="", data="", colon=True):
-        self.active = True
-        self.string = data
-
-    def do(self, *args):
-        if self.do_hook:
-            return self.do_hook(*args)
-        ch = args[0] if args else None
-        if ch in [8, 127]:  # backspace
-            self.string = self.string[:-1]
-        elif ch == 9 and self.complete_hook:
-            self.string = self.complete_hook(self.string)
-        elif ch == 21:  # C-u
-            self.string = ""
-        elif ch == 23:  # C-w
-            self.string = re.sub(r"((.* )?)\w.*", r"\1", self.string)
-        elif ch:
-            self.string = "%s%c" % (self.string, ch)
-        self.show()
-
-    def stop(self, *args):
-        self.active = False
-        if self.string and self.stop_hook:
-            self.stop_hook(*args)
-        self.do_hook = None
-        self.stop_hook = None
-        self.complete_hook = None
-
-    def cancel(self):
-        self.string = ""
-        self.stop()
-
-
-class UIInput(Input):
-    def __init__(self):
-        Input.__init__(self)
-        self.prompt = ""
-        self.keymap = Keymap()
-        self.keymap.bind(list(Window.chars), self.do)
-        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8,))
-        self.keymap.bind([21, 23], self.do)
-        self.keymap.bind(['\a', 27], self.cancel, ())
-        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
-
-    def show(self):
-        n = len(self.prompt) + 1
-        s = cut(self.string, APP.status.length() - n, left=True)
-        APP.status.status("%s%s " % (self.prompt, s))
-
-    def start(self, prompt="", data="", colon=True):
-        Input.start(self, prompt=prompt, data=data, colon=colon)
-        APP.cursor(1)
-        APP.keymapstack.push(self.keymap)
-        self.prompt = prompt + (": " if colon else "")
-        self.show()
-
-    def stop(self, *args):
-        Input.stop(self, *args)
-        APP.cursor(0)
-        APP.keymapstack.pop()
-        if not self.string:
-            APP.status.status(_("cancel"), 1)
 
 
 class MacroController(object):
