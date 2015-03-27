@@ -2163,10 +2163,7 @@ MACRO = {}
 
 
 def valid_song(name):
-    for backend in BACKENDS:
-        if backend.re_files.search(name):
-            return True
-    return False
+    return any(backend.re_files.search(name) for backend in BACKENDS)
 
 
 def valid_playlist(name):
