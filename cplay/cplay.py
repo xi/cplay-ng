@@ -214,7 +214,7 @@ class ProgressWindow(Window):
         self.hline(ord('-'), self.cols)
         if self.value > 0:
             self.move(0, 0)
-            x = int(self.value * self.cols)  # 0 to cols-1
+            x = int(self.value * self.cols)  # 0 to cols - 1
             if x:
                 self.hline(ord('='), x)
             self.move(0, x)
@@ -238,9 +238,10 @@ class StatusWindow(Window):
         return curses.newwin(1, self.parent.cols - 12, self.parent.rows - 1, 0)
 
     def update(self):
+        msg = self.current_message
         self.move(0, 0)
         self.clrtoeol()
-        self.insstr(cut(self.current_message, self.cols))
+        self.insstr(cut(msg, self.cols))
         self.touchwin()
         self.refresh()
 
@@ -617,18 +618,18 @@ class HelpWindow(ListWindow):
   <, >        : horizontal scrolling   s, S  : shuffle/Sort playlist
   C-l, l      : refresh, list mode     w, @  : write playlist, jump to active
   h, q, Q     : help, quit?, Quit!     X     : stop playlist after each track
-""").split("\n")
+""").splitlines()
 
 
 class ListEntry:
     def __init__(self, pathname, dir=False):
         self.filename = os.path.basename(pathname)
         self.pathname = pathname
-        self.slash = "/" if dir else ""
+        self.slash = '/' if dir else ''
         self.tagged = False
 
     def __str__(self):
-        mark = "*" if self.tagged else " "
+        mark = '*' if self.tagged else ' '
         return "%s %s%s" % (mark, self.vp(), self.slash)
 
     def vp(self):
@@ -668,10 +669,10 @@ class TagListWindow(ListWindow):
         self.tag_value = None
         self.keymap.bind(' ', self.command_tag_untag, ())
         self.keymap.bind('i', self.command_invert_tags, ())
-        self.keymap.bind('t', self.command_tag, (True,))
-        self.keymap.bind('u', self.command_tag, (False,))
-        self.keymap.bind('T', self.command_tag_regexp, (True,))
-        self.keymap.bind('U', self.command_tag_regexp, (False,))
+        self.keymap.bind('t', self.command_tag, (True, ))
+        self.keymap.bind('u', self.command_tag, (False, ))
+        self.keymap.bind('T', self.command_tag_regexp, (True, ))
+        self.keymap.bind('U', self.command_tag_regexp, (False, ))
         self.keymap.bind('l', self.command_change_viewpoint, ())
         self.keymap.bind('!', self.command_shell, ())
 
@@ -713,10 +714,10 @@ class TagListWindow(ListWindow):
         results = glob.glob(os.path.expanduser(s) + "*")
         if len(results) == 0:
             return line
-        if len(results) == 1:
+        elif len(results) == 1:
             lm = results[0]
             if os.path.isdir(lm):
-                lm += "/"
+                lm += '/'
         else:
             lm = results[0]
             for result in results:
@@ -765,8 +766,8 @@ class TagListWindow(ListWindow):
                     entry.tagged = self.tag_value
             self.update()
             APP.status.status(_("ok"), 1)
-        except re.error as e:
-            APP.status.status(e, 2)
+        except re.error as err:
+            APP.status.status(err, 2)
 
     def get_tagged(self):
         return [x for x in self.buffer if x.tagged]
@@ -876,7 +877,7 @@ class FilelistWindow(TagListWindow):
 
     def get_title(self):
         self.name = _("Filelist: ")
-        return ListWindow.get_title(self, re.sub(r"/?$", "/", self.cwd))
+        return ListWindow.get_title(self, re.sub("/?$", "/", self.cwd))
 
     def listdir_maybe(self, now=0):
         if now < self.mtime_when + 2:
@@ -1509,8 +1510,8 @@ class FrameOffsetBackendMpp(Backend):
         match = self.re_progress.search(self.buf)
         if match:
             m1, s1, m2, s2 = map(int, match.groups())
-            head = m1*60 + s1
-            tail = (m2*60 + s2) - head
+            head = m1 * 60 + s1
+            tail = (m2 * 60 + s2) - head
             self.set_position(head, head + tail)
 
 
@@ -1521,7 +1522,7 @@ class TimeOffsetBackend(Backend):
         match = self.re_progress.search(self.buf)
         if match:
             h, m, s = map(int, match.groups())
-            tail = h*3600 + m*60 + s
+            tail = h * 3600 + m * 60 + s
             head = max(self.length, tail) - tail
             self.set_position(head, head + tail)
 
@@ -1534,8 +1535,8 @@ class GSTBackend(Backend):
         match = self.re_progress.search(self.buf)
         if match:
             ph, pm, ps, us, lh, lm, ls, lus = map(int, match.groups())
-            position = ph*3600 + pm*60 + ps
-            length = lh*3600 + lm*60 + ls
+            position = ph * 3600 + pm * 60 + ps
+            length = lh * 3600 + lm * 60 + ls
             self.set_position(position, length)
 
 
@@ -1595,23 +1596,23 @@ class MPlayer(Backend):
 
 class Timeout:
     def __init__(self):
-        self.next = 0
-        self.dict = {}
+        self._next = 0
+        self._dict = {}
 
     def add(self, timeout, func, args=()):
-        tid = self.next = self.next + 1
-        self.dict[tid] = (func, args, time.time() + timeout)
+        tid = self._next = self._next + 1
+        self._dict[tid] = (func, args, time.time() + timeout)
         return tid
 
     def remove(self, tid):
-        del self.dict[tid]
+        del self._dict[tid]
 
     def check(self, now):
-        for tid, (func, args, timeout) in list(self.dict.items()):
+        for tid, (func, args, timeout) in list(self._dict.items()):
             if now >= timeout:
                 self.remove(tid)
                 func(*args)
-        return 0.2 if len(self.dict) else None
+        return 0.2 if len(self._dict) else None
 
 
 class FIFOControl:
@@ -2103,7 +2104,7 @@ def main():
 
     playlist = []
     if not sys.stdin.isatty():
-        playlist = [l.strip() for l in sys.stdin.readlines()]
+        playlist = [x.strip() for x in sys.stdin]
         os.close(0)
         os.open("/dev/tty", 0)
     try:
