@@ -107,7 +107,7 @@ class KeymapStack(list):
                 break
 
 
-class Keymap:
+class Keymap(object):
     def __init__(self):
         self.methods = dict()
 
@@ -130,7 +130,7 @@ class Keymap:
         return True
 
 
-class Window:
+class Window(object):
     chars = (string.ascii_letters + string.digits + string.punctuation +
              string.whitespace)
 
@@ -621,7 +621,7 @@ class HelpWindow(ListWindow):
 """).splitlines()
 
 
-class ListEntry:
+class ListEntry(object):
     def __init__(self, pathname, directory=False):
         self.filename = os.path.basename(pathname)
         self.pathname = pathname
@@ -991,7 +991,7 @@ class FilelistWindow(TagListWindow):
         self.update()
 
 
-class Playlist:
+class Playlist(object):
     def __init__(self):
         self.buffer = []
         self.bufptr = 0
@@ -1347,7 +1347,7 @@ def get_tag(pathname):
         return os.path.basename(pathname)
 
 
-class Backend:
+class Backend(object):
 
     stdin_r, stdin_w = os.pipe()
     stdout_r, stdout_w = os.pipe()
@@ -1595,7 +1595,7 @@ class MPlayer(Backend):
         self.mplayer_send("af equalizer=" + self.equalizer)
 
 
-class Timeout:
+class Timeout(object):
     def __init__(self):
         self._next = 0
         self._dict = {}
@@ -1616,7 +1616,7 @@ class Timeout:
         return 0.2 if len(self._dict) else None
 
 
-class FIFOControl:
+class FIFOControl(object):
     def __init__(self):
         self.commands = {
             "pause": [APP.player.toggle_pause, []],
@@ -1658,7 +1658,7 @@ class FIFOControl:
             pass
 
 
-class Player:
+class Player(object):
     def __init__(self):
         self.backend = BACKENDS[0]
         self.channels = []
@@ -1759,7 +1759,7 @@ class Player:
             APP.status.status(_("Equalizer support requires MPlayer"), 1)
 
 
-class Input:
+class Input(object):
     def __init__(self):
         self.active = False
         self.string = ""
@@ -1835,7 +1835,7 @@ class UIInput(Input):
             APP.status.status(_("cancel"), 1)
 
 
-class MacroController:
+class MacroController(object):
     def command_macro(self):
         APP.input.do_hook = self.do_macro
         APP.input.start(_("macro"))
@@ -1849,7 +1849,7 @@ class MacroController:
             APP.keymapstack.process(ord(i))
 
 
-class Application:
+class Application(object):
     def __init__(self):
         self.tcattr = None
         self.restricted = False
