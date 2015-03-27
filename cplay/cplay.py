@@ -622,10 +622,10 @@ class HelpWindow(ListWindow):
 
 
 class ListEntry:
-    def __init__(self, pathname, dir=False):
+    def __init__(self, pathname, directory=False):
         self.filename = os.path.basename(pathname)
         self.pathname = pathname
-        self.slash = '/' if dir else ''
+        self.slash = '/' if directory else ''
         self.tagged = False
 
     def __str__(self):
@@ -811,8 +811,8 @@ class FilelistWindow(TagListWindow):
         bookmark = self.bookmarks.get(ch)
         if bookmark:
             self.bookmarks[39] = [self.cwd, self.bufptr]
-            dir, pos = bookmark
-            self.chdir(dir)
+            directory, pos = bookmark
+            self.chdir(directory)
             self.listdir()
             self.bufptr = pos
             self.update()
@@ -864,9 +864,9 @@ class FilelistWindow(TagListWindow):
         self.update()
         APP.status.restore_default_status()
 
-    def search_recursively(self, re_tmp, dir, results):
-        for filename in os.listdir(dir):
-            pathname = os.path.join(dir, filename)
+    def search_recursively(self, re_tmp, directory, results):
+        for filename in os.listdir(directory):
+            pathname = os.path.join(directory, filename)
             if re_tmp.search(filename):
                 if os.path.isdir(pathname):
                     results.append(ListEntry(pathname, 1))
@@ -934,10 +934,10 @@ class FilelistWindow(TagListWindow):
         if not quiet:
             APP.status.restore_default_status()
 
-    def chdir(self, dir):
+    def chdir(self, directory):
         if hasattr(self, "cwd"):
             self.oldposition[self.cwd] = self.bufptr
-        self.cwd = os.path.normpath(dir)
+        self.cwd = os.path.normpath(directory)
         try:
             os.chdir(self.cwd)
         except:
@@ -957,9 +957,9 @@ class FilelistWindow(TagListWindow):
     def command_chparentdir(self):
         if APP.restricted and self.cwd == self.startdir:
             return
-        dir = os.path.basename(self.cwd)
+        directory = os.path.basename(self.cwd)
         self.chdir(os.path.dirname(self.cwd))
-        self.listdir(prevdir=dir)
+        self.listdir(prevdir=directory)
 
     def command_goto(self):
         if APP.restricted:
@@ -969,13 +969,13 @@ class FilelistWindow(TagListWindow):
         APP.input.start(_("goto"))
 
     def stop_goto(self):
-        dir = os.path.expanduser(APP.input.string)
-        if dir[0] != '/':
-            dir = os.path.join(self.cwd, dir)
-        if not os.path.isdir(dir):
+        directory = os.path.expanduser(APP.input.string)
+        if directory[0] != '/':
+            directory = os.path.join(self.cwd, directory)
+        if not os.path.isdir(directory):
             APP.status.status(_("Not a directory!"), 1)
             return
-        self.chdir(dir)
+        self.chdir(directory)
         self.listdir()
 
     def command_add_recursively(self):
@@ -1011,10 +1011,10 @@ class Playlist:
         if self.random:
             self.random_left.append(item)
 
-    def add_dir(self, dir):
-        filenames = os.listdir(dir)
+    def add_dir(self, directory):
+        filenames = os.listdir(directory)
         for filename in sorted(filenames):
-            self._add(os.path.join(dir, filename), quiet=True)
+            self._add(os.path.join(directory, filename), quiet=True)
 
     def add_m3u(self, line):
         if re.match(r"^(#.*)?$", line):
