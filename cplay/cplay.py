@@ -1367,7 +1367,7 @@ class Backend:
         self.time_setup = None
         self.buf = ''
         self.tid = None
-        self._p = None
+        self._proc = None
 
     def setup(self, entry, offset):
         """Ready the backend with given ListEntry and seek offset"""
@@ -1393,10 +1393,10 @@ class Backend:
         logging.debug("My offset is %d" % self.offset)
 
         try:
-            self._p = subprocess.Popen(self.argv,
-                                       stdout=self.stdout_w,
-                                       stderr=self.stderr_w,
-                                       stdin=self.stdin_r)
+            self._proc = subprocess.Popen(self.argv,
+                                          stdout=self.stdout_w,
+                                          stderr=self.stderr_w,
+                                          stdin=self.stdin_r)
         except OSError as err:
             APP.status.status(err, 2)
             return False
@@ -1408,13 +1408,13 @@ class Backend:
         return True
 
     def stop(self, quiet=False):
-        if self._p is None:
+        if self._proc is None:
             return
         if self.paused:
             self.toggle_pause(quiet)
         if self.poll() is None:
             try:
-                self._p.terminate()
+                self._proc.terminate()
             except OSError as err:
                 APP.status.status(err, 2)
         self.stopped = True
@@ -1422,9 +1422,10 @@ class Backend:
             self.update_status()
 
     def toggle_pause(self, quiet=False):
-        if self._p is None:
+        if self._proc is None:
             return
-        self._p.send_signal(signal.SIGCONT if self.paused else signal.SIGSTOP)
+        self._proc.send_signal(
+            signal.SIGCONT if self.paused else signal.SIGSTOP)
         self.paused = not self.paused
         if not quiet:
             self.update_status()
@@ -1442,10 +1443,10 @@ class Backend:
             self.parse_progress()
 
     def poll(self):
-        if self.stopped or self._p is None:
+        if self.stopped or self._proc is None:
             return 0
-        elif self._p.poll() is not None:
-            self._p = None
+        elif self._proc.poll() is not None:
+            self._proc = None
             APP.status.set_default_status("")
             APP.counter.counter(0, 0)
             APP.progress.progress(0)
