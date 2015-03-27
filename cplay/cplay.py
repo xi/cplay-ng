@@ -453,6 +453,7 @@ class ListWindow(Window):
         self.search_direction = 0
         self.last_search = ""
         self.hoffset = 0
+        self.not_found = False
         self.keymap = Keymap()
         self.keymap.bind(['k', curses.KEY_UP, 16], self.cursor_move, (-1, ))
         self.keymap.bind(['j', curses.KEY_DOWN, 14], self.cursor_move, (1, ))
@@ -799,6 +800,7 @@ class FilelistWindow(TagListWindow):
     def __init__(self, parent):
         TagListWindow.__init__(self, parent)
         self.oldposition = {}
+        self.cwd = None
         try:
             self.chdir(os.getcwd())
         except OSError:
@@ -951,7 +953,7 @@ class FilelistWindow(TagListWindow):
             APP.status.restore_default_status()
 
     def chdir(self, directory):
-        if hasattr(self, "cwd"):
+        if self.cwd is not None:
             self.oldposition[self.cwd] = self.bufptr
         self.cwd = os.path.normpath(directory)
         try:
@@ -1305,6 +1307,7 @@ class Backend(object):
         self.time_setup = None
         self.buf = ''
         self.tid = None
+        self.step = 0
         self._proc = None
 
     def setup(self, entry, offset):
