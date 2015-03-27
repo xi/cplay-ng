@@ -26,9 +26,6 @@ Requirements
 -  `mutagen <http://code.google.com/p/mutagen/>`_ (optional) For
    metadata support (IDv3 etc.)
 
--  `python-magic <https://github.com/ahupp/python-magic>`_ (optional) For
-   better filetype recognition
-
 For playback either install `mplayer <http://www.mplayerhq.hu/>`_,
 `gst123 <http://space.twc.de/~stefan/gst123.php>`_ or one or more of the
 following players:
