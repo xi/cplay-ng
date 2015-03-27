@@ -67,8 +67,6 @@ EQUALIZERS = [
     ("3:3:3:2:0:-1:-1:0:0:1", "rock"),
 ]
 
-SPEED_OFFSET = 0.005
-
 
 class Application(object):
     def __init__(self):
@@ -384,9 +382,6 @@ class RootWindow(Window):
         self.keymap.bind('v', APP.player.mixer, ("toggle",))
         self.keymap.bind(',', APP.macro.command_macro, ())
         # FIXME: Document this
-        self.keymap.bind('[', APP.player.incr_reset_decr_speed, (-1,))
-        self.keymap.bind(']', APP.player.incr_reset_decr_speed, (+1,))
-        self.keymap.bind('\\', APP.player.incr_reset_decr_speed, (0,))
         self.keymap.bind('e', APP.player.next_prev_eq, (+1,))
         self.keymap.bind('E', APP.player.next_prev_eq, (-1,))
 
@@ -1510,13 +1505,11 @@ class NoOffsetBackend(Backend):
 
 class MPlayer(Backend):
     re_progress = re.compile(r"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
-    speed = 1.0
     eq_cur = 0
     equalizer = EQUALIZERS[eq_cur][0]
 
     def play(self):
         Backend.play(self)
-        self.mplayer_send("speed_set %f" % self.speed)
         self.mplayer_send("af equalizer=" + self.equalizer)
         self.mplayer_send("seek %d\n" % self.offset)
 
@@ -1535,11 +1528,6 @@ class MPlayer(Backend):
         except IOError:
             logging.debug("Can't write to stdin_w.")
             APP.status.status(_("ERROR: Cannot send commands to mplayer!"), 3)
-
-    def speed_chg(self, set):
-        self.speed = set
-        self.mplayer_send("speed_set %f" % self.speed)
-        APP.status.status(_("Speed: %s%%") % (self.speed * 100), 1)
 
     def eq_chg(self, offset):
         if len(EQUALIZERS) == 0:
@@ -1698,16 +1686,6 @@ class Player(object):
         else:
             getattr(self._mixer, cmd)(*args)
             APP.status.status(str(self._mixer), 1)
-
-    def incr_reset_decr_speed(self, signum):
-        if isinstance(self.backend, MPlayer):
-            if signum == 0:
-                self.backend.speed_chg(1.0)
-            else:
-                self.backend.speed_chg(self.backend.speed +
-                                       signum*SPEED_OFFSET)
-        else:
-            APP.status.status(_("Speed control requires MPlayer"), 1)
 
     def next_prev_eq(self, direction):
         if isinstance(self.backend, MPlayer):
