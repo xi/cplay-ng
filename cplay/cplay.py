@@ -215,33 +215,6 @@ class Window(object):
     def __getattr__(self, name):
         return getattr(self.w, name)
 
-    def getmaxyx(self):
-        y, x = self.w.getmaxyx()
-        try:
-            curses.version  # tested with 1.2 and 1.6
-        except AttributeError:
-            # pyncurses - emulate traditional (silly) behavior
-            y, x = y + 1, x + 1
-        return y, x
-
-    def touchwin(self):
-        try:
-            self.w.touchwin()
-        except AttributeError:
-            self.touchln(0, self.getmaxyx()[0])
-
-    def attron(self, attr):
-        try:
-            self.w.attron(attr)
-        except AttributeError:
-            self.w.attr_on(attr)
-
-    def attroff(self, attr):
-        try:
-            self.w.attroff(attr)
-        except AttributeError:
-            self.w.attr_off(attr)
-
     def newwin(self):
         return curses.newwin(curses.tigetnum('lines'),
                              curses.tigetnum('cols'), 0, 0)
