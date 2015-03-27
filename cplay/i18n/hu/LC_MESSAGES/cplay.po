@@ -45,7 +45,7 @@ msgstr ""
 #: cplay/cplay.py:1778
 #, fuzzy, python-format
 msgid "%s volume %s%%"
-msgstr "Hangerő %d%%"
+msgstr "Hangerő %s%%"
 
 #: cplay/cplay.py:1238
 #, python-format
@@ -135,7 +135,7 @@ msgstr "Lejátszás: %s"
 #: cplay/cplay.py:1432
 #, fuzzy, python-format
 msgid "Playlist %s %s %s"
-msgstr "Számlista %s %s"
+msgstr "Számlista %s %s %s"
 
 #: cplay/cplay.py:535
 msgid "Quit? (y/N)"
@@ -189,7 +189,7 @@ msgstr ""
 #: cplay/cplay.py:1379
 #, fuzzy, python-format
 msgid "Stop playlist: %s"
-msgstr "Számlista %s %s"
+msgstr ""
 
 #: cplay/cplay.py:1588
 #, python-format
