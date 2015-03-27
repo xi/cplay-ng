@@ -347,7 +347,7 @@ class RootWindow(Window):
         self.keymap.bind('q', self.command_quit, ())
         self.keymap.bind('v', app.player.mixer, ("toggle",))
         self.keymap.bind(',', app.macro.command_macro, ())
-        # FIXME Document this
+        # FIXME: Document this
         self.keymap.bind('[', app.player.incr_reset_decr_speed, (-1,))
         self.keymap.bind(']', app.player.incr_reset_decr_speed, (+1,))
         self.keymap.bind('\\', app.player.incr_reset_decr_speed, (0,))
@@ -1025,7 +1025,7 @@ class Playlist:
             self.append(PlaylistEntry(os.path.join(dirname, line)))
 
     def add_pls(self, line):
-        # todo - support title & length
+        # FIXME: support title & length
         m = re.match(r"File(\d+)=(.*)", line)
         if m:
             self.append(PlaylistEntry(self.fix_url(m.group(2))))
@@ -1052,7 +1052,7 @@ class Playlist:
             self.append(PlaylistEntry(pathname))
         else:
             return
-        # todo - refactor
+        # FIXME: refactor
         filename = os.path.basename(pathname) or pathname
         if not quiet:
             self.update()
