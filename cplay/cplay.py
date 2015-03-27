@@ -494,7 +494,7 @@ class ListWindow(Window):
         self.update_line(curses.A_REVERSE)
 
     def update_line(self, attr=None, refresh=True):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         ypos = self.bufptr - self.scrptr
         if attr:
@@ -524,7 +524,7 @@ class ListWindow(Window):
         self.insstr(cut(s, self.cols))
 
     def current(self):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return None
         if self.bufptr >= len(self.buffer):
             self.bufptr = len(self.buffer) - 1
@@ -533,7 +533,7 @@ class ListWindow(Window):
     def cursor_move(self, ydiff):
         if APP.input.active:
             APP.input.cancel()
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         self.update_line(refresh=False)
         self.bufptr = (self.bufptr + ydiff) % len(self.buffer)
@@ -729,7 +729,7 @@ class TagListWindow(ListWindow):
         else:
             s, part = line, ""
         results = glob.glob(os.path.expanduser(s) + "*")
-        if len(results) == 0:
+        if not results:
             return line
         elif len(results) == 1:
             lm = results[0]
@@ -758,14 +758,14 @@ class TagListWindow(ListWindow):
         self.update()
 
     def command_tag_untag(self):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         tmp = self.buffer[self.bufptr]
         tmp.tagged = not tmp.tagged
         self.cursor_move(1)
 
     def command_tag(self, value):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         self.buffer[self.bufptr].tagged = value
         self.cursor_move(1)
@@ -962,7 +962,7 @@ class FilelistWindow(TagListWindow):
             pass
 
     def command_chdir_or_play(self):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         if self.current().filename == "..":
             self.command_chparentdir()
@@ -998,7 +998,7 @@ class FilelistWindow(TagListWindow):
 
     def command_add_recursively(self):
         l = self.get_tagged()
-        if len(l) == 0:
+        if not l:
             APP.playlist.add(self.current().pathname)
             self.cursor_move(1)
             return
@@ -1087,13 +1087,13 @@ class Playlist(object):
         return re.sub(r"(http://[^/]+)/?(.*)", r"\1/\2", url)
 
     def change_active_entry(self, direction):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         old = self.get_active_entry()
         new = None
         if self.random:
             if direction > 0:
-                if len(self.random_next) > 0:
+                if self.random_next:
                     new = self.random_next.pop()
                 elif self.random_left:
                     pass
@@ -1141,7 +1141,7 @@ class Playlist(object):
             self.update()
 
     def command_play(self):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         entry = self.get_active_entry()
         if entry is not None:
@@ -1152,7 +1152,7 @@ class Playlist(object):
         APP.player.play(entry)
 
     def command_delete(self):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         current_entry = self.current()
         n = len(self.buffer)
@@ -1180,11 +1180,11 @@ class Playlist(object):
         self.update()
 
     def command_move(self, after=False):
-        if len(self.buffer) == 0:
+        if not self.buffer:
             return
         current_entry = self.current()
         l = self.get_tagged()
-        if len(l) == 0 or current_entry.tagged:
+        if not l or current_entry.tagged:
             return
         self.buffer = self.not_tagged(self.buffer)
         self.bufptr = self.buffer.index(current_entry)
@@ -1539,7 +1539,7 @@ class Timeout(object):
             if now >= timeout:
                 self.remove(tid)
                 func(*args)
-        return 0.2 if len(self._dict) else None
+        return 0.2 if self._dict else None
 
 
 class FIFOControl(object):
