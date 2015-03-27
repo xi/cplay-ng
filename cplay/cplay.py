@@ -23,19 +23,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 __version__ = "cplay-ng 2.0.3"
 
 import os
-import sys
-import glob
-import time
-import argparse
-import random
 import re
-import signal
+import sys
+import time
+import glob
 import string
+import random
+import signal
 import select
-import subprocess
-import traceback
 import locale
 import logging
+import argparse
+import traceback
+import subprocess
 from pkg_resources import resource_filename
 
 try:
@@ -60,9 +60,9 @@ except ImportError:
     magic = None
 
 locale.setlocale(locale.LC_ALL, "")
-code = locale.getpreferredencoding()
+CODE = locale.getpreferredencoding()
 
-XTERM = re.search(r"rxvt|xterm", os.environ["TERM"])
+XTERM = re.search("rxvt|xterm", os.environ['TERM'])
 MACRO = {}
 APP = None
 
@@ -2041,7 +2041,7 @@ def get_tag(pathname):
         return (" ".join(f.get('artist', ('?',))) + " - " +
                 " ".join(f.get('album', ('?',))) + " - " +
                 " ".join(f.get('tracknumber', ('?',))) + " " +
-                " ".join(f.get('title', ('?',)))).encode(code, 'replace')
+                " ".join(f.get('title', ('?',)))).encode(CODE, 'replace')
     except:
         logging.debug(traceback.format_exc())
         return os.path.basename(pathname)
@@ -2129,7 +2129,7 @@ def main():
             APP.playlist.command_toggle_random()
         if args.toggle_mixer:
             APP.player.mixer("toggle")
-        logging.debug("Preferred locale is " + str(code))
+        logging.debug("Preferred locale is " + str(CODE))
         if args.files or playlist:
             for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
