@@ -1783,6 +1783,7 @@ class Mixer(object):
 
 class OssMixer(Mixer):
     def __init__(self):
+        Mixer.__init__(self)
         try:
             import ossaudiodev as oss
             self._ossaudiodev = True
@@ -1813,6 +1814,7 @@ class OssMixer(Mixer):
 
 class AlsaMixer(Mixer):
     def __init__(self):
+        Mixer.__init__(self)
         import alsaaudio
         self._channels = [
             ('Master', alsaaudio.Mixer('Master')),
@@ -1832,6 +1834,7 @@ class AlsaMixer(Mixer):
 
 class PulseMixer(Mixer):
     def __init__(self):
+        Mixer.__init__(self)
         self._channels = ['Master']
         self._sink = re.search(r'Sink #([0-9]+)', self._list_sinks()).group(1)
         self.set(self.get())
