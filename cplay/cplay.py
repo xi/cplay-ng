@@ -911,7 +911,7 @@ class FilelistWindow(TagListWindow):
                     files.append(pathname)
                 elif valid_playlist(filename):
                     files.append(pathname)
-        except os.error:
+        except OSError:
             pass
         dots = ListEntry(os.path.join(self.cwd, ".."), 1)
         self.buffer = [[dots], []][self.cwd == "/"]
@@ -940,7 +940,7 @@ class FilelistWindow(TagListWindow):
         self.cwd = os.path.normpath(directory)
         try:
             os.chdir(self.cwd)
-        except:
+        except OSError:
             pass
 
     def command_chdir_or_play(self):
