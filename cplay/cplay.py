@@ -72,14 +72,6 @@ EQUALIZERS = [
     ("0:0:0:0:0:0:0:0:0:0", "flat"),
     ("3:3:3:2:0:-1:-1:0:0:1", "rock"),
 ]
-SPEED_OFFSET = 0.005
-
-EQUALIZERS = [
-    ("0:0:0:0:0:0:0:0:0:0", "flat"),
-    ("3:3:3:2:0:-1:-1:0:0:1", "rock"),
-]
-# Ten band graphical equalizers for mplayer, see man (1) mplayer
-# Default: first entry
 
 SPEED_OFFSET = 0.005
 
