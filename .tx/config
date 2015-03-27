@@ -1,0 +1,8 @@
+[main]
+host = https://www.transifex.com
+
+[cplay-ng.cplaypot]
+file_filter = cplay/i18n/<lang>/LC_MESSAGES/cplay.po
+source_file = cplay/i18n/cplay.pot
+source_lang = en
+type = PO

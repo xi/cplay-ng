@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: cplay 1.49\n"
 "Report-Msgid-Bugs-To: Yoann Aubineau <yaubi@free.fr>\n"
-"POT-Creation-Date: 2014-06-01 13:54+0200\n"
+"POT-Creation-Date: 2015-03-27 23:55+0100\n"
 "PO-Revision-Date: 2004-07-03 16:04+0100\n"
 "Last-Translator: Yoann Aubineau <yaubi@free.fr>\n"
 "Language-Team: French <yaubi@free.fr>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: cplay.py:607
+#: cplay/cplay.py:777
 msgid ""
 "  Global                               t, T  : tag current/regex\n"
 "  ------                               u, U  : untag current/regex\n"
@@ -45,262 +45,269 @@ msgid ""
 "track\n"
 msgstr ""
 
-#: cplay.py:1976
+#: cplay/cplay.py:1778
 #, python-format
 msgid "%s volume %s%%"
-msgstr "%s : volume à %s%%"
+msgstr "%s: volume Ã  %s%%"
 
-#: cplay.py:1109
+#: cplay/cplay.py:1238
 #, python-format
 msgid "Added: %s"
-msgstr "Ajout de \"%s\" effectué"
+msgstr "Ajout de \"%s\" effectuÃ©"
 
-#: cplay.py:1003
+#: cplay/cplay.py:1165
 msgid "Adding tagged files"
-msgstr "Ajout de la sélection effectué"
+msgstr "Ajout de la sÃ©lection effectuÃ©"
 
-#: cplay.py:1689
+#: cplay/cplay.py:205
 #, fuzzy
 msgid "Backend not found!"
-msgstr "Programme de lecture introuvable pour ce fichier !"
+msgstr "Programme de lecture introuvable pour ce fichier!"
 
-#: cplay.py:1346
-msgid "Can't read metadata, I don't know this file"
-msgstr ""
-
-#: cplay.py:1328
+#: cplay/cplay.py:1904
 msgid "Can't read metadata, module mutagen not available"
 msgstr ""
 
-#: cplay.py:719
+#: cplay/cplay.py:878
 msgid "Command successfully executed.\n"
 msgstr ""
 
-#: cplay.py:332
+#: cplay/cplay.py:497
 #, python-format
 msgid "Counting %s time"
 msgstr "Mesure du temps %s"
 
-#: cplay.py:1214
+#: cplay/cplay.py:1339
 msgid "Deleted playlist"
-msgstr "Liste vidée"
+msgstr "Liste vidÃ©e"
 
-#: cplay.py:1585
+#: cplay/cplay.py:1680
 msgid "ERROR: Cannot send commands to mplayer!"
 msgstr ""
 
-#: cplay.py:1761
-msgid "Equalizer support requires MPlayer"
+#: cplay/cplay.py:1967
+msgid "Enable debugging output to <filename>."
 msgstr ""
 
-#: cplay.py:1598
-#, python-format
-msgid "Equalizer: %s(%s)"
+#: cplay/cplay.py:1978
+msgid "FIFO socket used by cnq"
 msgstr ""
 
-#: cplay.py:895
+#: cplay/cplay.py:1057
 msgid "Filelist: "
-msgstr "Liste des fichiers : "
+msgstr "Liste des fichiers: "
 
-#: cplay.py:605
+#: cplay/cplay.py:775
 msgid "Help"
 msgstr "Aide"
 
-#: cplay.py:753
+#: cplay/cplay.py:911
 #, python-format
 msgid "Listing %s"
 msgstr "Affichage des %s"
 
-#: cplay.py:1594
-msgid "No equalizers configured"
-msgstr ""
-
-#: cplay.py:1742
+#: cplay/cplay.py:259
 msgid "No mixer."
 msgstr ""
 
-#: cplay.py:992
+#: cplay/cplay.py:1154
 msgid "Not a directory!"
-msgstr "Répertoire introuvable !"
+msgstr "RÃ©pertoire introuvable!"
 
-#: cplay.py:840
+#: cplay/cplay.py:999
 msgid "Not found!"
-msgstr "Marque-page introuvable !"
+msgstr "Marque-page introuvable!"
 
-#: cplay.py:581 cplay.py:593
+#: cplay/cplay.py:751 cplay/cplay.py:763
 #, python-format
 msgid "Not found: %s "
-msgstr "Non trouvé : %s"
+msgstr "Non trouvÃ©: %s"
 
-#: cplay.py:1494
+#: cplay/cplay.py:1590
 #, python-format
 msgid "Paused: %s"
-msgstr "Pause : %s"
+msgstr "Pause: %s"
 
-#: cplay.py:1497
+#: cplay/cplay.py:1593
 #, python-format
 msgid "Playing: %s"
-msgstr "Lecture : %s"
+msgstr "Lecture: %s"
 
-#: cplay.py:1039
+#: cplay/cplay.py:1432
 #, python-format
 msgid "Playlist %s %s %s"
 msgstr "Liste de Lecture %s %s %s"
 
-#: cplay.py:371
+#: cplay/cplay.py:535
 msgid "Quit? (y/N)"
-msgstr "Quitter ? (y/N)"
+msgstr "Quitter? (y/N)"
 
-#: cplay.py:1253
+#: cplay/cplay.py:1373
 #, python-format
 msgid "Random: %s"
-msgstr "Lecture aléatoire %s"
+msgstr "Lecture alÃ©atoire %s"
 
-#: cplay.py:911
+#: cplay/cplay.py:1073
 msgid "Reading directory..."
-msgstr "Parcours du répertoire ..."
+msgstr "Parcours du rÃ©pertoire..."
 
-#: cplay.py:1250
+#: cplay/cplay.py:1370
 #, python-format
 msgid "Repeat: %s"
 msgstr "Lecture en boucle %s"
 
-#: cplay.py:1271
+#: cplay/cplay.py:1391
 msgid "Save playlist"
-msgstr "Enregistrement de la liste "
+msgstr "Enregistrement de la liste"
 
-#: cplay.py:862
+#: cplay/cplay.py:1024
 msgid "Searching..."
-msgstr "Recherche en cours ..."
+msgstr "Recherche en cours..."
 
-#: cplay.py:1240
+#: cplay/cplay.py:1360
 msgid "Shuffled playlist... Oops?"
-msgstr "Liste mélangée"
+msgstr "Liste mÃ©langÃ©e"
 
-#: cplay.py:1247
+#: cplay/cplay.py:1367
 msgid "Sorted playlist"
-msgstr "Liste triée"
+msgstr "Liste triÃ©e"
 
-#: cplay.py:1755
-msgid "Speed control requires MPlayer"
+#: cplay/cplay.py:1975
+msgid "Start in random mode."
 msgstr ""
 
-#: cplay.py:1590
-#, fuzzy, python-format
-msgid "Speed: %s%%"
-msgstr "Pause : %s"
+#: cplay/cplay.py:1973
+msgid "Start in repeat mode."
+msgstr ""
 
-#: cplay.py:1259
+#: cplay/cplay.py:1969
+msgid ""
+"Start in restricted mode: No shell commands, changing directory, goto, or"
+" saving playlists."
+msgstr ""
+
+#: cplay/cplay.py:1379
 #, python-format
 msgid "Stop playlist: %s"
 msgstr "Lecture manuelle %s"
 
-#: cplay.py:1492
+#: cplay/cplay.py:1588
 #, python-format
 msgid "Stopped: %s"
-msgstr "Arrêt : %s"
+msgstr "ArrÃªt: %s"
 
-#: cplay.py:778
+#: cplay/cplay.py:1977
+msgid "Switch mixer channels."
+msgstr ""
+
+#: cplay/cplay.py:936
 msgid "Tag regexp"
-msgstr "Sélection "
+msgstr "SÃ©lection"
 
-#: cplay.py:778
+#: cplay/cplay.py:936
 msgid "Untag regexp"
-msgstr "Déselection "
+msgstr "DÃ©selection"
 
-#: cplay.py:2055
-#, fuzzy, python-format
-msgid "Usage: %s [-d <filename>] [-mnrR] [ file | dir | playlist ] ...\n"
-msgstr "Usage %s [-nrRv] [ fichier | répertoire | liste_de_lecture ] ...\n"
+#: cplay/cplay.py:1964
+msgid "When in doubt, press 'h' for a friendly help page."
+msgstr ""
 
-#: cplay.py:1098 cplay.py:1243
+#: cplay/cplay.py:1226 cplay/cplay.py:1363
 msgid "Working..."
-msgstr "Ajout en cours ..."
+msgstr "Ajout en cours..."
 
-#: cplay.py:1041
+#: cplay/cplay.py:1434
 msgid "[random]"
-msgstr "[aléatoire]"
+msgstr "[alÃ©atoire]"
 
-#: cplay.py:1040
+#: cplay/cplay.py:1433
 msgid "[repeat]"
 msgstr "[boucle]"
 
-#: cplay.py:1042
+#: cplay/cplay.py:1435
 msgid "[stop]"
 msgstr "[manuel]"
 
-#: cplay.py:459
+#: cplay/cplay.py:625
 msgid "backward-isearch"
-msgstr "Recherche en arrière "
+msgstr "Recherche en arriÃ¨re"
 
-#: cplay.py:826
+#: cplay/cplay.py:985
 msgid "bookmark"
-msgstr "Atteindre le marque-page "
+msgstr "Atteindre le marque-page"
 
-#: cplay.py:1815
+#: cplay/cplay.py:338
 msgid "cancel"
-msgstr "Action annulée"
+msgstr "Action annulÃ©e"
 
-#: cplay.py:331
+#: cplay/cplay.py:496
 msgid "elapsed"
-msgstr "écoulé"
+msgstr "Ã©coulÃ©"
 
-#: cplay.py:657
+#: cplay/cplay.py:1979
+#, fuzzy
+msgid "file"
+msgstr "fichiers seulement"
+
+#: cplay/cplay.py:1980
+#, fuzzy
+msgid "file, dir or playlist"
+msgstr "Liste vidÃ©e"
+
+#: cplay/cplay.py:824 cplay/cplay.py:1966
 msgid "filename"
 msgstr "fichiers seulement"
 
-#: cplay.py:461
+#: cplay/cplay.py:627
 msgid "forward-isearch"
-msgstr "Recherche en avant "
+msgstr "Recherche en avant"
 
-#: cplay.py:985
+#: cplay/cplay.py:1147
 msgid "goto"
-msgstr "Se déplacer vers "
+msgstr "Se dÃ©placer vers"
 
-#: cplay.py:1836
+#: cplay/cplay.py:1750
 msgid "macro"
 msgstr ""
 
-#: cplay.py:681
+#: cplay/cplay.py:840
 msgid "metadata"
-msgstr "meta-donnée"
+msgstr "meta-donnÃ©e"
 
-#: cplay.py:1263
+#: cplay/cplay.py:1384
 msgid "off"
-msgstr "désactivée"
+msgstr "dÃ©sactivÃ©e"
 
-#: cplay.py:569 cplay.py:787 cplay.py:838 cplay.py:850 cplay.py:1285
+#: cplay/cplay.py:735 cplay/cplay.py:945 cplay/cplay.py:997 cplay/cplay.py:1010
+#: cplay/cplay.py:1405
 msgid "ok"
 msgstr "ok"
 
-#: cplay.py:1263
+#: cplay/cplay.py:1383
 msgid "on"
-msgstr "activée"
+msgstr "activÃ©e"
 
-#: cplay.py:658
+#: cplay/cplay.py:825
 msgid "pathname"
 msgstr "chemins complets"
 
-#: cplay.py:328
+#: cplay/cplay.py:493
 msgid "remaining"
 msgstr "restant"
 
-#: cplay.py:854
+#: cplay/cplay.py:1016
 msgid "search"
-msgstr "Recherche récursive "
+msgstr "Recherche rÃ©cursive"
 
-#: cplay.py:875
+#: cplay/cplay.py:1037
 msgid "search results"
 msgstr "recherche"
 
-#: cplay.py:845
+#: cplay/cplay.py:1004
 msgid "set bookmark"
-msgstr "Poser un marque-page "
+msgstr "Poser un marque-page"
 
-#: cplay.py:702
+#: cplay/cplay.py:861
 msgid "shell$ "
-msgstr "Commande : "
-
-#~ msgid ""
-#~ msgstr ""
+msgstr "Commande: "
 
