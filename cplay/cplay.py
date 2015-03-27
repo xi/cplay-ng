@@ -43,8 +43,10 @@ try:
 except ImportError:
     import curses
 
-locale.setlocale(locale.LC_ALL, "")
-code = locale.getpreferredencoding()
+try:
+    import tty
+except ImportError:
+    tty = None
 
 try:
     import gettext
@@ -53,18 +55,16 @@ except:
     _ = lambda s: s
 
 try:
-    import tty
-except ImportError:
-    tty = None
-
-try:
     import magic
 except ImportError:
     magic = None
 
-APP = None
+locale.setlocale(locale.LC_ALL, "")
+code = locale.getpreferredencoding()
 
 XTERM = re.search(r"rxvt|xterm", os.environ["TERM"])
+MACRO = {}
+APP = None
 
 # Ten band graphical equalizers for mplayer, see man (1) mplayer
 # Default: first entry
@@ -76,50 +76,126 @@ EQUALIZERS = [
 SPEED_OFFSET = 0.005
 
 
-def which(program):
-    for path in os.environ["PATH"].split(":"):
-        if os.path.exists(os.path.join(path, program)):
-            return os.path.join(path, program)
-
-
-def cut(s, n, left=False):
-    if left:
-        return "<%s" % s[-n + 1:] if len(s) > n else s
-    else:
-        return "%s>" % s[:n - 1] if len(s) > n else s
-
-
-class KeymapStack(list):
-    def push(self, item):
-        self.append(item)
-
-    def process(self, code):
-        for keymap in reversed(self):
-            if keymap and keymap.process(code):
-                break
-
-
-class Keymap(object):
+class Application(object):
     def __init__(self):
-        self.methods = dict()
+        self.tcattr = None
+        self.restricted = False
+        self.fifo = ("%s/cplay-control-%s" % (
+            os.environ.get("TMPDIR", "/tmp"),
+            os.environ["USER"]))
 
-    def bind(self, key, method, args=None):
-        if isinstance(key, (tuple, list)):
-            for i in key:
-                self.bind(i, method, args)
+    def setup(self):
+        if tty is not None:
+            self.tcattr = tty.tcgetattr(sys.stdin.fileno())
+            tcattr = tty.tcgetattr(sys.stdin.fileno())
+            tcattr[0] = tcattr[0] & ~(tty.IXON)
+            tty.tcsetattr(sys.stdin.fileno(), tty.TCSANOW, tcattr)
+        self.screen = curses.initscr()
+        curses.cbreak()
+        curses.noecho()
+        try:
+            curses.meta(1)
+        except:
+            pass
+        self.cursor(0)
+
+        signal.signal(signal.SIGHUP, self.handler_quit)
+        signal.signal(signal.SIGINT, self.handler_quit)
+        signal.signal(signal.SIGTERM, self.handler_quit)
+        signal.signal(signal.SIGWINCH, self.handler_resize)
+
+        # register services
+        self.keymapstack = KeymapStack()
+        self.window = RootWindow()
+        self.player = Player()
+        self.timeout = Timeout()
+        self.input = UIInput()
+        self.macro = MacroController()
+        self.status = self.window.win_status
+        self.progress = self.window.win_progress
+        self.counter = self.window.win_counter
+        self.playlist = self.window.win_tab.win_playlist
+        self.filelist = self.window.win_tab.win_filelist
+
+        self.window.setup_keymap()
+        self.window.update()
+        self.filelist.listdir()
+        self.control = FIFOControl()
+
+    def cleanup(self):
+        try:
+            curses.endwin()
+        except curses.error:
             return
-        elif isinstance(key, str):
-            key = ord(key)
-        self.methods[key] = (method, args)
+        if XTERM:
+            sys.stderr.write("\033]0;%s\a" % "xterm")
+        if tty is not None:
+            tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
+        # remove temporary files
+        self.control.cleanup()
 
-    def process(self, key):
-        if key not in self.methods:
-            return False
-        method, args = self.methods[key]
-        if args is None:
-            args = (key,)
-        method(*args)
-        return True
+    def run(self):
+        while True:
+            now = time.time()
+            timeout = self.timeout.check(now)
+            self.filelist.listdir_maybe(now)
+            if not self.player.backend.stopped:
+                timeout = 0.5
+                if self.player.backend.poll():
+                    # end of playlist hack
+                    self.player.backend.stopped = True
+                    if not self.playlist.stop:
+                        entry = self.playlist.change_active_entry(1)
+                        if entry is None:
+                            self.player.backend.stopped = True
+                        else:
+                            self.player.play(entry)
+            R = [sys.stdin, self.player.backend.stdout_r,
+                 self.player.backend.stderr_r]
+            if self.control.fd:
+                R.append(self.control.fd)
+            try:
+                r, w, e = select.select(R, [], [], timeout)
+            except select.error:
+                continue
+            # user
+            if sys.stdin in r:
+                c = self.window.getch()
+                APP.keymapstack.process(c)
+            # backend
+            if self.player.backend.stderr_r in r:
+                self.player.backend.read_fd(self.player.backend.stderr_r)
+            # backend
+            if self.player.backend.stdout_r in r:
+                self.player.backend.read_fd(self.player.backend.stdout_r)
+            # remote
+            if self.control.fd in r:
+                self.control.handle_command()
+
+    def cursor(self, visibility):
+        try:
+            curses.curs_set(visibility)
+        except:
+            pass
+
+    def quit(self, status=0):
+        self.player.backend.stop(quiet=True)
+        sys.exit(status)
+
+    def handler_resize(self, sig, frame):
+        # curses trickery
+        while True:
+            try:
+                curses.endwin()
+                break
+            except:
+                time.sleep(1)
+        self.screen.refresh()
+        self.window.resize()
+        self.window.update()
+
+    def handler_quit(self, sig, frame):
+        self.quit(1)
 
 
 class Window(object):
@@ -1261,84 +1337,6 @@ class PlaylistWindow(TagListWindow, Playlist):
         self.parent.update_title()
 
 
-def get_type(pathname):
-    if magic is not None:
-        mg_string = magic.from_file(pathname)
-        logging.debug("Magic type:" + mg_string)
-        if re.match(r"^Ogg data, Vorbis audio.*", mg_string):
-            ftype = 'oggvorbis'
-        elif re.match(r"^Ogg data, FLAC audio.*", mg_string):
-            ftype = 'oggflac'
-        elif re.match(r"FLAC audio bitstream.*", mg_string):
-            ftype = 'flac'
-        # For some reason not all ID3 tagged files return an ID3 identifier,
-        # so we just need to look for mp3 files and hope they are also ID3d.
-        elif re.match(r".*MPEG ADTS, layer III.*", mg_string):
-            ftype = 'id3'
-        else:
-            ftype = "unknown"
-        logging.debug("Magic category: " + ftype)
-        return ftype
-    if re.match(r".*\.ogg$", pathname, re.I):
-        return 'oggvorbis'
-    elif re.match(r".*\.oga$", pathname, re.I):
-        return 'oggflac'
-    elif re.match(r".*\.flac$", pathname, re.I):
-        return 'flac'
-    elif re.match(r".*\.mp3$", pathname, re.I):
-        return 'id3'
-    return "unknown"
-
-
-# FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
-#        in background so it wouldn't slow down responsiveness
-def get_tag(pathname):
-    if re.compile(r"^http://").match(pathname) or not os.path.exists(pathname):
-        return pathname
-    try:
-        import mutagen
-    except ImportError:
-        logging.debug("No mutagen available")
-        APP.status.status(_("Can't read metadata, module mutagen not "
-                            "available"), 2)
-        return pathname
-
-    ftype = get_type(pathname)
-    try:
-        if ftype == 'oggvorbis':
-            import mutagen.oggvorbis
-            metaopen = mutagen.oggvorbis.Open
-        elif ftype == 'id3':
-            import mutagen.easyid3
-            metaopen = mutagen.easyid3.Open
-        elif ftype == 'flac':
-            import mutagen.flac
-            metaopen = mutagen.flac.Open
-        elif ftype == 'oggflac':
-            import mutagen.oggflac
-            metaopen = mutagen.oggflac.Open
-        else:
-            APP.status.status(_("Can't read metadata, I don't know "
-                                "this file"), 1)
-            return os.path.basename(pathname)
-        f = metaopen(pathname)
-    except:
-        logging.debug("Error reading metadata")
-        logging.debug(traceback.format_exc())
-        APP.status.status("Error reading metadata", 1)
-        return os.path.basename(pathname)
-
-    # FIXME: Allow user to configure metadata view
-    try:
-        return (" ".join(f.get('artist', ('?',))) + " - " +
-                " ".join(f.get('album', ('?',))) + " - " +
-                " ".join(f.get('tracknumber', ('?',))) + " " +
-                " ".join(f.get('title', ('?',)))).encode(code, 'replace')
-    except:
-        logging.debug(traceback.format_exc())
-        return os.path.basename(pathname)
-
-
 class Backend(object):
 
     stdin_r, stdin_w = os.pipe()
@@ -1841,128 +1839,6 @@ class MacroController(object):
             APP.keymapstack.process(ord(i))
 
 
-class Application(object):
-    def __init__(self):
-        self.tcattr = None
-        self.restricted = False
-        self.fifo = ("%s/cplay-control-%s" % (
-            os.environ.get("TMPDIR", "/tmp"),
-            os.environ["USER"]))
-
-    def setup(self):
-        if tty is not None:
-            self.tcattr = tty.tcgetattr(sys.stdin.fileno())
-            tcattr = tty.tcgetattr(sys.stdin.fileno())
-            tcattr[0] = tcattr[0] & ~(tty.IXON)
-            tty.tcsetattr(sys.stdin.fileno(), tty.TCSANOW, tcattr)
-        self.screen = curses.initscr()
-        curses.cbreak()
-        curses.noecho()
-        try:
-            curses.meta(1)
-        except:
-            pass
-        self.cursor(0)
-
-        signal.signal(signal.SIGHUP, self.handler_quit)
-        signal.signal(signal.SIGINT, self.handler_quit)
-        signal.signal(signal.SIGTERM, self.handler_quit)
-        signal.signal(signal.SIGWINCH, self.handler_resize)
-
-        # register services
-        self.keymapstack = KeymapStack()
-        self.window = RootWindow()
-        self.player = Player()
-        self.timeout = Timeout()
-        self.input = UIInput()
-        self.macro = MacroController()
-        self.status = self.window.win_status
-        self.progress = self.window.win_progress
-        self.counter = self.window.win_counter
-        self.playlist = self.window.win_tab.win_playlist
-        self.filelist = self.window.win_tab.win_filelist
-
-        self.window.setup_keymap()
-        self.window.update()
-        self.filelist.listdir()
-        self.control = FIFOControl()
-
-    def cleanup(self):
-        try:
-            curses.endwin()
-        except curses.error:
-            return
-        if XTERM:
-            sys.stderr.write("\033]0;%s\a" % "xterm")
-        if tty is not None:
-            tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
-        # remove temporary files
-        self.control.cleanup()
-
-    def run(self):
-        while True:
-            now = time.time()
-            timeout = self.timeout.check(now)
-            self.filelist.listdir_maybe(now)
-            if not self.player.backend.stopped:
-                timeout = 0.5
-                if self.player.backend.poll():
-                    # end of playlist hack
-                    self.player.backend.stopped = True
-                    if not self.playlist.stop:
-                        entry = self.playlist.change_active_entry(1)
-                        if entry is None:
-                            self.player.backend.stopped = True
-                        else:
-                            self.player.play(entry)
-            R = [sys.stdin, self.player.backend.stdout_r,
-                 self.player.backend.stderr_r]
-            if self.control.fd:
-                R.append(self.control.fd)
-            try:
-                r, w, e = select.select(R, [], [], timeout)
-            except select.error:
-                continue
-            # user
-            if sys.stdin in r:
-                c = self.window.getch()
-                APP.keymapstack.process(c)
-            # backend
-            if self.player.backend.stderr_r in r:
-                self.player.backend.read_fd(self.player.backend.stderr_r)
-            # backend
-            if self.player.backend.stdout_r in r:
-                self.player.backend.read_fd(self.player.backend.stdout_r)
-            # remote
-            if self.control.fd in r:
-                self.control.handle_command()
-
-    def cursor(self, visibility):
-        try:
-            curses.curs_set(visibility)
-        except:
-            pass
-
-    def quit(self, status=0):
-        self.player.backend.stop(quiet=True)
-        sys.exit(status)
-
-    def handler_resize(self, sig, frame):
-        # curses trickery
-        while True:
-            try:
-                curses.endwin()
-                break
-            except:
-                time.sleep(1)
-        self.screen.refresh()
-        self.window.resize()
-        self.window.update()
-
-    def handler_quit(self, sig, frame):
-        self.quit(1)
-
-
 class Mixer(object):
     def __init__(self):
         self.channels = []
@@ -2060,6 +1936,150 @@ class PulseMixer(Mixer):
         self.set('%+d' % inc)
 
 
+class KeymapStack(list):
+    def push(self, item):
+        self.append(item)
+
+    def process(self, code):
+        for keymap in reversed(self):
+            if keymap and keymap.process(code):
+                break
+
+
+class Keymap(object):
+    def __init__(self):
+        self.methods = dict()
+
+    def bind(self, key, method, args=None):
+        if isinstance(key, (tuple, list)):
+            for i in key:
+                self.bind(i, method, args)
+            return
+        elif isinstance(key, str):
+            key = ord(key)
+        self.methods[key] = (method, args)
+
+    def process(self, key):
+        if key not in self.methods:
+            return False
+        method, args = self.methods[key]
+        if args is None:
+            args = (key, )
+        method(*args)
+        return True
+
+
+def get_type(pathname):
+    if magic is not None:
+        mg_string = magic.from_file(pathname)
+        logging.debug("Magic type:" + mg_string)
+        if re.match(r"^Ogg data, Vorbis audio.*", mg_string):
+            ftype = 'oggvorbis'
+        elif re.match(r"^Ogg data, FLAC audio.*", mg_string):
+            ftype = 'oggflac'
+        elif re.match(r"FLAC audio bitstream.*", mg_string):
+            ftype = 'flac'
+        # For some reason not all ID3 tagged files return an ID3 identifier,
+        # so we just need to look for mp3 files and hope they are also ID3d.
+        elif re.match(r".*MPEG ADTS, layer III.*", mg_string):
+            ftype = 'id3'
+        else:
+            ftype = "unknown"
+        logging.debug("Magic category: " + ftype)
+        return ftype
+    if re.match(r".*\.ogg$", pathname, re.I):
+        return 'oggvorbis'
+    elif re.match(r".*\.oga$", pathname, re.I):
+        return 'oggflac'
+    elif re.match(r".*\.flac$", pathname, re.I):
+        return 'flac'
+    elif re.match(r".*\.mp3$", pathname, re.I):
+        return 'id3'
+    return "unknown"
+
+
+# FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
+#        in background so it wouldn't slow down responsiveness
+def get_tag(pathname):
+    if re.compile(r"^http://").match(pathname) or not os.path.exists(pathname):
+        return pathname
+    try:
+        import mutagen
+    except ImportError:
+        logging.debug("No mutagen available")
+        APP.status.status(_("Can't read metadata, module mutagen not "
+                            "available"), 2)
+        return pathname
+
+    ftype = get_type(pathname)
+    try:
+        if ftype == 'oggvorbis':
+            import mutagen.oggvorbis
+            metaopen = mutagen.oggvorbis.Open
+        elif ftype == 'id3':
+            import mutagen.easyid3
+            metaopen = mutagen.easyid3.Open
+        elif ftype == 'flac':
+            import mutagen.flac
+            metaopen = mutagen.flac.Open
+        elif ftype == 'oggflac':
+            import mutagen.oggflac
+            metaopen = mutagen.oggflac.Open
+        else:
+            APP.status.status(_("Can't read metadata, I don't know "
+                                "this file"), 1)
+            return os.path.basename(pathname)
+        f = metaopen(pathname)
+    except:
+        logging.debug("Error reading metadata")
+        logging.debug(traceback.format_exc())
+        APP.status.status("Error reading metadata", 1)
+        return os.path.basename(pathname)
+
+    # FIXME: Allow user to configure metadata view
+    try:
+        return (" ".join(f.get('artist', ('?',))) + " - " +
+                " ".join(f.get('album', ('?',))) + " - " +
+                " ".join(f.get('tracknumber', ('?',))) + " " +
+                " ".join(f.get('title', ('?',)))).encode(code, 'replace')
+    except:
+        logging.debug(traceback.format_exc())
+        return os.path.basename(pathname)
+
+
+def valid_song(name):
+    return any(backend.re_files.search(name) for backend in BACKENDS)
+
+
+def valid_playlist(name):
+    if re.search(r"\.(m3u|pls)$", name, re.I):
+        return True
+    return False
+
+
+def which(program):
+    for path in os.environ["PATH"].split(":"):
+        if os.path.exists(os.path.join(path, program)):
+            return os.path.join(path, program)
+
+
+def cut(s, n, left=False):
+    if len(s) <= n:
+        return s
+    elif left:
+        return "<%s" % s[-n + 1:]
+    else:
+        return "%s>" % s[:n - 1]
+
+
+for rc in [os.path.expanduser("~/.cplayrc"), "/etc/cplayrc"]:
+    try:
+        exec(compile(open(rc).read(), rc, 'exec'))
+        break
+    except IOError:
+        pass
+
+
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0],
@@ -2150,26 +2170,6 @@ BACKENDS = [
     NoOffsetBackend("timidity {file}",
                     r"\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
 ]
-
-MACRO = {}
-
-
-def valid_song(name):
-    return any(backend.re_files.search(name) for backend in BACKENDS)
-
-
-def valid_playlist(name):
-    if re.search(r"\.(m3u|pls)$", name, re.I):
-        return True
-    return False
-
-
-for rc in [os.path.expanduser("~/.cplayrc"), "/etc/cplayrc"]:
-    try:
-        exec(compile(open(rc).read(), rc, 'exec'))
-        break
-    except IOError:
-        pass
 
 
 if __name__ == "__main__":
