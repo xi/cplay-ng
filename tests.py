@@ -75,7 +75,7 @@ class MockPlaylist(object):
     def command_toggle_repeat(self): pass
     def change_active_entry(self, direction): pass
 
-    # cplay.app.playlist.stop ?
+    # cplay.APP.playlist.stop ?
 
 
 class MockApp(object):
@@ -119,18 +119,18 @@ class MockPlayer(object):
 
 
 def patch_services():
-    cplay.app = MockApp()
-    cplay.app.keymapstack = MockKeymapStack()
-    # cplay.app.window = MockWindow()
-    cplay.app.player = MockPlayer()
-    cplay.app.timeout = MockTimeout()
-    cplay.app.input = cplay.Input()
-    cplay.app.macro = MockMacro()
-    cplay.app.status = MockStatus()
-    cplay.app.progress = MockProgress()
-    cplay.app.counter = MockCounter()
-    cplay.app.playlist = MockPlaylist()
-    cplay.app.filelist = MockFilelist()
+    cplay.APP = MockApp()
+    cplay.APP.keymapstack = MockKeymapStack()
+    # cplay.APP.window = MockWindow()
+    cplay.APP.player = MockPlayer()
+    cplay.APP.timeout = MockTimeout()
+    cplay.APP.input = cplay.Input()
+    cplay.APP.macro = MockMacro()
+    cplay.APP.status = MockStatus()
+    cplay.APP.progress = MockProgress()
+    cplay.APP.counter = MockCounter()
+    cplay.APP.playlist = MockPlaylist()
+    cplay.APP.filelist = MockFilelist()
 
 
 class TestCut(unittest.TestCase):
@@ -484,9 +484,9 @@ class TestMacroController(unittest.TestCase):
     def test_macro_controller(self):
         cplay.MACRO['a'] = 'abc'
         self.macro_controller.command_macro()
-        cplay.app.input.do(ord('a'))
+        cplay.APP.input.do(ord('a'))
 
-        actual = cplay.app.keymapstack.log
+        actual = cplay.APP.keymapstack.log
         expected = [ord(c) for c in 'abc']
         self.assertListEqual(actual, expected)
 

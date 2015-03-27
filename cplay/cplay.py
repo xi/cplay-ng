@@ -62,7 +62,7 @@ try:
 except ImportError:
     magic = None
 
-app = None
+APP = None
 
 XTERM = re.search(r"rxvt|xterm", os.environ["TERM"])
 
@@ -247,9 +247,9 @@ class StatusWindow(Window):
     def status(self, message, duration=0):
         self.current_message = str(message)
         if self.tid:
-            app.timeout.remove(self.tid)
+            APP.timeout.remove(self.tid)
         if duration:
-            self.tid = app.timeout.add(duration, self.timeout)
+            self.tid = APP.timeout.add(duration, self.timeout)
         else:
             self.tid = None
         self.update()
@@ -312,7 +312,7 @@ class CounterWindow(Window):
         else:
             self.mode = self.ELAPSED
             tmp = _("elapsed")
-        app.status.status(_("Counting %s time") % tmp, 1)
+        APP.status.status(_("Counting %s time") % tmp, 1)
         self.update()
 
 
@@ -320,7 +320,7 @@ class RootWindow(Window):
     def __init__(self):
         Window.__init__(self, None)
         self.keymap = Keymap()
-        app.keymapstack.push(self.keymap)
+        APP.keymapstack.push(self.keymap)
         self.win_progress = ProgressWindow(self)
         self.win_status = StatusWindow(self)
         self.win_counter = CounterWindow(self)
@@ -328,40 +328,40 @@ class RootWindow(Window):
 
     def setup_keymap(self):
         self.keymap.bind(12, self.update, ())  # C-l
-        self.keymap.bind([curses.KEY_LEFT, 2], app.player.seek,
+        self.keymap.bind([curses.KEY_LEFT, 2], APP.player.seek,
                          (-1, 1))  # C-b
-        self.keymap.bind([curses.KEY_RIGHT, 6], app.player.seek,
+        self.keymap.bind([curses.KEY_RIGHT, 6], APP.player.seek,
                          (1, 1))  # C-f
-        self.keymap.bind([1, '^'], app.player.seek, (0, 0))  # C-a
-        self.keymap.bind([5, '$'], app.player.seek, (-1, 0))  # C-e
+        self.keymap.bind([1, '^'], APP.player.seek, (0, 0))  # C-a
+        self.keymap.bind([5, '$'], APP.player.seek, (-1, 0))  # C-e
         # 0123456789
-        self.keymap.bind(list(range(48, 58)), app.player.key_volume)
-        self.keymap.bind(['+'], app.player.mixer, ("cue", [1]))
-        self.keymap.bind('-', app.player.mixer, ("cue", [-1]))
-        self.keymap.bind('n', app.player.next_prev_song, (+1,))
-        self.keymap.bind('p', app.player.next_prev_song, (-1,))
-        self.keymap.bind('z', app.player.toggle_pause, ())
-        self.keymap.bind('x', app.player.toggle_stop, ())
-        self.keymap.bind('c', app.counter.toggle_mode, ())
-        self.keymap.bind('Q', app.quit, ())
+        self.keymap.bind(list(range(48, 58)), APP.player.key_volume)
+        self.keymap.bind(['+'], APP.player.mixer, ("cue", [1]))
+        self.keymap.bind('-', APP.player.mixer, ("cue", [-1]))
+        self.keymap.bind('n', APP.player.next_prev_song, (+1,))
+        self.keymap.bind('p', APP.player.next_prev_song, (-1,))
+        self.keymap.bind('z', APP.player.toggle_pause, ())
+        self.keymap.bind('x', APP.player.toggle_stop, ())
+        self.keymap.bind('c', APP.counter.toggle_mode, ())
+        self.keymap.bind('Q', APP.quit, ())
         self.keymap.bind('q', self.command_quit, ())
-        self.keymap.bind('v', app.player.mixer, ("toggle",))
-        self.keymap.bind(',', app.macro.command_macro, ())
+        self.keymap.bind('v', APP.player.mixer, ("toggle",))
+        self.keymap.bind(',', APP.macro.command_macro, ())
         # FIXME: Document this
-        self.keymap.bind('[', app.player.incr_reset_decr_speed, (-1,))
-        self.keymap.bind(']', app.player.incr_reset_decr_speed, (+1,))
-        self.keymap.bind('\\', app.player.incr_reset_decr_speed, (0,))
-        self.keymap.bind('e', app.player.next_prev_eq, (+1,))
-        self.keymap.bind('E', app.player.next_prev_eq, (-1,))
+        self.keymap.bind('[', APP.player.incr_reset_decr_speed, (-1,))
+        self.keymap.bind(']', APP.player.incr_reset_decr_speed, (+1,))
+        self.keymap.bind('\\', APP.player.incr_reset_decr_speed, (0,))
+        self.keymap.bind('e', APP.player.next_prev_eq, (+1,))
+        self.keymap.bind('E', APP.player.next_prev_eq, (-1,))
 
     def command_quit(self):
-        app.input.do_hook = self.do_quit
-        app.input.start(_("Quit? (y/N)"))
+        APP.input.do_hook = self.do_quit
+        APP.input.start(_("Quit? (y/N)"))
 
     def do_quit(self, ch):
         if chr(ch) == 'y':
-            app.quit()
-        app.input.stop()
+            APP.quit()
+        APP.input.stop()
 
 
 class TabWindow(Window):
@@ -376,8 +376,8 @@ class TabWindow(Window):
         keymap = Keymap()
         keymap.bind('\t', self.change_window, ())  # tab
         keymap.bind('h', self.help, ())
-        app.keymapstack.push(keymap)
-        app.keymapstack.push(self.children[self.active_child].keymap)
+        APP.keymapstack.push(keymap)
+        APP.keymapstack.push(self.children[self.active_child].keymap)
 
     def newwin(self):
         return curses.newwin(self.parent.rows - 2, self.parent.cols, 0, 0)
@@ -409,14 +409,14 @@ class TabWindow(Window):
         return win
 
     def change_window(self, window=None):
-        app.keymapstack.pop()
+        APP.keymapstack.pop()
         self.children[self.active_child].visible = False
         if window:
             self.active_child = self.children.index(window)
         else:
             # toggle windows 0 and 1
             self.active_child = not self.active_child
-        app.keymapstack.push(self.children[self.active_child].keymap)
+        APP.keymapstack.push(self.children[self.active_child].keymap)
         self.update()
 
     def help(self):
@@ -425,7 +425,7 @@ class TabWindow(Window):
         else:
             self.win_last = self.children[self.active_child]
             self.change_window(self.win_help)
-            app.status.status(__version__, 2)
+            APP.status.status(__version__, 2)
 
 
 class ListWindow(Window):
@@ -513,8 +513,8 @@ class ListWindow(Window):
         return self.buffer[self.bufptr]
 
     def cursor_move(self, ydiff):
-        if app.input.active:
-            app.input.cancel()
+        if APP.input.active:
+            APP.input.cancel()
         if len(self.buffer) == 0:
             return
         self.update_line(refresh=False)
@@ -544,20 +544,20 @@ class ListWindow(Window):
     def start_search(self, prompt_text, direction):
         self.search_direction = direction
         self.not_found = False
-        if app.input.active:
-            app.input.prompt = "%s: " % prompt_text
+        if APP.input.active:
+            APP.input.prompt = "%s: " % prompt_text
             self.do_search(advance=direction)
         else:
-            app.input.do_hook = self.do_search
-            app.input.stop_hook = self.stop_search
-            app.input.start(prompt_text)
+            APP.input.do_hook = self.do_search
+            APP.input.stop_hook = self.stop_search
+            APP.input.start(prompt_text)
 
     def stop_search(self):
-        self.last_search = app.input.string
-        app.status.status(_("ok"), 1)
+        self.last_search = APP.input.string
+        APP.status.status(_("ok"), 1)
 
     def do_search(self, ch=None, advance=0):
-        old_string = app.input.string
+        old_string = APP.input.string
         if ch in [8, 127]:
             new_string = old_string[:-1]
         elif ch:
@@ -566,23 +566,23 @@ class ListWindow(Window):
             new_string = self.last_search
         else:
             new_string = old_string
-        app.input.string = new_string
+        APP.input.string = new_string
         index = self.bufptr + advance
         while True:
             if not 0 <= index < len(self.buffer):
-                app.status.status(_("Not found: %s ") % new_string)
+                APP.status.status(_("Not found: %s ") % new_string)
                 self.not_found = True
                 break
             line = str(self.buffer[index]).lower()
             if line.find(new_string.lower()) != -1:
-                app.input.show()
+                APP.input.show()
                 self.update_line(refresh=False)
                 self.bufptr = index
                 self.update(force=False)
                 self.not_found = False
                 break
             if self.not_found:
-                app.status.status(_("Not found: %s ") % new_string)
+                APP.status.status(_("Not found: %s ") % new_string)
                 break
             index = index + self.search_direction
 
@@ -676,14 +676,14 @@ class TagListWindow(ListWindow):
         self.keymap.bind('!', self.command_shell, ())
 
     def command_shell(self):
-        if app.restricted:
+        if APP.restricted:
             return
-        app.input.stop_hook = self.stop_shell
-        app.input.complete_hook = self.complete_shell
-        app.input.start(_("shell$ "), colon=False)
+        APP.input.stop_hook = self.stop_shell
+        APP.input.complete_hook = self.complete_shell
+        APP.input.start(_("shell$ "), colon=False)
 
     def stop_shell(self):
-        s = app.input.string
+        s = APP.input.string
         curses.endwin()
         sys.stderr.write("\n")
         argv = [x.pathname for x in self.get_tagged()]
@@ -694,12 +694,12 @@ class TagListWindow(ListWindow):
             sys.stderr.write("\nshell returned %s, press return!\n" %
                              ret_value)
             sys.stdin.readline()
-            app.window.update()
-            app.status.restore_default_status()
+            APP.window.update()
+            APP.status.restore_default_status()
         else:
-            app.status.status(_("Command successfully executed.\n"), 2)
-            app.window.update()
-        app.cursor(0)
+            APP.status.status(_("Command successfully executed.\n"), 2)
+            APP.window.update()
+        APP.cursor(0)
 
     def complete_shell(self, line):
         return self.complete_generic(line, quote=True)
@@ -730,8 +730,8 @@ class TagListWindow(ListWindow):
 
     def command_change_viewpoint(self, klass=ListEntry):
         klass.vps.append(klass.vps.pop(0))
-        app.status.status(_("Listing %s") % klass.vps[0][0], 1)
-        app.player.backend.update_status()
+        APP.status.status(_("Listing %s") % klass.vps[0][0], 1)
+        APP.player.backend.update_status()
         self.update()
 
     def command_invert_tags(self):
@@ -754,19 +754,19 @@ class TagListWindow(ListWindow):
 
     def command_tag_regexp(self, value):
         self.tag_value = value
-        app.input.stop_hook = self.stop_tag_regexp
-        app.input.start(_("Tag regexp") if value else _("Untag regexp"))
+        APP.input.stop_hook = self.stop_tag_regexp
+        APP.input.start(_("Tag regexp") if value else _("Untag regexp"))
 
     def stop_tag_regexp(self):
         try:
-            r = re.compile(app.input.string, re.I)
+            r = re.compile(APP.input.string, re.I)
             for entry in self.buffer:
                 if r.search(str(entry)):
                     entry.tagged = self.tag_value
             self.update()
-            app.status.status(_("ok"), 1)
+            APP.status.status(_("ok"), 1)
         except re.error as e:
-            app.status.status(e, 2)
+            APP.status.status(e, 2)
 
     def get_tagged(self):
         return [x for x in self.buffer if x.tagged]
@@ -802,11 +802,11 @@ class FilelistWindow(TagListWindow):
         self.bookmarks = {39: [self.cwd, 0]}
 
     def command_get_bookmark(self):
-        app.input.do_hook = self.do_get_bookmark
-        app.input.start(_("bookmark"))
+        APP.input.do_hook = self.do_get_bookmark
+        APP.input.start(_("bookmark"))
 
     def do_get_bookmark(self, ch):
-        app.input.string = ch
+        APP.input.string = ch
         bookmark = self.bookmarks.get(ch)
         if bookmark:
             self.bookmarks[39] = [self.cwd, self.bufptr]
@@ -815,34 +815,34 @@ class FilelistWindow(TagListWindow):
             self.listdir()
             self.bufptr = pos
             self.update()
-            app.status.status(_("ok"), 1)
+            APP.status.status(_("ok"), 1)
         else:
-            app.status.status(_("Not found!"), 1)
-        app.input.stop()
+            APP.status.status(_("Not found!"), 1)
+        APP.input.stop()
 
     def command_set_bookmark(self):
-        app.input.do_hook = self.do_set_bookmark
-        app.input.start(_("set bookmark"))
+        APP.input.do_hook = self.do_set_bookmark
+        APP.input.start(_("set bookmark"))
 
     def do_set_bookmark(self, ch):
-        app.input.string = ch
+        APP.input.string = ch
         self.bookmarks[ch] = [self.cwd, self.bufptr]
         if ch:
-            app.status.status(_("ok"), 1)
+            APP.status.status(_("ok"), 1)
         else:
-            app.input.stop()
+            APP.input.stop()
 
     def command_search_recursively(self):
-        app.input.stop_hook = self.stop_search_recursively
-        app.input.start(_("search"))
+        APP.input.stop_hook = self.stop_search_recursively
+        APP.input.start(_("search"))
 
     def stop_search_recursively(self):
         try:
-            re_tmp = re.compile(app.input.string, re.I)
+            re_tmp = re.compile(APP.input.string, re.I)
         except re.error as e:
-            app.status.status(e, 2)
+            APP.status.status(e, 2)
             return
-        app.status.status(_("Searching..."))
+        APP.status.status(_("Searching..."))
         results = []
         for entry in self.buffer:
             if entry.filename == "..":
@@ -861,7 +861,7 @@ class FilelistWindow(TagListWindow):
         self.bufptr = 0
         self.parent.update_title()
         self.update()
-        app.status.restore_default_status()
+        APP.status.restore_default_status()
 
     def search_recursively(self, re_tmp, dir, results):
         for filename in os.listdir(dir):
@@ -891,7 +891,7 @@ class FilelistWindow(TagListWindow):
 
     def listdir(self, quiet=False, prevdir=None):
         if not quiet:
-            app.status.status(_("Reading directory..."))
+            APP.status.status(_("Reading directory..."))
         self.mode = self.DIR
         dirs = []
         files = []
@@ -931,7 +931,7 @@ class FilelistWindow(TagListWindow):
         self.parent.update_title()
         self.update()
         if not quiet:
-            app.status.restore_default_status()
+            APP.status.restore_default_status()
 
     def chdir(self, dir):
         if hasattr(self, "cwd"):
@@ -951,28 +951,28 @@ class FilelistWindow(TagListWindow):
             self.chdir(self.current().pathname)
             self.listdir()
         elif valid_song(self.current().filename):
-            app.player.play(self.current())
+            APP.player.play(self.current())
 
     def command_chparentdir(self):
-        if app.restricted and self.cwd == self.startdir:
+        if APP.restricted and self.cwd == self.startdir:
             return
         dir = os.path.basename(self.cwd)
         self.chdir(os.path.dirname(self.cwd))
         self.listdir(prevdir=dir)
 
     def command_goto(self):
-        if app.restricted:
+        if APP.restricted:
             return
-        app.input.stop_hook = self.stop_goto
-        app.input.complete_hook = self.complete_generic
-        app.input.start(_("goto"))
+        APP.input.stop_hook = self.stop_goto
+        APP.input.complete_hook = self.complete_generic
+        APP.input.start(_("goto"))
 
     def stop_goto(self):
-        dir = os.path.expanduser(app.input.string)
+        dir = os.path.expanduser(APP.input.string)
         if dir[0] != '/':
             dir = os.path.join(self.cwd, dir)
         if not os.path.isdir(dir):
-            app.status.status(_("Not a directory!"), 1)
+            APP.status.status(_("Not a directory!"), 1)
             return
         self.chdir(dir)
         self.listdir()
@@ -980,12 +980,12 @@ class FilelistWindow(TagListWindow):
     def command_add_recursively(self):
         l = self.get_tagged()
         if len(l) == 0:
-            app.playlist.add(self.current().pathname)
+            APP.playlist.add(self.current().pathname)
             self.cursor_move(1)
             return
-        app.status.status(_("Adding tagged files"), 1)
+        APP.status.status(_("Adding tagged files"), 1)
         for entry in l:
-            app.playlist.add(entry.pathname, quiet=True)
+            APP.playlist.add(entry.pathname, quiet=True)
             entry.tagged = False
         self.update()
 
@@ -1044,7 +1044,7 @@ class Playlist:
     def _add(self, pathname, quiet=False):
         if os.path.isdir(pathname):
             if not quiet:
-                app.status.status(_("Working..."))
+                APP.status.status(_("Working..."))
             self.add_dir(pathname)
         elif valid_playlist(pathname):
             self.add_playlist(pathname)
@@ -1056,13 +1056,13 @@ class Playlist:
         filename = os.path.basename(pathname) or pathname
         if not quiet:
             self.update()
-            app.status.status(_("Added: %s") % filename, 1)
+            APP.status.status(_("Added: %s") % filename, 1)
 
     def add(self, pathname, quiet=False):
         try:
             self._add(pathname)
         except Exception as e:
-            app.status.status(e, 2)
+            APP.status.status(e, 2)
 
     def fix_url(self, url):
         return re.sub(r"(http://[^/]+)/?(.*)", r"\1/\2", url)
@@ -1130,7 +1130,7 @@ class Playlist:
         entry = self.current()
         entry.active = True
         self.update()
-        app.player.play(entry)
+        APP.player.play(entry)
 
     def command_delete(self):
         if len(self.buffer) == 0:
@@ -1157,7 +1157,7 @@ class Playlist:
         self.random_prev = []
         self.random_next = []
         self.random_left = []
-        app.status.status(_("Deleted playlist"), 1)
+        APP.status.status(_("Deleted playlist"), 1)
         self.update()
 
     def command_move(self, after=False):
@@ -1178,14 +1178,14 @@ class Playlist:
         random.shuffle(self.buffer)
         self.bufptr = 0
         self.update()
-        app.status.status(_("Shuffled playlist... Oops?"), 1)
+        APP.status.status(_("Shuffled playlist... Oops?"), 1)
 
     def command_sort(self):
-        app.status.status(_("Working..."))
+        APP.status.status(_("Working..."))
         self.buffer.sort(key=lambda x: x.vp())
         self.bufptr = 0
         self.update()
-        app.status.status(_("Sorted playlist"), 1)
+        APP.status.status(_("Sorted playlist"), 1)
 
     def command_toggle_repeat(self):
         self.toggle("repeat", _("Repeat: %s"))
@@ -1201,20 +1201,20 @@ class Playlist:
 
     def toggle(self, attr, format):
         setattr(self, attr, not getattr(self, attr))
-        app.status.status(format % (_("on") if getattr(self, attr)
+        APP.status.status(format % (_("on") if getattr(self, attr)
                                     else _("off")), 1)
 
     def command_save_playlist(self):
-        if app.restricted:
+        if APP.restricted:
             return
-        default = self.pathname or "%s/" % app.filelist.cwd
-        app.input.stop_hook = self.stop_save_playlist
-        app.input.start(_("Save playlist"), default)
+        default = self.pathname or "%s/" % APP.filelist.cwd
+        APP.input.stop_hook = self.stop_save_playlist
+        APP.input.start(_("Save playlist"), default)
 
     def stop_save_playlist(self):
-        pathname = app.input.string
+        pathname = APP.input.string
         if pathname[0] != '/':
-            pathname = os.path.join(app.filelist.cwd, pathname)
+            pathname = os.path.join(APP.filelist.cwd, pathname)
         if not re.search(r"\.m3u$", pathname, re.I):
             pathname = "%s%s" % (pathname, ".m3u")
         try:
@@ -1223,9 +1223,9 @@ class Playlist:
                 file.write("%s\n" % entry.pathname)
             file.close()
             self.pathname = pathname
-            app.status.status(_("ok"), 1)
+            APP.status.status(_("ok"), 1)
         except IOError as e:
-            app.status.status(e, 2)
+            APP.status.status(e, 2)
 
 
 class PlaylistWindow(TagListWindow, Playlist):
@@ -1306,7 +1306,7 @@ def get_tag(pathname):
         import mutagen
     except ImportError:
         logging.debug("No mutagen available")
-        app.status.status(_("Can't read metadata, module mutagen not "
+        APP.status.status(_("Can't read metadata, module mutagen not "
                             "available"), 2)
         return pathname
 
@@ -1325,14 +1325,14 @@ def get_tag(pathname):
             import mutagen.oggflac
             metaopen = mutagen.oggflac.Open
         else:
-            app.status.status(_("Can't read metadata, I don't know "
+            APP.status.status(_("Can't read metadata, I don't know "
                                 "this file"), 1)
             return os.path.basename(pathname)
         f = metaopen(pathname)
     except:
         logging.debug("Error reading metadata")
         logging.debug(traceback.format_exc())
-        app.status.status("Error reading metadata", 1)
+        APP.status.status("Error reading metadata", 1)
         return os.path.basename(pathname)
 
     # FIXME: Allow user to configure metadata view
@@ -1381,7 +1381,7 @@ class Backend:
         self.entry = entry
         self.offset = offset
         if offset == 0:
-            app.progress.progress(0)
+            APP.progress.progress(0)
             self.offset = 0
             self.length = 0
         self.time_setup = time.time()
@@ -1397,7 +1397,7 @@ class Backend:
                                        stderr=self.stderr_w,
                                        stdin=self.stdin_r)
         except OSError as err:
-            app.status.status(err, 2)
+            APP.status.status(err, 2)
             return False
 
         self.stopped = False
@@ -1415,7 +1415,7 @@ class Backend:
             try:
                 self._p.terminate()
             except OSError as err:
-                app.status.status(err, 2)
+                APP.status.status(err, 2)
         self.stopped = True
         if not quiet:
             self.update_status()
@@ -1433,7 +1433,7 @@ class Backend:
             self.tid = None
         else:
             self.parse_buf()
-            self.tid = app.timeout.add(1.0, self.parse_progress)
+            self.tid = APP.timeout.add(1.0, self.parse_progress)
 
     def read_fd(self, fd):
         self.buf = os.read(fd, 512)
@@ -1445,9 +1445,9 @@ class Backend:
             return 0
         elif self._p.poll() is not None:
             self._p = None
-            app.status.set_default_status("")
-            app.counter.counter(0, 0)
-            app.progress.progress(0)
+            APP.status.set_default_status("")
+            APP.counter.counter(0, 0)
+            APP.progress.progress(0)
             return True
 
     def seek(self, offset, relative):
@@ -1471,20 +1471,20 @@ class Backend:
         self.show_position()
 
     def show_position(self):
-        app.counter.counter(self.offset, self.length - self.offset)
-        app.progress.progress((float(self.offset) / self.length)
+        APP.counter.counter(self.offset, self.length - self.offset)
+        APP.progress.progress((float(self.offset) / self.length)
                               if self.length else 0)
 
     def update_status(self):
         if self.entry is None:
-            app.status.set_default_status("")
+            APP.status.set_default_status("")
         elif self.stopped:
-            app.status.set_default_status(_("Stopped: %s") % self.entry.vp())
+            APP.status.set_default_status(_("Stopped: %s") % self.entry.vp())
         elif self.paused:
-            app.status.set_default_status(_("Paused: %s") % self.entry.vp())
+            APP.status.set_default_status(_("Paused: %s") % self.entry.vp())
         else:
             logging.debug(self.entry.vp())
-            app.status.set_default_status(_("Playing: %s") % self.entry.vp())
+            APP.status.set_default_status(_("Playing: %s") % self.entry.vp())
 
 
 class FrameOffsetBackend(Backend):
@@ -1575,20 +1575,20 @@ class MPlayer(Backend):
             os.write(self.stdin_w, arg + "\n")
         except IOError:
             logging.debug("Can't write to stdin_w.")
-            app.status.status(_("ERROR: Cannot send commands to mplayer!"), 3)
+            APP.status.status(_("ERROR: Cannot send commands to mplayer!"), 3)
 
     def speed_chg(self, set):
         self.speed = set
         self.mplayer_send("speed_set %f" % self.speed)
-        app.status.status(_("Speed: %s%%") % (self.speed * 100), 1)
+        APP.status.status(_("Speed: %s%%") % (self.speed * 100), 1)
 
     def eq_chg(self, offset):
         if len(EQUALIZERS) == 0:
-            app.status.status(_("No equalizers configured"), 2)
+            APP.status.status(_("No equalizers configured"), 2)
             return
         self.eq_cur = (self.eq_cur + offset) % (len(EQUALIZERS))
         self.equalizer = EQUALIZERS[self.eq_cur][0]
-        app.status.status(_("Equalizer: %s(%s)") % (EQUALIZERS[self.eq_cur][1],
+        APP.status.status(_("Equalizer: %s(%s)") % (EQUALIZERS[self.eq_cur][1],
                                                     self.equalizer), 1)
         self.mplayer_send("af equalizer=" + self.equalizer)
 
@@ -1617,28 +1617,28 @@ class Timeout:
 class FIFOControl:
     def __init__(self):
         self.commands = {
-            "pause": [app.player.toggle_pause, []],
-            "next": [app.player.next_prev_song, [+1]],
-            "prev": [app.player.next_prev_song, [-1]],
-            "forward": [app.player.seek, [1, 1]],
-            "backward": [app.player.seek, [-1, 1]],
-            "play": [app.player.toggle_stop, []],
-            "stop": [app.player.toggle_stop, []],
+            "pause": [APP.player.toggle_pause, []],
+            "next": [APP.player.next_prev_song, [+1]],
+            "prev": [APP.player.next_prev_song, [-1]],
+            "forward": [APP.player.seek, [1, 1]],
+            "backward": [APP.player.seek, [-1, 1]],
+            "play": [APP.player.toggle_stop, []],
+            "stop": [APP.player.toggle_stop, []],
             "volume": [self.volume, None],
-            "macro": [app.macro.run_macro, None],
-            "add": [app.playlist.add, None],
-            "empty": [app.playlist.command_delete_all, []],
-            "quit": [app.quit, []]
+            "macro": [APP.macro.run_macro, None],
+            "add": [APP.playlist.add, None],
+            "empty": [APP.playlist.command_delete_all, []],
+            "quit": [APP.quit, []]
         }
         self.fd = None
-        if not os.path.exists(app.fifo):
-            os.mkfifo(app.fifo, 0o600)
-            self.fd = open(app.fifo, "rb+", 0)
+        if not os.path.exists(APP.fifo):
+            os.mkfifo(APP.fifo, 0o600)
+            self.fd = open(APP.fifo, "rb+", 0)
 
     def cleanup(self):
         if self.fd is not None:
             self.fd.close()
-            os.unlink(app.fifo)
+            os.unlink(APP.fifo)
 
     def handle_command(self):
         argv = self.fd.readline().strip().split(" ", 1)
@@ -1651,7 +1651,7 @@ class FIFOControl:
     def volume(self, s):
         argv = s.split()
         try:
-            app.player.mixer(argv[0], [int(argv[1])])
+            APP.player.mixer(argv[0], [int(argv[1])])
         except:
             pass
 
@@ -1681,7 +1681,7 @@ class Player:
         else:
             # FIXME: Needs to report suitable backends
             logging.debug("Backend not found")
-            app.status.status(_("Backend not found!"), 1)
+            APP.status.status(_("Backend not found!"), 1)
             self.backend.stopped = False  # keep going
             return False
 
@@ -1694,15 +1694,15 @@ class Player:
         if self.setup_backend(entry, offset):
             self.backend.play()
         else:
-            app.timeout.add(1, self.next_prev_song, (1,))
+            APP.timeout.add(1, self.next_prev_song, (1,))
 
     def delayed_play(self, entry, offset):
         if self.play_tid:
-            app.timeout.remove(self.play_tid)
-        self.play_tid = app.timeout.add(0.5, self.play, (entry, offset))
+            APP.timeout.remove(self.play_tid)
+        self.play_tid = APP.timeout.add(0.5, self.play, (entry, offset))
 
     def next_prev_song(self, direction):
-        new_entry = app.playlist.change_active_entry(direction)
+        new_entry = APP.playlist.change_active_entry(direction)
         self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
         # The backend has to be set-up right away when changing songs.
         # Otherwise the user can manipulate the old offset value while waiting
@@ -1735,10 +1735,10 @@ class Player:
 
     def mixer(self, cmd=None, args=[]):
         if self._mixer is None:
-            app.status.status(_("No mixer."), 1)
+            APP.status.status(_("No mixer."), 1)
         else:
             getattr(self._mixer, cmd)(*args)
-            app.status.status(str(self._mixer), 1)
+            APP.status.status(str(self._mixer), 1)
 
     def incr_reset_decr_speed(self, signum):
         if isinstance(self.backend, MPlayer):
@@ -1748,13 +1748,13 @@ class Player:
                 self.backend.speed_chg(self.backend.speed +
                                        signum*SPEED_OFFSET)
         else:
-            app.status.status(_("Speed control requires MPlayer"), 1)
+            APP.status.status(_("Speed control requires MPlayer"), 1)
 
     def next_prev_eq(self, direction):
         if isinstance(self.backend, MPlayer):
             self.backend.eq_chg(direction)
         else:
-            app.status.status(_("Equalizer support requires MPlayer"), 1)
+            APP.status.status(_("Equalizer support requires MPlayer"), 1)
 
 
 class Input:
@@ -1815,36 +1815,36 @@ class UIInput(Input):
 
     def show(self):
         n = len(self.prompt) + 1
-        s = cut(self.string, app.status.length() - n, left=True)
-        app.status.status("%s%s " % (self.prompt, s))
+        s = cut(self.string, APP.status.length() - n, left=True)
+        APP.status.status("%s%s " % (self.prompt, s))
 
     def start(self, prompt="", data="", colon=True):
         Input.start(self, prompt=prompt, data=data, colon=colon)
-        app.cursor(1)
-        app.keymapstack.push(self.keymap)
+        APP.cursor(1)
+        APP.keymapstack.push(self.keymap)
         self.prompt = prompt + (": " if colon else "")
         self.show()
 
     def stop(self, *args):
         Input.stop(self, *args)
-        app.cursor(0)
-        app.keymapstack.pop()
+        APP.cursor(0)
+        APP.keymapstack.pop()
         if not self.string:
-            app.status.status(_("cancel"), 1)
+            APP.status.status(_("cancel"), 1)
 
 
 class MacroController:
     def command_macro(self):
-        app.input.do_hook = self.do_macro
-        app.input.start(_("macro"))
+        APP.input.do_hook = self.do_macro
+        APP.input.start(_("macro"))
 
     def do_macro(self, ch):
-        app.input.stop()
+        APP.input.stop()
         self.run_macro(chr(ch))
 
     def run_macro(self, c):
         for i in MACRO.get(c, ""):
-            app.keymapstack.process(ord(i))
+            APP.keymapstack.process(ord(i))
 
 
 class Application:
@@ -1932,7 +1932,7 @@ class Application:
             # user
             if sys.stdin in r:
                 c = self.window.getch()
-                app.keymapstack.process(c)
+                APP.keymapstack.process(c)
             # backend
             if self.player.backend.stderr_r in r:
                 self.player.backend.read_fd(self.player.backend.stderr_r)
@@ -2095,11 +2095,11 @@ def main():
     if args.debug is not None:
         logging.basicConfig(filename=args.debug, level=logging.DEBUG)
 
-    global app
-    app = Application()
+    global APP
+    APP = Application()
 
     if args.fifo is not None:
-        app.fifo = args.fifo
+        APP.fifo = args.fifo
 
     playlist = []
     if not sys.stdin.isatty():
@@ -2107,25 +2107,25 @@ def main():
         os.close(0)
         os.open("/dev/tty", 0)
     try:
-        app.setup()
-        app.restricted = args.restricted
+        APP.setup()
+        APP.restricted = args.restricted
         if args.repeat:
-            app.playlist.command_toggle_repeat()
+            APP.playlist.command_toggle_repeat()
         if args.random:
-            app.playlist.command_toggle_random()
+            APP.playlist.command_toggle_random()
         if args.toggle_mixer:
-            app.player.mixer("toggle")
+            APP.player.mixer("toggle")
         logging.debug("Preferred locale is " + str(code))
         if args.files or playlist:
             for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
-                app.playlist.add(i)
-            app.window.win_tab.change_window()
-        app.run()
+                APP.playlist.add(i)
+            APP.window.win_tab.change_window()
+        APP.run()
     except SystemExit:
-        app.cleanup()
+        APP.cleanup()
     except:
-        app.cleanup()
+        APP.cleanup()
         traceback.print_exc()
 
 
