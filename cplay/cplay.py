@@ -64,7 +64,7 @@ except ImportError:
 
 app = None
 
-XTERM = re.search("rxvt|xterm", os.environ["TERM"])
+XTERM = re.search(r"rxvt|xterm", os.environ["TERM"])
 
 # Ten band graphical equalizers for mplayer, see man (1) mplayer
 # Default: first entry
@@ -706,8 +706,8 @@ class TagListWindow(ListWindow):
 
     def complete_generic(self, line, quote=False):
         if quote:
-            s = re.sub('.*[^\\\\][ \'"()\[\]{}$`]', '', line)
-            s, part = re.sub('\\\\', '', s), line[:len(line) - len(s)]
+            s = re.sub(r'.*[^\\][ \'"()\[\]{}$`]', '', line)
+            s, part = re.sub(r'\\', '', s), line[:len(line) - len(s)]
         else:
             s, part = line, ""
         results = glob.glob(os.path.expanduser(s) + "*")
@@ -725,7 +725,7 @@ class TagListWindow(ListWindow):
                         lm = lm[:i]
                         break
         if quote:
-            lm = re.sub('([ \'"()\[\]{}$`])', '\\\\\\1', lm)
+            lm = re.sub(r'([ \'"()\[\]{}$`])', r'\\\1', lm)
         return part + lm
 
     def command_change_viewpoint(self, klass=ListEntry):
@@ -876,7 +876,7 @@ class FilelistWindow(TagListWindow):
 
     def get_title(self):
         self.name = _("Filelist: ")
-        return ListWindow.get_title(self, re.sub("/?$", "/", self.cwd))
+        return ListWindow.get_title(self, re.sub(r"/?$", "/", self.cwd))
 
     def listdir_maybe(self, now=0):
         if now < self.mtime_when + 2:
@@ -1016,9 +1016,9 @@ class Playlist:
             self._add(os.path.join(dir, filename), quiet=True)
 
     def add_m3u(self, line):
-        if re.match("^(#.*)?$", line):
+        if re.match(r"^(#.*)?$", line):
             return
-        if re.match("^(/|http://)", line):
+        if re.match(r"^(/|http://)", line):
             self.append(PlaylistEntry(self.fix_url(line)))
         else:
             dirname = os.path.dirname(self.pathname)
@@ -1026,15 +1026,15 @@ class Playlist:
 
     def add_pls(self, line):
         # todo - support title & length
-        m = re.match("File(\d+)=(.*)", line)
+        m = re.match(r"File(\d+)=(.*)", line)
         if m:
             self.append(PlaylistEntry(self.fix_url(m.group(2))))
 
     def add_playlist(self, pathname):
         self.pathname = pathname
-        if re.search("\.m3u$", pathname, re.I):
+        if re.search(r"\.m3u$", pathname, re.I):
             f = self.add_m3u
-        if re.search("\.pls$", pathname, re.I):
+        if re.search(r"\.pls$", pathname, re.I):
             f = self.add_pls
         file = open(pathname)
         for line in file.readlines():
@@ -1065,7 +1065,7 @@ class Playlist:
             app.status.status(e, 2)
 
     def fix_url(self, url):
-        return re.sub("(http://[^/]+)/?(.*)", "\\1/\\2", url)
+        return re.sub(r"(http://[^/]+)/?(.*)", r"\1/\2", url)
 
     def change_active_entry(self, direction):
         if len(self.buffer) == 0:
@@ -1215,7 +1215,7 @@ class Playlist:
         pathname = app.input.string
         if pathname[0] != '/':
             pathname = os.path.join(app.filelist.cwd, pathname)
-        if not re.search("\.m3u$", pathname, re.I):
+        if not re.search(r"\.m3u$", pathname, re.I):
             pathname = "%s%s" % (pathname, ".m3u")
         try:
             file = open(pathname, "w")
@@ -1272,27 +1272,27 @@ def get_type(pathname):
     if magic is not None:
         mg_string = magic.from_file(pathname)
         logging.debug("Magic type:" + mg_string)
-        if re.match("^Ogg data, Vorbis audio.*", mg_string):
+        if re.match(r"^Ogg data, Vorbis audio.*", mg_string):
             ftype = 'oggvorbis'
-        elif re.match("^Ogg data, FLAC audio.*", mg_string):
+        elif re.match(r"^Ogg data, FLAC audio.*", mg_string):
             ftype = 'oggflac'
-        elif re.match("FLAC audio bitstream.*", mg_string):
+        elif re.match(r"FLAC audio bitstream.*", mg_string):
             ftype = 'flac'
         # For some reason not all ID3 tagged files return an ID3 identifier,
         # so we just need to look for mp3 files and hope they are also ID3d.
-        elif re.match(".*MPEG ADTS, layer III.*", mg_string):
+        elif re.match(r".*MPEG ADTS, layer III.*", mg_string):
             ftype = 'id3'
         else:
             ftype = "unknown"
         logging.debug("Magic category: " + ftype)
         return ftype
-    if re.match(".*\.ogg$", pathname, re.I):
+    if re.match(r".*\.ogg$", pathname, re.I):
         return 'oggvorbis'
-    elif re.match(".*\.oga$", pathname, re.I):
+    elif re.match(r".*\.oga$", pathname, re.I):
         return 'oggflac'
-    elif re.match(".*\.flac$", pathname, re.I):
+    elif re.match(r".*\.flac$", pathname, re.I):
         return 'flac'
-    elif re.match(".*\.mp3$", pathname, re.I):
+    elif re.match(r".*\.mp3$", pathname, re.I):
         return 'id3'
     return "unknown"
 
@@ -1300,7 +1300,7 @@ def get_type(pathname):
 # FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
 #        in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
-    if re.compile("^http://").match(pathname) or not os.path.exists(pathname):
+    if re.compile(r"^http://").match(pathname) or not os.path.exists(pathname):
         return pathname
     try:
         import mutagen
@@ -1488,7 +1488,7 @@ class Backend:
 
 
 class FrameOffsetBackend(Backend):
-    re_progress = re.compile(b"Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)")
+    re_progress = re.compile(r"Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)")
 
     def parse_buf(self):
         def parse_time(s):
@@ -1503,7 +1503,7 @@ class FrameOffsetBackend(Backend):
 
 
 class FrameOffsetBackendMpp(Backend):
-    re_progress = re.compile(b".*\s(\d+):(\d+).*\s(\d+):(\d+)")
+    re_progress = re.compile(r".*\s(\d+):(\d+).*\s(\d+):(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1515,7 +1515,7 @@ class FrameOffsetBackendMpp(Backend):
 
 
 class TimeOffsetBackend(Backend):
-    re_progress = re.compile(b"(\d+):(\d+):(\d+)")
+    re_progress = re.compile(r"(\d+):(\d+):(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1527,8 +1527,8 @@ class TimeOffsetBackend(Backend):
 
 
 class GSTBackend(Backend):
-    re_progress = re.compile(b"Time: (\d+):(\d+):(\d+).(\d+)"
-                             b" of (\d+):(\d+):(\d+).(\d+)")
+    re_progress = re.compile(r"Time: (\d+):(\d+):(\d+).(\d+)"
+                             r" of (\d+):(\d+):(\d+).(\d+)")
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1550,7 +1550,7 @@ class NoOffsetBackend(Backend):
 
 
 class MPlayer(Backend):
-    re_progress = re.compile(b"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
+    re_progress = re.compile(r"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     speed = 1.0
     eq_cur = 0
     equalizer = EQUALIZERS[eq_cur][0]
@@ -1784,7 +1784,7 @@ class Input:
         elif ch == 21:  # C-u
             self.string = ""
         elif ch == 23:  # C-w
-            self.string = re.sub("((.* )?)\w.*", "\\1", self.string)
+            self.string = re.sub(r"((.* )?)\w.*", r"\1", self.string)
         elif ch:
             self.string = "%s%c" % (self.string, ch)
         self.show()
@@ -2131,30 +2131,30 @@ def main():
 
 MIXERS = [OssMixer, AlsaMixer, PulseMixer]
 BACKENDS = [
-    FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", "\.ogg$"),
-    FrameOffsetBackend("splay -f -k {offset} {file}", "(^http://|\.mp[123]$)",
+    FrameOffsetBackend("ogg123 -q -v -k {offset} {file}", r"\.ogg$"),
+    FrameOffsetBackend("splay -f -k {offset} {file}", r"(^http://|\.mp[123]$)",
                        38.28),
     FrameOffsetBackend("mpg123 -q -v -k {offset} {file}",
-                       "(^http://|\.mp[123]$)", 38.28),
+                       r"(^http://|\.mp[123]$)", 38.28),
     FrameOffsetBackend("mpg321 -q -v -k {offset} {file}",
-                       "(^http://|\.mp[123]$)", 38.28),
+                       r"(^http://|\.mp[123]$)", 38.28),
     FrameOffsetBackendMpp("mppdec --gain 2 --start {offset} {file}",
-                          "\.mp[cp+]$"),
+                          r"\.mp[cp+]$"),
     TimeOffsetBackend("madplay -v --display-time=remaining -s {offset} {file}",
-                      "\.mp[123]$"),
+                      r"\.mp[123]$"),
     MPlayer("mplayer -slave -vc null -vo null {file}",
-            "^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
-            "med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
+            r"^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
+            r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
     GSTBackend("gst123 -k {offset} {file}",
-               "\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
+               r"\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
     NoOffsetBackend("mikmod -q -p0 {file}",
-                    "\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
+                    r"\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
     NoOffsetBackend("xmp -q {file}",
-                    "\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
-    NoOffsetBackend("play {file}", "\.(aiff|au|cdr|mp3|ogg|wav)$"),
-    NoOffsetBackend("speexdec {file}", "\.spx$"),
+                    r"\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$"),
+    NoOffsetBackend("play {file}", r"\.(aiff|au|cdr|mp3|ogg|wav)$"),
+    NoOffsetBackend("speexdec {file}", r"\.spx$"),
     NoOffsetBackend("timidity {file}",
-                    "\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
+                    r"\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
 ]
 
 MACRO = {}
@@ -2168,7 +2168,7 @@ def valid_song(name):
 
 
 def valid_playlist(name):
-    if re.search("\.(m3u|pls)$", name, re.I):
+    if re.search(r"\.(m3u|pls)$", name, re.I):
         return True
     return False
 
