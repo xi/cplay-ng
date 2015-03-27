@@ -135,7 +135,7 @@ class Application(object):
             if self.control.fd:
                 R.append(self.control.fd)
             try:
-                r, w, e = select.select(R, [], [], timeout)
+                r, _w, _e = select.select(R, [], [], timeout)
             except select.error:
                 continue
             # user
@@ -162,7 +162,7 @@ class Application(object):
         self.player.backend.stop(quiet=True)
         sys.exit(status)
 
-    def handler_resize(self, sig, frame):
+    def handler_resize(self, _sig, _frame):
         # curses trickery
         while True:
             try:
@@ -360,14 +360,14 @@ class RootWindow(Window):
         self.keymap.bind(list(range(48, 58)), APP.player.key_volume)
         self.keymap.bind(['+'], APP.player.mixer, ("cue", [1]))
         self.keymap.bind('-', APP.player.mixer, ("cue", [-1]))
-        self.keymap.bind('n', APP.player.next_prev_song, (+1,))
-        self.keymap.bind('p', APP.player.next_prev_song, (-1,))
+        self.keymap.bind('n', APP.player.next_prev_song, (+1, ))
+        self.keymap.bind('p', APP.player.next_prev_song, (-1, ))
         self.keymap.bind('z', APP.player.toggle_pause, ())
         self.keymap.bind('x', APP.player.toggle_stop, ())
         self.keymap.bind('c', APP.counter.toggle_mode, ())
         self.keymap.bind('Q', APP.quit, ())
         self.keymap.bind('q', self.command_quit, ())
-        self.keymap.bind('v', APP.player.mixer, ("toggle",))
+        self.keymap.bind('v', APP.player.mixer, ("toggle", ))
         self.keymap.bind(',', APP.macro.command_macro, ())
 
     def command_quit(self):
@@ -448,13 +448,14 @@ class ListWindow(Window):
     def __init__(self, parent):
         Window.__init__(self, parent)
         self.buffer = []
-        self.bufptr = self.scrptr = 0
+        self.bufptr = 0
+        self.scrptr = 0
         self.search_direction = 0
         self.last_search = ""
         self.hoffset = 0
         self.keymap = Keymap()
-        self.keymap.bind(['k', curses.KEY_UP, 16], self.cursor_move, (-1,))
-        self.keymap.bind(['j', curses.KEY_DOWN, 14], self.cursor_move, (1,))
+        self.keymap.bind(['k', curses.KEY_UP, 16], self.cursor_move, (-1, ))
+        self.keymap.bind(['j', curses.KEY_DOWN, 14], self.cursor_move, (1, ))
         self.keymap.bind(['K', curses.KEY_PPAGE], self.cursor_ppage, ())
         self.keymap.bind(['J', curses.KEY_NPAGE], self.cursor_npage, ())
         self.keymap.bind(['g', curses.KEY_HOME], self.cursor_home, ())
@@ -463,8 +464,8 @@ class ListWindow(Window):
                          (_("backward-isearch"), -1))
         self.keymap.bind(['/', 19], self.start_search,
                          (_("forward-isearch"), 1))
-        self.keymap.bind(['>'], self.hscroll, (8,))
-        self.keymap.bind(['<'], self.hscroll, (-8,))
+        self.keymap.bind(['>'], self.hscroll, (8, ))
+        self.keymap.bind(['<'], self.hscroll, (-8, ))
 
     def newwin(self):
         return curses.newwin(self.parent.rows - 2, self.parent.cols,
@@ -484,7 +485,7 @@ class ListWindow(Window):
             i = 0
             for entry in self.buffer[first:first + self.rows]:
                 self.move(i, 0)
-                i = i + 1
+                i += 1
                 self.putstr(entry)
             if self.visible:
                 self.refresh()
@@ -871,7 +872,7 @@ class FilelistWindow(TagListWindow):
                 except:
                     pass
         if self.mode != self.SEARCH:
-            self.chdir(os.path.join(self.cwd, _('search results')))
+            self.chdir(os.path.join(self.cwd, _("search results")))
             self.mode = self.SEARCH
         self.buffer = results
         self.bufptr = 0
@@ -1050,7 +1051,7 @@ class Playlist(object):
         self.pathname = pathname
         if re.search(r"\.m3u$", pathname, re.I):
             f = self.add_m3u
-        if re.search(r"\.pls$", pathname, re.I):
+        elif re.search(r"\.pls$", pathname, re.I):
             f = self.add_pls
         file = open(pathname)
         for line in file.readlines():
@@ -1251,8 +1252,8 @@ class PlaylistWindow(TagListWindow, Playlist):
         self.keymap.bind(['\n', curses.KEY_ENTER], self.command_play, ())
         self.keymap.bind('d', self.command_delete, ())
         self.keymap.bind('D', self.command_delete_all, ())
-        self.keymap.bind('m', self.command_move, (True,))
-        self.keymap.bind('M', self.command_move, (False,))
+        self.keymap.bind('m', self.command_move, (True, ))
+        self.keymap.bind('M', self.command_move, (False, ))
         self.keymap.bind('s', self.command_shuffle, ())
         self.keymap.bind('S', self.command_sort, ())
         self.keymap.bind('r', self.command_toggle_repeat, ())
@@ -1327,7 +1328,7 @@ class Backend(object):
 
     def play(self):
         logging.debug("Executing " + " ".join(self.argv))
-        logging.debug("My offset is %d" % self.offset)
+        logging.debug("My offset is %d", self.offset)
 
         try:
             self._proc = subprocess.Popen(self.argv,
@@ -1522,7 +1523,8 @@ class Timeout(object):
         self._dict = {}
 
     def add(self, timeout, func, args=()):
-        tid = self._next = self._next + 1
+        self._next += 1
+        tid = self._next
         self._dict[tid] = (func, args, time.time() + timeout)
         return tid
 
