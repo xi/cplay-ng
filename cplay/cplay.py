@@ -1606,12 +1606,11 @@ class Player(object):
             if self.backend.re_files.search(entry.pathname):
                 if self.backend.setup(entry, offset):
                     return True
-        else:
-            # FIXME: Needs to report suitable backends
-            logging.debug("Backend not found")
-            APP.status.status(_("Backend not found!"), 1)
-            self.backend.stopped = False  # keep going
-            return False
+        # FIXME: Needs to report suitable backends
+        logging.debug("Backend not found")
+        APP.status.status(_("Backend not found!"), 1)
+        self.backend.stopped = False  # keep going
+        return False
 
     def play(self, entry, offset=0):
         # Play executed, remove from queue
