@@ -1379,6 +1379,9 @@ class Backend(object):
             self.parse_buf()
             self.tid = APP.timeout.add(1.0, self.parse_progress)
 
+    def parse_buf(self):
+        raise NotImplementedError
+
     def read_fd(self, fd):
         self.buf = os.read(fd, 512)
         if self.tid is None:
