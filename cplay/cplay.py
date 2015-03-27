@@ -729,9 +729,9 @@ class TagListWindow(ListWindow):
             lm = re.sub(r'([ \'"()\[\]{}$`])', r'\\\1', lm)
         return part + lm
 
-    def command_change_viewpoint(self, klass=ListEntry):
-        klass.vps.append(klass.vps.pop(0))
-        APP.status.status(_("Listing %s") % klass.vps[0][0], 1)
+    def command_change_viewpoint(self, cls=ListEntry):
+        cls.vps.append(cls.vps.pop(0))
+        APP.status.status(_("Listing %s") % cls.vps[0][0], 1)
         APP.player.backend.update_status()
         self.update()
 
