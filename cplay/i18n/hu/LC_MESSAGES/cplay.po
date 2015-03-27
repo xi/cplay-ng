@@ -45,12 +45,12 @@ msgstr ""
 #: cplay/cplay.py:1778
 #, fuzzy, python-format
 msgid "%s volume %s%%"
-msgstr "Hangerı %d%%"
+msgstr "Hanger≈ë %d%%"
 
 #: cplay/cplay.py:1238
 #, python-format
 msgid "Added: %s"
-msgstr "Hozz·adva: %s"
+msgstr "Hozz√°adva: %s"
 
 #: cplay/cplay.py:1165
 msgid "Adding tagged files"
@@ -59,7 +59,7 @@ msgstr ""
 #: cplay/cplay.py:205
 #, fuzzy
 msgid "Backend not found!"
-msgstr "Lej·tszÛ nem tal·lhatÛ!"
+msgstr "Lej√°tsz√≥ nem tal√°lhat√≥!"
 
 #: cplay/cplay.py:1904
 msgid "Can't read metadata, module mutagen not available"
@@ -77,7 +77,7 @@ msgstr ""
 #: cplay/cplay.py:1339
 #, fuzzy
 msgid "Deleted playlist"
-msgstr "Rendezett sz·mlista..."
+msgstr "Rendezett sz√°mlista..."
 
 #: cplay/cplay.py:1680
 msgid "ERROR: Cannot send commands to mplayer!"
@@ -93,16 +93,16 @@ msgstr ""
 
 #: cplay/cplay.py:1057
 msgid "Filelist: "
-msgstr "¡llom·nylista: "
+msgstr "√Ållom√°nylista: "
 
 #: cplay/cplay.py:775
 msgid "Help"
-msgstr "SegÌtsÈg"
+msgstr "Seg√≠ts√©g"
 
 #: cplay/cplay.py:911
 #, fuzzy, python-format
 msgid "Listing %s"
-msgstr "Lej·tsz·s: %s"
+msgstr "Lej√°tsz√°s: %s"
 
 #: cplay/cplay.py:259
 msgid "No mixer."
@@ -110,32 +110,32 @@ msgstr ""
 
 #: cplay/cplay.py:1154
 msgid "Not a directory!"
-msgstr "Nem kˆnyvt·r!"
+msgstr "Nem k√∂nyvt√°r!"
 
 #: cplay/cplay.py:999
 #, fuzzy
 msgid "Not found!"
-msgstr "Lej·tszÛ nem tal·lhatÛ!"
+msgstr "Lej√°tsz√≥ nem tal√°lhat√≥!"
 
 #: cplay/cplay.py:751 cplay/cplay.py:763
 #, fuzzy, python-format
 msgid "Not found: %s "
-msgstr "Nem tal·lhatÛ: %s"
+msgstr "Nem tal√°lhat√≥: %s"
 
 #: cplay/cplay.py:1590
 #, python-format
 msgid "Paused: %s"
-msgstr "Sz¸netel: %s"
+msgstr "Sz√ºnetel: %s"
 
 #: cplay/cplay.py:1593
 #, python-format
 msgid "Playing: %s"
-msgstr "Lej·tsz·s: %s"
+msgstr "Lej√°tsz√°s: %s"
 
 #: cplay/cplay.py:1432
 #, fuzzy, python-format
 msgid "Playlist %s %s %s"
-msgstr "Sz·mlista %s %s"
+msgstr "Sz√°mlista %s %s"
 
 #: cplay/cplay.py:535
 msgid "Quit? (y/N)"
@@ -144,20 +144,20 @@ msgstr ""
 #: cplay/cplay.py:1373
 #, fuzzy, python-format
 msgid "Random: %s"
-msgstr "VÈletlenszer˚ %s"
+msgstr "V√©letlenszer≈± %s"
 
 #: cplay/cplay.py:1073
 msgid "Reading directory..."
-msgstr "Kˆnyvt·r olvas·sa..."
+msgstr "K√∂nyvt√°r olvas√°sa..."
 
 #: cplay/cplay.py:1370
 #, fuzzy, python-format
 msgid "Repeat: %s"
-msgstr "IsmÈtel %s"
+msgstr "Ism√©tel %s"
 
 #: cplay/cplay.py:1391
 msgid "Save playlist"
-msgstr "Sz·mlista mentÈse"
+msgstr "Sz√°mlista ment√©se"
 
 #: cplay/cplay.py:1024
 msgid "Searching..."
@@ -165,12 +165,12 @@ msgstr ""
 
 #: cplay/cplay.py:1360
 msgid "Shuffled playlist... Oops?"
-msgstr "Kevert sz·mlista... Hopsz?"
+msgstr "Kevert sz√°mlista... Hopsz?"
 
 #: cplay/cplay.py:1367
 #, fuzzy
 msgid "Sorted playlist"
-msgstr "Rendezett sz·mlista..."
+msgstr "Rendezett sz√°mlista..."
 
 #: cplay/cplay.py:1975
 msgid "Start in random mode."
@@ -189,12 +189,12 @@ msgstr ""
 #: cplay/cplay.py:1379
 #, fuzzy, python-format
 msgid "Stop playlist: %s"
-msgstr "Sz·mlista %s %s"
+msgstr "Sz√°mlista %s %s"
 
 #: cplay/cplay.py:1588
 #, python-format
 msgid "Stopped: %s"
-msgstr "Meg·llÌtva: %s"
+msgstr "Meg√°ll√≠tva: %s"
 
 #: cplay/cplay.py:1977
 msgid "Switch mixer channels."
@@ -218,11 +218,11 @@ msgstr ""
 
 #: cplay/cplay.py:1434
 msgid "[random]"
-msgstr "[vÈletlenszer˚]"
+msgstr "[v√©letlenszer≈±]"
 
 #: cplay/cplay.py:1433
 msgid "[repeat]"
-msgstr "[ismÈtlÈs]"
+msgstr "[ism√©tl√©s]"
 
 #: cplay/cplay.py:1435
 msgid "[stop]"
@@ -230,7 +230,7 @@ msgstr ""
 
 #: cplay/cplay.py:625
 msgid "backward-isearch"
-msgstr "keresÈs h·tra"
+msgstr "keres√©s h√°tra"
 
 #: cplay/cplay.py:985
 msgid "bookmark"
@@ -238,7 +238,7 @@ msgstr ""
 
 #: cplay/cplay.py:338
 msgid "cancel"
-msgstr "mÈgsem"
+msgstr "m√©gsem"
 
 #: cplay/cplay.py:496
 msgid "elapsed"
@@ -251,7 +251,7 @@ msgstr ""
 #: cplay/cplay.py:1980
 #, fuzzy
 msgid "file, dir or playlist"
-msgstr "Rendezett sz·mlista..."
+msgstr "Rendezett sz√°mlista..."
 
 #: cplay/cplay.py:824 cplay/cplay.py:1966
 msgid "filename"
@@ -259,11 +259,11 @@ msgstr ""
 
 #: cplay/cplay.py:627
 msgid "forward-isearch"
-msgstr "keresÈs elıre"
+msgstr "keres√©s el≈ëre"
 
 #: cplay/cplay.py:1147
 msgid "goto"
-msgstr "ugr·s"
+msgstr "ugr√°s"
 
 #: cplay/cplay.py:1750
 msgid "macro"

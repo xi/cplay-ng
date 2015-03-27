@@ -47,12 +47,12 @@ msgstr ""
 #: cplay/cplay.py:1778
 #, python-format
 msgid "%s volume %s%%"
-msgstr "%s lydstyrke %s%"
+msgstr "%s lydstyrke %s%%"
 
 #: cplay/cplay.py:1238
 #, python-format
 msgid "Added: %s"
-msgstr "Tilføjede: %s"
+msgstr "TilfÅ™jede: %s"
 
 #: cplay/cplay.py:1165
 msgid "Adding tagged files"
@@ -74,7 +74,7 @@ msgstr ""
 #: cplay/cplay.py:497
 #, python-format
 msgid "Counting %s time"
-msgstr "Tæller %s gange"
+msgstr "TÄ‡ller %s gange"
 
 #: cplay/cplay.py:1339
 msgid "Deleted playlist"
@@ -98,12 +98,12 @@ msgstr "Filliste: "
 
 #: cplay/cplay.py:775
 msgid "Help"
-msgstr "Hjælp"
+msgstr "HjÄ‡lp"
 
 #: cplay/cplay.py:911
 #, python-format
 msgid "Listing %s"
-msgstr "Sææter %s på liste"
+msgstr "SÄ‡Ä‡ter %s pÄº liste"
 
 #: cplay/cplay.py:259
 msgid "No mixer."
@@ -125,7 +125,7 @@ msgstr "%s ikke fundet "
 #: cplay/cplay.py:1590
 #, python-format
 msgid "Paused: %s"
-msgstr "Sat på pause: %s"
+msgstr "Sat pÄº pause: %s"
 
 #: cplay/cplay.py:1593
 #, python-format
@@ -144,11 +144,11 @@ msgstr "Afslut? (y/N)"
 #: cplay/cplay.py:1373
 #, python-format
 msgid "Random: %s"
-msgstr "Tilfældig: %s"
+msgstr "TilfÄ‡ldig: %s"
 
 #: cplay/cplay.py:1073
 msgid "Reading directory..."
-msgstr "Læser filkatalog..."
+msgstr "LÄ‡ser filkatalog..."
 
 #: cplay/cplay.py:1370
 #, python-format
@@ -161,7 +161,7 @@ msgstr "Gem spilleliste"
 
 #: cplay/cplay.py:1024
 msgid "Searching..."
-msgstr "Søger..."
+msgstr "SÅ™ger..."
 
 #: cplay/cplay.py:1360
 msgid "Shuffled playlist... Oops?"
@@ -169,7 +169,7 @@ msgstr "Blandede spilleliste... Hovsa?"
 
 #: cplay/cplay.py:1367
 msgid "Sorted playlist"
-msgstr "Sortérede spilleliste"
+msgstr "SortÃ©rede spilleliste"
 
 #: cplay/cplay.py:1975
 msgid "Start in random mode."
@@ -188,7 +188,7 @@ msgstr ""
 #: cplay/cplay.py:1379
 #, python-format
 msgid "Stop playlist: %s"
-msgstr "Stop spilleliste"
+msgstr "Stop spilleliste: %s"
 
 #: cplay/cplay.py:1588
 #, python-format
@@ -201,11 +201,11 @@ msgstr ""
 
 #: cplay/cplay.py:936
 msgid "Tag regexp"
-msgstr "Vælg regexp"
+msgstr "VÄ‡lg regexp"
 
 #: cplay/cplay.py:936
 msgid "Untag regexp"
-msgstr "Fravælg regexp"
+msgstr "FravÄ‡lg regexp"
 
 #: cplay/cplay.py:1964
 msgid "When in doubt, press 'h' for a friendly help page."
@@ -217,7 +217,7 @@ msgstr "Arbejder..."
 
 #: cplay/cplay.py:1434
 msgid "[random]"
-msgstr "[tilfældig]"
+msgstr "[tilfÄ‡ldig]"
 
 #: cplay/cplay.py:1433
 msgid "[repeat]"
@@ -229,11 +229,11 @@ msgstr "[stop]"
 
 #: cplay/cplay.py:625
 msgid "backward-isearch"
-msgstr "baglæns-isøgning"
+msgstr "baglÄ‡ns-isÅ™gning"
 
 #: cplay/cplay.py:985
 msgid "bookmark"
-msgstr "bogmærke"
+msgstr "bogmÄ‡rke"
 
 #: cplay/cplay.py:338
 msgid "cancel"
@@ -259,11 +259,11 @@ msgstr "filnavn"
 
 #: cplay/cplay.py:627
 msgid "forward-isearch"
-msgstr "forlæns-isøgning"
+msgstr "forlÄ‡ns-isÅ™gning"
 
 #: cplay/cplay.py:1147
 msgid "goto"
-msgstr "gå til"
+msgstr "gÄº til"
 
 #: cplay/cplay.py:1750
 msgid "macro"
@@ -296,15 +296,15 @@ msgstr "tilbage"
 
 #: cplay/cplay.py:1016
 msgid "search"
-msgstr "søg"
+msgstr "sÅ™g"
 
 #: cplay/cplay.py:1037
 msgid "search results"
-msgstr "søgnings-resultater"
+msgstr "sÅ™gnings-resultater"
 
 #: cplay/cplay.py:1004
 msgid "set bookmark"
-msgstr "sæt bogmærke"
+msgstr "sÄ‡t bogmÄ‡rke"
 
 #: cplay/cplay.py:861
 msgid "shell$ "

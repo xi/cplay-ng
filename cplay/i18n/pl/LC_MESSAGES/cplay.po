@@ -46,7 +46,7 @@ msgstr ""
 #: cplay/cplay.py:1778
 #, python-format
 msgid "%s volume %s%%"
-msgstr "%s g³o¶no¶æ %s%%"
+msgstr "%s gÅ‚oÅ›noÅ›Ä‡ %s%%"
 
 #: cplay/cplay.py:1238
 #, python-format
@@ -60,7 +60,7 @@ msgstr ""
 #: cplay/cplay.py:205
 #, fuzzy
 msgid "Backend not found!"
-msgstr "Nie znaleziono programu odtwarzaj±cego!"
+msgstr "Nie znaleziono programu odtwarzajÄ…cego!"
 
 #: cplay/cplay.py:1904
 msgid "Can't read metadata, module mutagen not available"
@@ -77,7 +77,7 @@ msgstr "Licznik %s czasu"
 
 #: cplay/cplay.py:1339
 msgid "Deleted playlist"
-msgstr "Skasowano listê utworów"
+msgstr "Skasowano listÄ™ utworÃ³w"
 
 #: cplay/cplay.py:1680
 msgid "ERROR: Cannot send commands to mplayer!"
@@ -93,7 +93,7 @@ msgstr ""
 
 #: cplay/cplay.py:1057
 msgid "Filelist: "
-msgstr "Lista plików: "
+msgstr "Lista plikÃ³w: "
 
 #: cplay/cplay.py:775
 msgid "Help"
@@ -134,16 +134,16 @@ msgstr "Odtwarzanie: %s"
 #: cplay/cplay.py:1432
 #, python-format
 msgid "Playlist %s %s %s"
-msgstr "Lista utworów %s %s %s"
+msgstr "Lista utworÃ³w %s %s %s"
 
 #: cplay/cplay.py:535
 msgid "Quit? (y/N)"
-msgstr "Wyj¶æ (y/N)"
+msgstr "WyjÅ›Ä‡ (y/N)"
 
 #: cplay/cplay.py:1373
 #, python-format
 msgid "Random: %s"
-msgstr "Losowo¶æ: %s"
+msgstr "LosowoÅ›Ä‡: %s"
 
 #: cplay/cplay.py:1073
 msgid "Reading directory..."
@@ -156,7 +156,7 @@ msgstr "Powtarzanie: %s"
 
 #: cplay/cplay.py:1391
 msgid "Save playlist"
-msgstr "Zapisz listê utworów"
+msgstr "Zapisz listÄ™ utworÃ³w"
 
 #: cplay/cplay.py:1024
 msgid "Searching..."
@@ -164,11 +164,11 @@ msgstr "Wyszukiwanie..."
 
 #: cplay/cplay.py:1360
 msgid "Shuffled playlist... Oops?"
-msgstr "Przetasowano listê utworów... Oops?"
+msgstr "Przetasowano listÄ™ utworÃ³w... Oops?"
 
 #: cplay/cplay.py:1367
 msgid "Sorted playlist"
-msgstr "Posortowano listê utworów"
+msgstr "Posortowano listÄ™ utworÃ³w"
 
 #: cplay/cplay.py:1975
 msgid "Start in random mode."
@@ -187,7 +187,7 @@ msgstr ""
 #: cplay/cplay.py:1379
 #, python-format
 msgid "Stop playlist: %s"
-msgstr "Zatrzymano listê utworów: %s"
+msgstr "Zatrzymano listÄ™ utworÃ³w: %s"
 
 #: cplay/cplay.py:1588
 #, python-format
@@ -200,11 +200,11 @@ msgstr ""
 
 #: cplay/cplay.py:936
 msgid "Tag regexp"
-msgstr "Zaznacz wyra¿enie"
+msgstr "Zaznacz wyraÅ¼enie"
 
 #: cplay/cplay.py:936
 msgid "Untag regexp"
-msgstr "Odznacz wyra¿enie"
+msgstr "Odznacz wyraÅ¼enie"
 
 #: cplay/cplay.py:1964
 msgid "When in doubt, press 'h' for a friendly help page."
@@ -232,7 +232,7 @@ msgstr "szukanie-wstecz"
 
 #: cplay/cplay.py:985
 msgid "bookmark"
-msgstr "zak³adka"
+msgstr "zakÅ‚adka"
 
 #: cplay/cplay.py:338
 msgid "cancel"
@@ -245,16 +245,16 @@ msgstr "odegranego"
 #: cplay/cplay.py:1979
 #, fuzzy
 msgid "file"
-msgstr "plików"
+msgstr "plikÃ³w"
 
 #: cplay/cplay.py:1980
 #, fuzzy
 msgid "file, dir or playlist"
-msgstr "Skasowano listê utworów"
+msgstr "Skasowano listÄ™ utworÃ³w"
 
 #: cplay/cplay.py:824 cplay/cplay.py:1966
 msgid "filename"
-msgstr "plików"
+msgstr "plikÃ³w"
 
 #: cplay/cplay.py:627
 msgid "forward-isearch"
@@ -262,7 +262,7 @@ msgstr "szukanie-do przodu"
 
 #: cplay/cplay.py:1147
 msgid "goto"
-msgstr "id¼ do"
+msgstr "idÅº do"
 
 #: cplay/cplay.py:1750
 msgid "macro"
@@ -274,7 +274,7 @@ msgstr "metadata"
 
 #: cplay/cplay.py:1384
 msgid "off"
-msgstr "wy³±czone"
+msgstr "wyÅ‚Ä…czone"
 
 #: cplay/cplay.py:735 cplay/cplay.py:945 cplay/cplay.py:997 cplay/cplay.py:1010
 #: cplay/cplay.py:1405
@@ -283,15 +283,15 @@ msgstr "ok"
 
 #: cplay/cplay.py:1383
 msgid "on"
-msgstr "w³±czone"
+msgstr "wÅ‚Ä…czone"
 
 #: cplay/cplay.py:825
 msgid "pathname"
-msgstr "¶cie¿ek"
+msgstr "Å›cieÅ¼ek"
 
 #: cplay/cplay.py:493
 msgid "remaining"
-msgstr "pozosta³ego"
+msgstr "pozostaÅ‚ego"
 
 #: cplay/cplay.py:1016
 msgid "search"
@@ -303,9 +303,9 @@ msgstr "wyniki wyszukiwania"
 
 #: cplay/cplay.py:1004
 msgid "set bookmark"
-msgstr "ustaw zak³adkê"
+msgstr "ustaw zakÅ‚adkÄ™"
 
 #: cplay/cplay.py:861
 msgid "shell$ "
-msgstr "pow³oka$ "
+msgstr "powÅ‚oka$ "
 
