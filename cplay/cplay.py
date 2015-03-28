@@ -1655,6 +1655,21 @@ class NoOffsetBackend(Backend):
         pass
 
 
+class NoBufferBackend(Backend):
+    def __init__(self, *args):
+        Backend.__init__(self, *args)
+        self._starttime = 0
+
+    def play(self):
+        self._starttime = time.time()
+        Backend.play(self)
+
+    def parse_buf(self):
+        position = time.time() - self._starttime + self.offset
+        logging.debug(position)
+        self.set_position(position, 2 * position)
+
+
 class MPlayer(Backend):
     re_progress = re.compile(r"^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d")
     eq_cur = 0
@@ -2047,6 +2062,10 @@ BACKENDS = [
     NoOffsetBackend("speexdec {file}", r"\.spx$"),
     NoOffsetBackend("timidity {file}",
                     r"\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
+    NoBufferBackend(
+        "cvlc --play-and-exit --start-time {offset} {file}",
+        r"^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
+        r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
 ]
 
 
