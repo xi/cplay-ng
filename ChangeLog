@@ -1,3 +1,16 @@
+????-??-??  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+  *** 2.1.0 released ***
+
+	- dropped support for ncurses
+	- dropped support for mplayer specific features (speed, equalizer)
+	- added support for VLC
+	- added support for playing videos
+	- translations are now managed on
+	  https://www.transifex.com/projects/p/cplay-ng/
+	- a lot of internal restructuring to ease collaboration with Andreas van
+	  Cranenburgh's fork at https://github.com/andreasvc/cplay
+
 2015-03-20  Tobias Bengfort <tobias.bengfort@posteo.de>
 
   *** 2.0.3 released ***
