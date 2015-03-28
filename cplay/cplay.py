@@ -60,6 +60,7 @@ class Application(object):
     def __init__(self):
         self.tcattr = None
         self.restricted = False
+        self.video = False
         self.fifo = ("%s/cplay-control-%s" % (
             os.environ.get("TMPDIR", "/tmp"),
             os.environ["USER"]))
@@ -1941,6 +1942,8 @@ def get_tag(pathname):
 
 
 def valid_song(name):
+    if not APP.video and re.search(RE_VIDEO, name):
+        return False
     return any(backend.re_files.search(name) for backend in BACKENDS)
 
 
@@ -1990,6 +1993,8 @@ def parse_args():
                         help=_('Start in random mode.'))
     parser.add_argument('-m', '--toggle-mixer', action='store_true',
                         help=_('Switch mixer channels.'))
+    parser.add_argument('-V', '--video', action='store_true',
+                        help=_('Allow to play videos.'))
     parser.add_argument('--fifo', help=_('FIFO socket used by cnq'))
     parser.add_argument('files', metavar=_('file'), nargs='*',
                         help=_('file, dir or playlist'))
@@ -2016,6 +2021,7 @@ def main():
     try:
         APP.setup()
         APP.restricted = args.restricted
+        APP.video = args.video
         if args.repeat:
             APP.playlist.command_toggle_repeat()
         if args.random:
@@ -2050,10 +2056,12 @@ BACKENDS = [
     TimeOffsetBackend("madplay -v --display-time=remaining -s {offset} {file}",
                       r"\.mp[123]$"),
     MPlayer("mplayer -slave -vc null -vo null {file}",
-            r"^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
-            r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
+            r"^http://|\.(mp[1234]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
+            r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|"
+            r"mkv|flv|avi|wmv)$"),
     GSTBackend("gst123 -k {offset} {file}",
-               r"\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$"),
+               r"\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|"
+               r"mkv|flv|avi|wmv)$"),
     NoOffsetBackend("mikmod -q -p0 {file}",
                     r"\.(mod|xm|fm|s3m|med|col|669|it|mtm)$"),
     NoOffsetBackend("xmp -q {file}",
@@ -2064,9 +2072,11 @@ BACKENDS = [
                     r"\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$"),
     NoBufferBackend(
         "cvlc --play-and-exit --start-time {offset} {file}",
-        r"^http://|\.(mp[123]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
-        r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$"),
+        r"^http://|\.(mp[1234]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|"
+        r"med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|"
+        r"mkv|flv|avi|wmv)$"),
 ]
+RE_VIDEO = r"\.(mkv|flv|avi|wmv|mp4)$"
 
 
 if __name__ == "__main__":

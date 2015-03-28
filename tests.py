@@ -81,6 +81,7 @@ class MockPlaylist(object):
 class MockApp(object):
     def __init__(self):
         self.restricted = None
+        self.video = False
         self.fifo = '/tmp/cplay-test'
     def setup(self): pass
     def cleanup(self): pass
