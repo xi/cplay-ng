@@ -197,9 +197,10 @@ class Player(object):
             return False
         logging.debug('Setting up backend for %s' % str(entry))
         self.backend.stop(quiet=True)
-        for self.backend in BACKENDS:
-            if self.backend.re_files.search(entry.pathname):
-                if self.backend.setup(entry, offset):
+        for backend in BACKENDS:
+            if backend.re_files.search(entry.pathname):
+                if backend.setup(entry, offset):
+                    self.backend = backend
                     return True
         # FIXME: Needs to report suitable backends
         logging.debug('Backend not found')
@@ -1099,8 +1100,9 @@ class FilelistWindow(TagListWindow):
         for i in files:
             self.buffer.append(ListEntry(i))
         if prevdir:
-            for self.bufptr in range(len(self.buffer)):
-                if self.buffer[self.bufptr].filename == prevdir:
+            for bufptr in range(len(self.buffer)):
+                if self.buffer[bufptr].filename == prevdir:
+                    self.bufptr = bufptr
                     break
             else:
                 self.bufptr = 0
