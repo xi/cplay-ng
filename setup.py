@@ -38,7 +38,7 @@ setup(
     author='Ulf Betlehem',
     author_email='flu@iki.fi',
     maintainer='Tobias Bengfort',
-    maintainer_email='tobias.bengfort@gmx.net',
+    maintainer_email='tobias.bengfort@posteo.de',
     packages=['cplay'],
     include_package_data=True,
     install_requires=[
