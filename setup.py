@@ -26,7 +26,7 @@ class _install_lib(install_lib):
 with open('cplay/cplay.py') as fh:
     for line in fh:
         if line.startswith('__version__'):
-            name, version = line.split('"')[1].split()
+            name, version = line.split('\'')[1].split()
             break
 
 setup(
