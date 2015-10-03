@@ -51,7 +51,7 @@ CODE = locale.getpreferredencoding()
 _ = lambda x: x
 gettext.install('cplay', resource_filename(__name__, 'i18n'))
 
-XTERM = re.search("rxvt|xterm", os.environ['TERM'])
+XTERM = re.search("rxvt|xterm", os.environ.get('TERM', ''))
 MACRO = {}
 APP = None
 
