@@ -938,7 +938,7 @@ class TagListWindow(ListWindow):
 
     def stop_tag_regexp(self):
         try:
-            r = re.compile(APP.input.string, re.I)
+            r = re.compile(APP.input.string, re.IGNORECASE)
             for entry in self.buffer:
                 if r.search(str(entry)):
                     entry.tagged = self.tag_value
@@ -1018,7 +1018,7 @@ class FilelistWindow(TagListWindow):
 
     def stop_search_recursively(self):
         try:
-            re_tmp = re.compile(APP.input.string, re.I)
+            re_tmp = re.compile(APP.input.string, re.IGNORECASE)
         except re.error as e:
             APP.status.status(e, 2)
             return
@@ -1212,9 +1212,9 @@ class Playlist(object):
 
     def add_playlist(self, pathname):
         self.pathname = pathname
-        if re.search(r'\.m3u$', pathname, re.I):
+        if re.search(r'\.m3u$', pathname, re.IGNORECASE):
             f = self.add_m3u
-        elif re.search(r'\.pls$', pathname, re.I):
+        elif re.search(r'\.pls$', pathname, re.IGNORECASE):
             f = self.add_pls
         file = open(pathname)
         for line in file.readlines():
@@ -1395,7 +1395,7 @@ class Playlist(object):
         pathname = APP.input.string
         if pathname[0] != '/':
             pathname = os.path.join(APP.filelist.cwd, pathname)
-        if not re.search(r'\.m3u$', pathname, re.I):
+        if not re.search(r'\.m3u$', pathname, re.IGNORECASE):
             pathname = '%s%s' % (pathname, '.m3u')
         try:
             file = open(pathname, 'w')
@@ -1457,7 +1457,7 @@ class Backend(object):
     def __init__(self, commandline, files, fps=1):
         self.commandline = commandline
         self.argv = None
-        self.re_files = re.compile(files, re.I)
+        self.re_files = re.compile(files, re.IGNORECASE)
         self.fps = fps
         self.entry = None
         # True only if stopped manually or playlist ran out
@@ -1948,7 +1948,7 @@ def valid_song(name):
 
 
 def valid_playlist(name):
-    if re.search(r'\.(m3u|pls)$', name, re.I):
+    if re.search(r'\.(m3u|pls)$', name, re.IGNORECASE):
         return True
     return False
 
