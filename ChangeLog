@@ -8,6 +8,7 @@
 	- removed cplay.list
 	- added support for VLC
 	- added support for playing videos
+	- added -s flag to allow saving state on close and restoring on open
 	- translations are now managed on
 	  https://www.transifex.com/projects/p/cplay-ng/
 	- a lot of internal restructuring to ease collaboration with Andreas van
