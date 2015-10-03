@@ -1339,7 +1339,8 @@ class Playlist(object):
         self.random_prev = []
         self.random_next = []
         self.random_left = []
-        APP.status.status(_('Deleted playlist'), 1)
+        self.active_entry = None
+        APP.status.status(_('Playlist cleared'), 1)
         self.update()
 
     def command_move(self, after=False):
@@ -1956,7 +1957,7 @@ def valid_playlist(name):
 
 
 def which(program):
-    for path in os.environ['PATH'].split(':'):
+    for path in os.environ.get('PATH', os.defpath).split(':'):
         if os.path.exists(os.path.join(path, program)):
             return os.path.join(path, program)
 
