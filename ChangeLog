@@ -4,6 +4,8 @@
 
 	- dropped support for ncurses
 	- dropped support for mplayer specific features (speed, equalizer)
+	- removed lircrc
+	- removed cplay.list
 	- added support for VLC
 	- added support for playing videos
 	- translations are now managed on
