@@ -195,7 +195,7 @@ class Player(object):
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
             return False
-        logging.debug('Setting up backend for ' + str(entry))
+        logging.debug('Setting up backend for %s' % str(entry))
         self.backend.stop(quiet=True)
         for self.backend in BACKENDS:
             if self.backend.re_files.search(entry.pathname):
@@ -212,7 +212,7 @@ class Player(object):
         self.play_tid = None
         if entry is None or offset is None:
             return
-        logging.debug('Starting to play ' + str(entry))
+        logging.debug('Starting to play %s' % str(entry))
         if self.setup_backend(entry, offset):
             self.backend.play()
         else:
@@ -1491,7 +1491,7 @@ class Backend(object):
         return self.argv[0]
 
     def play(self):
-        logging.debug('Executing ' + ' '.join(self.argv))
+        logging.debug('Executing %s', ' '.join(self.argv))
         logging.debug('My offset is %d', self.offset)
 
         try:
@@ -1500,7 +1500,7 @@ class Backend(object):
                                           stderr=self.stderr_w,
                                           stdin=self.stdin_r)
         except OSError as err:
-            APP.status.status(err, 2)
+            APP.status.status('play() %s' % err, 2)
             return False
 
         self.stopped = False
@@ -1518,7 +1518,7 @@ class Backend(object):
             try:
                 self._proc.terminate()
             except OSError as err:
-                APP.status.status(err, 2)
+                APP.status.status('stop() %s' % err, 2)
         self.stopped = True
         if not quiet:
             self.update_status()
@@ -1688,7 +1688,7 @@ class MPlayer(Backend):
             logging.debug('Cannot parse mplayer output')
 
     def mplayer_send(self, arg):
-        logging.debug('Sending command ' + arg)
+        logging.debug('Sending command %s' % arg)
         try:
             os.write(self.stdin_w, arg + '\n')
         except IOError:
@@ -2028,7 +2028,7 @@ def main():
             APP.playlist.command_toggle_random()
         if args.toggle_mixer:
             APP.player.mixer('toggle')
-        logging.debug('Preferred locale is ' + str(CODE))
+        logging.debug('Preferred locale is %s' % str(CODE))
         if args.files or playlist:
             for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
