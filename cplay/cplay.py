@@ -256,7 +256,7 @@ class Player(object):
     def key_volume(self, ch):
         self.mixer('set', [int((ch & 0x0f) * 100 / 9.0)])
 
-    def mixer(self, cmd=None, args=[]):
+    def mixer(self, cmd=None, args=()):
         if self._mixer is None:
             APP.status.status(_('No mixer.'), 1)
         else:
@@ -1185,6 +1185,15 @@ class Playlist(object):
         self.stop = False
 
     def update(self):
+        pass
+
+    def current(self):
+        pass
+
+    def get_tagged(self):
+        pass
+
+    def not_tagged(self, l):
         pass
 
     def append(self, item):
