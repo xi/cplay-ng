@@ -33,6 +33,7 @@ import curses
 import signal
 import select
 import locale
+import pickle
 import gettext
 import logging
 import argparse
@@ -54,6 +55,7 @@ gettext.install('cplay', resource_filename(__name__, 'i18n'))
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
 APP = None
+RECOVERY_FILE = '.cplay.rec'
 
 
 class Application(object):
@@ -159,7 +161,25 @@ class Application(object):
         except:
             pass
 
+    def write_recovery(self):
+        data = {
+            'repeat': self.playlist.repeat,
+            'random': self.playlist.random,
+            'buffer': self.playlist.buffer,
+        }
+
+        backend = self.player.backend
+        if backend is not None:
+            data['entry'] = backend.entry
+            data['offset'] = backend.offset
+            data['length'] = backend.length
+
+        with open(RECOVERY_FILE, 'w') as fh:
+            pickle.dump(data, fh)
+
     def quit(self, status=0):
+        if self.recover:
+            self.write_recovery()
         self.player.backend.stop(quiet=True)
         sys.exit(status)
 
@@ -207,6 +227,12 @@ class Player(object):
         APP.status.status(_('Backend not found!'), 1)
         self.backend.stopped = False  # keep going
         return False
+
+    def setup_stopped(self, entry, offset=0, length=0):
+        self.setup_backend(entry)
+        self.backend.set_position(offset, length)
+        self.backend.stopped = True
+        APP.status.set_default_status(_('Stopped: %s') % entry.vp())
 
     def play(self, entry, offset=0):
         # Play executed, remove from queue
@@ -2007,10 +2033,28 @@ def parse_args():
                         help=_('Switch mixer channels.'))
     parser.add_argument('-V', '--video', action='store_true',
                         help=_('Allow to play videos.'))
+    parser.add_argument('-s', '--save', action='store_true',
+                        help=_('Save state on close and restore on open.'))
     parser.add_argument('--fifo', help=_('FIFO socket used by cnq'))
     parser.add_argument('files', metavar=_('file'), nargs='*',
                         help=_('file, dir or playlist'))
-    return parser.parse_args()
+
+    args = parser.parse_args()
+
+    if args.save and os.path.exists(RECOVERY_FILE):
+        with open(RECOVERY_FILE) as fh:
+            recovery = pickle.load(fh)
+    else:
+        recovery = {}
+
+    args.repeat = args.repeat or recovery.get('repeat', False)
+    args.random = args.random or recovery.get('random', False)
+    args.buffer = recovery.get('buffer', [])
+    args.entry = recovery.get('entry')
+    args.offset = recovery.get('offset', 0)
+    args.length = recovery.get('length', 0)
+
+    return args
 
 
 def main():
@@ -2034,6 +2078,8 @@ def main():
         APP.setup()
         APP.restricted = args.restricted
         APP.video = args.video
+        APP.recover = args.save
+
         if args.repeat:
             APP.playlist.command_toggle_repeat()
         if args.random:
@@ -2041,11 +2087,22 @@ def main():
         if args.toggle_mixer:
             APP.player.mixer('toggle')
         logging.debug('Preferred locale is %s' % str(CODE))
+
         if args.files or playlist:
             for i in args.files or playlist:
                 i = os.path.abspath(i) if os.path.exists(i) else i
                 APP.playlist.add(i)
             APP.window.win_tab.change_window()
+        elif args.buffer:
+            APP.playlist.buffer = args.buffer
+            APP.window.win_tab.change_window()
+
+        if args.entry is not None:
+            APP.player.setup_stopped(
+                args.entry,
+                offset=args.offset,
+                length=args.length)
+
         APP.run()
     except SystemExit:
         APP.cleanup()
