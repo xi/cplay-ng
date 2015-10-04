@@ -32,7 +32,7 @@ class MockMacro(object):
 
 
 class MockCounter(object):
-    def counter(self, values): pass
+    def counter(self, elapsed, remaining): pass
     def toggle_mode(self): pass
 
 
@@ -358,13 +358,63 @@ dir/file3.wav""",
 class TestPlaylistWindow(unittest.TestCase): pass
 class TestGetType(unittest.TestCase): pass
 class TestGetTag(unittest.TestCase): pass
-class TestBackend(unittest.TestCase): pass
-class TestFrameOffsetBackend(unittest.TestCase): pass
-class TestFrameOffsetBackendMpp(unittest.TestCase): pass
-class TestTimeOffsetBackend(unittest.TestCase): pass
-class TestGSTBackend(unittest.TestCase): pass
-class TestNoOffsetBackend(unittest.TestCase): pass
-class TestMPlayer(unittest.TestCase): pass
+
+
+class TestBackend(unittest.TestCase):
+    def setUp(self):
+        self.backend = cplay.Backend('', '')
+
+    def _test_parse_buf(self, buf, offset, length):
+        self.backend.buf = buf
+        self.backend.parse_buf()
+        self.assertEqual(self.backend.offset, offset)
+        self.assertEqual(self.backend.length, length)
+
+
+class TestFrameOffsetBackend(TestBackend):
+    def setUp(self):
+        self.backend = cplay.FrameOffsetBackend('', '', 38.28)
+
+    def test_parse_buf(self):
+        buf = b'Frame#   520 [93576], Time: 00:13.58 [40:44.43], RVA:   off, Vol: 100(100)'
+        self._test_parse_buf(buf, 13, 2457)
+
+
+class TestFrameOffsetBackendMpp(TestBackend): pass
+
+
+class TestTimeOffsetBackend(TestBackend):
+    def setUp(self):
+        self.backend = cplay.TimeOffsetBackend('', '')
+
+    def test_parse_buf(self):
+        self.backend.length = 2457
+        buf = b'MPEG Audio Decoder 0.15.2 (beta) - Copyright (C) 2000-2004 Robert Leslie et al.\
+          Title: Sometitle\
+         Artist: Someartist\
+-00:39:13 Layer III, 320 kbps, 44100 Hz, joint stereo (MS), no CRC'
+        self._test_parse_buf(buf, 104, 2457)
+
+
+class TestGSTBackend(TestBackend):
+    def setUp(self):
+        self.backend = cplay.GSTBackend('', '')
+
+    def test_parse_buf(self):
+        buf = b'Playing file:///some/file\n\nTime: 0:01:47.17 of 0:40:57.82'
+        self._test_parse_buf(buf, 107, 2457)
+
+
+class TestNoOffsetBackend(TestBackend):
+    def setUp(self):
+        self.backend = cplay.NoOffsetBackend('', '')
+
+    def test_parse_buf(self):
+        buf = b'In:3.47% 00:00:12.63 [00:05:51.84] Out:557k  [   ===|==-   ]        Clip:0 '
+        self._test_parse_buf(buf, 1, 2)
+
+
+class TestMPlayer(TestBackend): pass
 
 
 class TestTimeout(unittest.TestCase):
