@@ -1986,6 +1986,8 @@ for rc in [os.path.expanduser('~/.cplayrc'), '/etc/cplayrc']:
         break
     except IOError:
         pass
+    except Exception as err:
+        logging.warning('Could not execute %s', rc, exc_info=True)
 
 
 def parse_args():
