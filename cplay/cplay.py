@@ -1633,11 +1633,11 @@ class Backend(object):
 
 
 class FrameOffsetBackend(Backend):
-    re_progress = re.compile(r'Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)')
+    re_progress = re.compile(br'Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)')
 
     def parse_buf(self):
         def parse_time(s):
-            l = reversed(s.split(':'))
+            l = reversed(s.split(b':'))
             return sum([int(x) * 60 ** i for i, x in enumerate(l)])
 
         match = self.re_progress.search(self.buf)
@@ -1648,7 +1648,7 @@ class FrameOffsetBackend(Backend):
 
 
 class FrameOffsetBackendMpp(Backend):
-    re_progress = re.compile(r'.*\s(\d+):(\d+).*\s(\d+):(\d+)')
+    re_progress = re.compile(br'.*\s(\d+):(\d+).*\s(\d+):(\d+)')
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1660,7 +1660,7 @@ class FrameOffsetBackendMpp(Backend):
 
 
 class TimeOffsetBackend(Backend):
-    re_progress = re.compile(r'(\d+):(\d+):(\d+)')
+    re_progress = re.compile(br'(\d+):(\d+):(\d+)')
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1672,8 +1672,8 @@ class TimeOffsetBackend(Backend):
 
 
 class GSTBackend(Backend):
-    re_progress = re.compile(r'Time: (\d+):(\d+):(\d+).(\d+)'
-                             r' of (\d+):(\d+):(\d+).(\d+)')
+    re_progress = re.compile(br'Time: (\d+):(\d+):(\d+).(\d+)'
+                             br' of (\d+):(\d+):(\d+).(\d+)')
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
@@ -1710,7 +1710,7 @@ class NoBufferBackend(Backend):
 
 
 class MPlayer(Backend):
-    re_progress = re.compile(r'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
+    re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
     eq_cur = 0
 
     def play(self):
@@ -2012,6 +2012,8 @@ for rc in [os.path.expanduser('~/.cplayrc'), '/etc/cplayrc']:
         break
     except IOError:
         pass
+    except Exception as err:
+        logging.warning('Could not execute %s', rc, exc_info=True)
 
 
 def parse_args():
