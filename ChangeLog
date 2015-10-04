@@ -12,6 +12,7 @@
 	- fixed some python3 bytestring issues
 	- translations are now managed on
 	  https://www.transifex.com/projects/p/cplay-ng/
+	- metadata detection has been refactored and should now be more reliable
 	- a lot of internal restructuring to ease collaboration with Andreas van
 	  Cranenburgh's fork at https://github.com/andreasvc/cplay
 
