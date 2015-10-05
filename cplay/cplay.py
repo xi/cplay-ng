@@ -174,7 +174,7 @@ class Application(object):
             data['offset'] = backend.offset
             data['length'] = backend.length
 
-        with open(RECOVERY_FILE, 'w') as fh:
+        with open(RECOVERY_FILE, 'wb') as fh:
             pickle.dump(data, fh)
 
     def quit(self, status=0):
@@ -2044,7 +2044,7 @@ def parse_args():
     args = parser.parse_args()
 
     if args.save and os.path.exists(RECOVERY_FILE):
-        with open(RECOVERY_FILE) as fh:
+        with open(RECOVERY_FILE, 'rb') as fh:
             recovery = pickle.load(fh)
     else:
         recovery = {}
