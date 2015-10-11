@@ -55,7 +55,6 @@ gettext.install('cplay', resource_filename(__name__, 'i18n'))
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
 APP = None
-RECOVERY_FILE = '.cplay.rec'
 
 
 class Application(object):
@@ -174,7 +173,7 @@ class Application(object):
             data['offset'] = backend.offset
             data['length'] = backend.length
 
-        with open(RECOVERY_FILE, 'wb') as fh:
+        with open(self.recover, 'wb') as fh:
             pickle.dump(data, fh)
 
     def quit(self, status=0):
@@ -2035,7 +2034,8 @@ def parse_args():
                         help=_('Switch mixer channels.'))
     parser.add_argument('-V', '--video', action='store_true',
                         help=_('Allow to play videos.'))
-    parser.add_argument('-s', '--save', action='store_true',
+    parser.add_argument('-s', '--save',
+                        nargs='?', default=False, metavar='FILE',
                         help=_('Save state on close and restore on open.'))
     parser.add_argument('--fifo', help=_('FIFO socket used by cnq'))
     parser.add_argument('files', metavar=_('file'), nargs='*',
@@ -2043,8 +2043,11 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if args.save and os.path.exists(RECOVERY_FILE):
-        with open(RECOVERY_FILE, 'rb') as fh:
+    if not args.save and args.save is not False:
+        args.save = '.cplay.rec'
+
+    if args.save and os.path.exists(args.save):
+        with open(args.save, 'rb') as fh:
             recovery = pickle.load(fh)
     else:
         recovery = {}
