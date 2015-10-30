@@ -8,6 +8,7 @@
 	- removed cplay.list
 	- added support for VLC
 	- added support for playing videos
+	- added -s flag to allow saving state on close and restoring on open
 	- log error instead of crash on invalid cplayrc
 	- fixed some python3 bytestring issues
 	- translations are now managed on
