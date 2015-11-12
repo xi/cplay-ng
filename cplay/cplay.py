@@ -2020,6 +2020,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[0],
                                      epilog=_('When in doubt, press \'h\' for '
                                               'a friendly help page.'))
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--debug', metavar=_('filename'),
                         help=_('Enable debugging output to <filename>.'))
     parser.add_argument('-n', '--restricted', action='store_true',
