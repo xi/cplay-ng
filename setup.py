@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+import re
 from setuptools import setup
 from distutils.command.build import build
 from setuptools.command.install_lib import install_lib
@@ -8,6 +10,13 @@ try:
     import babel
 except:
     babel = None
+
+DIRNAME = os.path.abspath(os.path.dirname(__file__))
+rel = lambda *parts: os.path.abspath(os.path.join(DIRNAME, *parts))
+
+README = open(rel('README.rst')).read()
+CPLAY = open(rel('cplay', 'cplay.py')).read()
+NAME, VERSION = re.search("__version__ = '([^']+)'", CPLAY).group(1).split()
 
 
 class _build(build):
@@ -23,17 +32,11 @@ class _install_lib(install_lib):
         install_lib.run(self)
 
 
-with open('cplay/cplay.py') as fh:
-    for line in fh:
-        if line.startswith('__version__'):
-            name, version = line.split('\'')[1].split()
-            break
-
 setup(
-    name=name,
-    version=version,
+    name=NAME,
+    version=VERSION,
     description="A curses front-end for various audio players",
-    long_description=open('README.rst').read(),
+    long_description=README,
     url='https://github.com/xi/cplay-ng',
     author='Ulf Betlehem',
     author_email='flu@iki.fi',
