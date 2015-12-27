@@ -1971,10 +1971,11 @@ def get_tag(pathname):
     # FIXME: Allow user to configure metadata view
     try:
         get = lambda key: ' '.join(metadata.get(key, ('?', )))
-        s = (get('artist') + ' - ' +
-             get('album') + ' - ' +
-             get('tracknumber') + ' ' +
-             get('title'))
+        s = '%s - %s - %s %s' % (
+            get('artist'),
+            get('album'),
+            get('tracknumber'),
+            get('title'))
         if six.PY2:
             s = s.encode(CODE, 'replace')
         return s
