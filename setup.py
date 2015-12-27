@@ -46,6 +46,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'argparse',
+        'six',
     ],
     extras_require={
         'metadata': ['mutagen'],

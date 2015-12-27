@@ -46,6 +46,8 @@ try:
 except ImportError:
     tty = None
 
+import six
+
 locale.setlocale(locale.LC_ALL, '')
 CODE = locale.getpreferredencoding()
 
@@ -1969,10 +1971,13 @@ def get_tag(pathname):
     # FIXME: Allow user to configure metadata view
     try:
         get = lambda key: ' '.join(metadata.get(key, ('?', )))
-        return (get('artist') + ' - ' +
-                get('album') + ' - ' +
-                get('tracknumber') + ' ' +
-                get('title')).encode(CODE, 'replace')
+        s = (get('artist') + ' - ' +
+             get('album') + ' - ' +
+             get('tracknumber') + ' ' +
+             get('title'))
+        if six.PY2:
+            s = s.encode(CODE, 'replace')
+        return s
     except:
         logging.debug(traceback.format_exc())
         return fallback
