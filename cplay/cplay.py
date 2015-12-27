@@ -1464,8 +1464,8 @@ class PlaylistWindow(TagListWindow, Playlist):
         self.keymap.bind('w', self.command_save_playlist, ())
         self.keymap.bind('@', self.command_jump_to_active, ())
 
-    def command_change_viewpoint(self, klass=PlaylistEntry):
-        TagListWindow.command_change_viewpoint(self, klass)
+    def command_change_viewpoint(self, cls=PlaylistEntry):
+        TagListWindow.command_change_viewpoint(self, cls)
 
     def get_title(self):
         space_out = lambda value, s: s if value else ' ' * len(s)
