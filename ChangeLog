@@ -1,3 +1,10 @@
+2015-08-28  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+  *** 2.1.1 released ***
+
+	- add --version option
+	- fix displaying bytestrings in python3
+
 2015-10-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
   *** 2.1.0 released ***
