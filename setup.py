@@ -6,8 +6,15 @@ from setuptools import setup
 from distutils.command.build import build
 from setuptools.command.install_lib import install_lib
 
+extra_args = {}
+
 try:
     import babel
+    extra_args['message_extractors'] = {
+        'cplay': [
+            ('**.py', 'python', None)
+        ],
+    }
 except:
     babel = None
 
@@ -52,11 +59,6 @@ setup(
         'metadata': ['mutagen'],
         'alsa mixer': ['pyalsaaudio'],
     },
-    message_extractors={
-        'cplay': [
-            ('**.py', 'python', None)
-        ],
-    },
     entry_points={'console_scripts': [
         'cplay-ng=cplay.cplay:main',
         'cnq-ng=cplay.remote_control:main',
@@ -76,4 +78,5 @@ setup(
         'License :: OSI Approved :: GNU General Public License v2 or later '
             '(GPLv2+)',
         'Topic :: Multimedia :: Sound/Audio :: Players',
-    ])
+    ],
+    **extra_args)
