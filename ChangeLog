@@ -1,4 +1,12 @@
-2015-08-28  Tobias Bengfort <tobias.bengfort@posteo.de>
+2016-01-03  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+  *** 2.1.2 release ***
+
+	- fix warning when using setup.py without babel installed
+	- allow http protocol
+	- various fixes related to mixers
+
+2015-12-28  Tobias Bengfort <tobias.bengfort@posteo.de>
 
   *** 2.1.1 released ***
 
