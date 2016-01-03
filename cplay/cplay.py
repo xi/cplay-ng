@@ -209,8 +209,10 @@ class Player(object):
         for mixer in MIXERS:
             try:
                 self._mixer = mixer()
+                logging.debug('Chose mixer %s', mixer.__name__)
                 break
-            except:
+            except Exception as e:
+                logging.debug('Mixer %s not available: %s', mixer.__name__, e)
                 pass
 
     def setup_backend(self, entry, offset=0):
