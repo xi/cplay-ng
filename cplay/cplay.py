@@ -1892,7 +1892,7 @@ class AlsaMixer(Mixer):
 class PulseMixer(Mixer):
     def __init__(self):
         Mixer.__init__(self)
-        self._channels = ['Master']
+        self._channels = [('Master',)]
         self._sink = re.search(r'Sink #([0-9]+)', self._list_sinks()).group(1)
         self.set(self.get())
 
