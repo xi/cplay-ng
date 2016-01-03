@@ -1894,7 +1894,7 @@ class PulseMixer(Mixer):
     def __init__(self):
         Mixer.__init__(self)
         self._channels = [('Master',)]
-        self._sink = re.search(r'Sink #([0-9]+)', self._list_sinks()).group(1)
+        self._sink = re.search(b'Sink #([0-9]+)', self._list_sinks()).group(1)
         self.set(self.get())
 
     def _list_sinks(self):
@@ -1905,7 +1905,7 @@ class PulseMixer(Mixer):
 
     def get(self):
         return int(re.search(
-            r'Volume: .* ([0-9]+)%',
+            b'Volume: .* ([0-9]+)%',
             self._list_sinks()).group(1))
 
     def set(self, vol):
