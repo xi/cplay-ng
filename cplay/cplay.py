@@ -1874,8 +1874,9 @@ class AlsaMixer(Mixer):
         Mixer.__init__(self)
         import alsaaudio
         self._channels = [
-            ('Master', alsaaudio.Mixer('Master')),
-            ('PCM', alsaaudio.Mixer('PCM')),
+            (name, alsaaudio.Mixer(name))
+            for name in ['Master', 'PCM']
+            if name in alsaaudio.mixers()
         ]
 
     def get(self):
