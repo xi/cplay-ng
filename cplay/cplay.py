@@ -1238,7 +1238,7 @@ class Playlist(object):
     def add_m3u(self, line):
         if re.match(r'^(#.*)?$', line):
             return
-        if re.match(r'^(/|http://)', line):
+        if re.match(r'^(/|https?://)', line):
             self.append(PlaylistEntry(self.fix_url(line)))
         else:
             dirname = os.path.dirname(self.pathname)
