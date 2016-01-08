@@ -1731,7 +1731,7 @@ class MPlayer(Backend):
     def mplayer_send(self, arg):
         logging.debug('Sending command %s' % arg)
         try:
-            os.write(self.stdin_w, arg + '\n')
+            os.write(self.stdin_w, (arg + '\n').encode('utf8'))
         except IOError:
             logging.debug('Can\'t write to stdin_w.')
             APP.status.status(_('ERROR: Cannot send commands to mplayer!'), 3)
