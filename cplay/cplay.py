@@ -1285,7 +1285,7 @@ class Playlist(object):
             APP.status.status(e, 2)
 
     def fix_url(self, url):
-        return re.sub(r'(http://[^/]+)/?(.*)', r'\1/\2', url)
+        return re.sub(r'(https?://[^/]+)/?(.*)', r'\1/\2', url)
 
     def change_active_entry(self, direction):
         if not self.buffer:
@@ -1976,7 +1976,7 @@ class Keymap(object):
 #        in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
     fallback = os.path.basename(pathname)
-    if re.compile(r'^http://').match(pathname) or not os.path.exists(pathname):
+    if re.compile(r'^https?://').match(pathname) or not os.path.exists(pathname):
         return fallback
     try:
         import mutagen
@@ -2152,18 +2152,19 @@ def main():
 MIXERS = [OssMixer, AlsaMixer, PulseMixer]
 BACKENDS = [
     FrameOffsetBackend('ogg123 -q -v -k {offset} {file}', r'\.ogg$'),
-    FrameOffsetBackend('splay -f -k {offset} {file}', r'(^http://|\.mp[123]$)',
+    FrameOffsetBackend('splay -f -k {offset} {file}',
+                       r'(^https?://|\.mp[123]$)',
                        38.28),
     FrameOffsetBackend('mpg123 -q -v -k {offset} {file}',
-                       r'(^http://|\.mp[123]$)', 38.28),
+                       r'(^https?://|\.mp[123]$)', 38.28),
     FrameOffsetBackend('mpg321 -q -v -k {offset} {file}',
-                       r'(^http://|\.mp[123]$)', 38.28),
+                       r'(^https?://|\.mp[123]$)', 38.28),
     FrameOffsetBackendMpp('mppdec --gain 2 --start {offset} {file}',
                           r'\.mp[cp+]$'),
     TimeOffsetBackend('madplay -v --display-time=remaining -s {offset} {file}',
                       r'\.mp[123]$'),
     MPlayer('mplayer -slave -vc null -vo null {file}',
-            r'^http://|\.(mp[1234]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+            r'^https?://|\.(mp[1234]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
             r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
             r'mkv|flv|avi|wmv)$'),
     GSTBackend('gst123 -k {offset} {file}',
@@ -2182,7 +2183,7 @@ BACKENDS = [
                     r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
     NoBufferBackend(
         'cvlc --play-and-exit --start-time {offset} {file}',
-        r'^http://|\.(mp[1234]|ogg|opus|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+        r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
         r'mkv|flv|avi|wmv)$'),
 ]
