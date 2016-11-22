@@ -1674,6 +1674,19 @@ class TimeOffsetBackend(Backend):
             self.set_position(head, head + tail)
 
 
+class SoxBackend(Backend):
+    re_progress = re.compile(br'(\d+):(\d+):(\d+)\.\d+ '
+                             br'\[(\d+):(\d+):(\d+)\.\d+\]')
+
+    def parse_buf(self):
+        match = self.re_progress.search(self.buf)
+        if match:
+            h, m, s, h2, m2, s2 = map(int, match.groups())
+            head = h * 3600 + m * 60 + s
+            tail = h2 * 3600 + m2 * 60 + s2
+            self.set_position(head, head + tail)
+
+
 class GSTBackend(Backend):
     re_progress = re.compile(br'Time: (\d+):(\d+):(\d+).(\d+)'
                              br' of (\d+):(\d+):(\d+).(\d+)')
@@ -2146,11 +2159,11 @@ BACKENDS = [
     GSTBackend('gst123 -k {offset} {file}',
                r'\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
+    SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     NoOffsetBackend('mikmod -q -p0 {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
     NoOffsetBackend('xmp -q {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$'),
-    NoOffsetBackend('play {file}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     NoOffsetBackend('speexdec {file}', r'\.spx$'),
     NoOffsetBackend('timidity {file}',
                     r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
