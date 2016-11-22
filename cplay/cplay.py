@@ -1700,6 +1700,16 @@ class GSTBackend(Backend):
             self.set_position(position, length)
 
 
+class AVPlay(Backend):
+    re_progress = re.compile(br' *(\d+)\.')
+
+    def parse_buf(self):
+        match = self.re_progress.match(self.buf)
+        if match:
+            head = int(match.groups()[0])
+            self.set_position(head, head * 2)
+
+
 class NoOffsetBackend(Backend):
 
     def parse_buf(self):
@@ -2160,6 +2170,9 @@ BACKENDS = [
                r'\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
+    AVPlay('avplay -nodisp -autoexit -ss {offset} {file}',
+           r'\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+           r'mkv|flv|avi|wmv)$'),
     NoOffsetBackend('mikmod -q -p0 {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
     NoOffsetBackend('xmp -q {file}',
