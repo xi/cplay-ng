@@ -87,8 +87,5 @@ local. For mpeg streaming, splay is recommended.
 It is also possible to pipe a playlist to cplay-ng, as stdin will be
 reopened on startup unless it is attached to a tty.
 
-Remote control is available via ``/var/tmp/cplay\_control-$USER``.
-Create this with mkfifo and see lircrc for examples.
-
 The shell command gets the full path of either all tagged items or the
 current item as positional arguments.
