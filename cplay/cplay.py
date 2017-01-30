@@ -644,7 +644,6 @@ class ListWindow(Window):
         self.search_direction = 0
         self.last_search = ''
         self.hoffset = 0
-        self.not_found = False
         self.keymap = Keymap()
         self.keymap.bind(['k', curses.KEY_UP, 16], self.cursor_move, (-1, ))
         self.keymap.bind(['j', curses.KEY_DOWN, 14], self.cursor_move, (1, ))
@@ -752,7 +751,6 @@ class ListWindow(Window):
 
     def start_search(self, prompt_text, direction):
         self.search_direction = direction
-        self.not_found = False
         if APP.input.active:
             APP.input.prompt = '%s: ' % prompt_text
             self.do_search(advance=direction)
@@ -776,24 +774,20 @@ class ListWindow(Window):
         else:
             new_string = old_string
         APP.input.string = new_string
-        index = self.bufptr + advance
+        index = (self.bufptr + advance) % len(self.buffer)
+        origin = index
         while True:
-            if not 0 <= index < len(self.buffer):
-                APP.status.status(_('Not found: %s ') % new_string)
-                self.not_found = True
-                break
             line = str(self.buffer[index]).lower()
             if line.find(new_string.lower()) != -1:
                 APP.input.show()
                 self.update_line(refresh=False)
                 self.bufptr = index
                 self.update(force=False)
-                self.not_found = False
                 break
-            if self.not_found:
+            index = (index + self.search_direction) % len(self.buffer)
+            if index == origin:
                 APP.status.status(_('Not found: %s ') % new_string)
                 break
-            index = index + self.search_direction
 
     def hscroll(self, value):
         self.hoffset = max(0, self.hoffset + value)
