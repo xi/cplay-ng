@@ -1,6 +1,17 @@
+2017-01-30  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+  *** 2.2.0 released ***
+
+	- fix: space not allowed in extra requirement name
+	- fix unicode issue with mplayer
+	- improve sox backend
+	- allow https in URLs
+	- add avplay backend
+	- wrap-around find
+
 2016-01-03  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.1.2 release ***
+  *** 2.1.2 released ***
 
 	- fix warning when using setup.py without babel installed
 	- allow http protocol
