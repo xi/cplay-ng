@@ -26,10 +26,13 @@ Requirements
 -  `mutagen <http://code.google.com/p/mutagen/>`_ (optional) For
    metadata support (IDv3 etc.)
 
-For playback either install `mplayer <http://www.mplayerhq.hu/>`_,
-`gst123 <http://space.twc.de/~stefan/gst123.php>`_ or one or more of the
-following players:
+For playback, install one or more of the following players:
 
+-  `mplayer <http://www.mplayerhq.hu/>`_
+-  `gst123 <http://space.twc.de/~stefan/gst123.php>`_
+-  `avplay <https://www.libav.org/avplay.html>`_
+-  `sox <http://sox.sf.net/>`_
+-  `vlc <https://www.videolan.org/vlc/>`_
 -  `mpg321 <http://sourceforge.net/projects/mpg321/>`_
 -  `ogg123 <http://www.vorbis.com/>`_
 -  `mpg123 <http://www.mpg123.org/>`_
@@ -37,7 +40,6 @@ following players:
 -  `madplay <http://www.mars.org/home/rob/proj/mpeg/>`_
 -  `mikmod <http://www.mikmod.org/>`_
 -  `xmp <http://xmp.sf.net/>`_
--  `sox <http://sox.sf.net/>`_
 -  `speex <http://www.speex.org/>`_
 -  `timidity <http://sourceforge.net/projects/timidity/>`_
 
