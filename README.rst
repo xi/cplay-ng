@@ -20,6 +20,9 @@ Requirements
 -  `python-oss <http://net.indra.com/~tim/ossmodule/>`_ (optional) For
    OSS mixer support
 
+-  pulseaudio-utils, specifically the ``pactl`` command (optional) For
+   PulseAudio mixer support
+
 -  `mutagen <http://code.google.com/p/mutagen/>`_ (optional) For
    metadata support (IDv3 etc.)
 
