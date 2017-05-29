@@ -2176,7 +2176,7 @@ BACKENDS = [
     NoOffsetBackend('timidity {file}',
                     r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
     NoBufferBackend(
-        'cvlc --play-and-exit --start-time {offset} {file}',
+        'cvlc --play-and-exit --no-loop --start-time {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
         r'mkv|flv|avi|wmv)$'),
