@@ -20,6 +20,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """
 
+from __future__ import unicode_literals
+
 __version__ = 'cplay-ng 2.2.0'
 
 import os
@@ -1748,7 +1750,7 @@ class MPlayer(Backend):
     def mplayer_send(self, arg):
         logging.debug('Sending command %s' % arg)
         try:
-            os.write(self.stdin_w, (arg + '\n').encode('utf8'))
+            os.write(self.stdin_w, (arg + '\n').encode(CODE))
         except IOError:
             logging.debug('Can\'t write to stdin_w.')
             APP.status.status(_('ERROR: Cannot send commands to mplayer!'), 3)
@@ -1803,7 +1805,7 @@ class FIFOControl(object):
             os.unlink(APP.fifo)
 
     def handle_command(self):
-        argv = self.fd.readline().strip().split(' ', 1)
+        argv = self.fd.readline().decode(CODE).strip().split(' ', 1)
         if argv[0] in self.commands.keys():
             f, a = self.commands[argv[0]]
             if a is None:
@@ -1952,7 +1954,7 @@ class Keymap(object):
             for i in key:
                 self.bind(i, method, args)
             return
-        elif isinstance(key, str):
+        elif isinstance(key, six.string_types):
             key = ord(key)
         self.methods[key] = (method, args)
 

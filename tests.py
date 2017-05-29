@@ -1,10 +1,12 @@
+from __future__ import unicode_literals
+
 import os
 import time
 
 try:
-    from StringIO import StringIO
+    from StringIO import BytesIO
 except:
-    from io import StringIO
+    from io import BytesIO
 
 try:
     import unittest2 as unittest
@@ -448,7 +450,7 @@ class TestFIFOControl(unittest.TestCase):
         self.control.commands = {
             'test': [lambda x: state.append(x), ['foo']],
         }
-        self.control.fd = StringIO('test\n')
+        self.control.fd = BytesIO(b'test\n')
         self.assertListEqual(state, [])
         self.control.handle_command()
         self.assertListEqual(state, ['foo'])
@@ -458,7 +460,7 @@ class TestFIFOControl(unittest.TestCase):
         self.control.commands = {
             'test': [lambda x: state.append(x), None],
         }
-        self.control.fd = StringIO('test bar\n')
+        self.control.fd = BytesIO(b'test bar\n')
         self.assertListEqual(state, [])
         self.control.handle_command()
         self.assertListEqual(state, ['bar'])

@@ -24,12 +24,16 @@ from __future__ import print_function
 
 import os
 import sys
+import locale
 import argparse
 
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
+
+locale.setlocale(locale.LC_ALL, '')
+CODE = locale.getpreferredencoding()
 
 
 def parse_args():
@@ -93,7 +97,8 @@ def main():
     if os.path.exists(args.fifo):
         with open(args.fifo, "wb", 0) as fd:
             def send_msg(*msg):
-                fd.write(' '.join(str(i) for i in msg) + '\n')
+                m = ' '.join(str(i) for i in msg) + '\n'
+                fd.write(m.encode(CODE))
 
             if args.cmd == 'volume':
                 send_msg(args.cmd, args.action, args.value)
