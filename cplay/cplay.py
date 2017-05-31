@@ -1059,40 +1059,49 @@ class FilelistWindow(TagListWindow):
         APP.input.start(_('search'))
 
     def stop_search_recursively(self):
+        APP.status.status(_('Searching...'))
+
         try:
-            re_tmp = re.compile(APP.input.string, re.IGNORECASE)
-        except re.error as e:
+            results = self.fs_search(APP.input.string)
+        except Exception as e:
+            APP.status.restore_default_status()
             APP.status.status(e, 2)
             return
-        APP.status.status(_('Searching...'))
+
+        if self.mode != self.SEARCH:
+            self.chdir(os.path.join(self.cwd, _('search results')))
+            self.mode = self.SEARCH
+        self.buffer = []
+        for pathname, filename, isdir in results:
+            entry = ListEntry(pathname, isdir)
+            if filename is not None:
+                entry.filename = filename
+            self.buffer.append(entry)
+        self.bufptr = 0
+        self.parent.update_title()
+        self.update()
+        APP.status.restore_default_status()
+
+    def fs_search(self, query):
+        re_tmp = re.compile(query, re.IGNORECASE)
         results = []
         for entry in self.buffer:
             if entry.filename == '..':
                 continue
             if re_tmp.search(entry.filename):
-                results.append(entry)
+                results.append((entry.pathname, entry.filename, False))
             elif os.path.isdir(entry.pathname):
-                try:
-                    self.search_recursively(re_tmp, entry.pathname, results)
-                except:
-                    pass
-        if self.mode != self.SEARCH:
-            self.chdir(os.path.join(self.cwd, _('search results')))
-            self.mode = self.SEARCH
-        self.buffer = results
-        self.bufptr = 0
-        self.parent.update_title()
-        self.update()
-        APP.status.restore_default_status()
+                self.search_recursively(re_tmp, entry.pathname, results)
+        return results
 
     def search_recursively(self, re_tmp, directory, results):
         for filename in os.listdir(directory):
             pathname = os.path.join(directory, filename)
             if re_tmp.search(filename):
                 if os.path.isdir(pathname):
-                    results.append(ListEntry(pathname, 1))
-                elif valid_playlist(filename) or valid_song(filename):
-                    results.append(ListEntry(pathname))
+                    results.append((pathname, None, True))
+                elif valid_playlist(pathname) or valid_song(pathname):
+                    results.append((pathname, None, False))
             elif os.path.isdir(pathname):
                 self.search_recursively(re_tmp, pathname, results)
 
