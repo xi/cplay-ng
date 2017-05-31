@@ -2164,11 +2164,11 @@ BACKENDS = [
             r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
             r'mkv|flv|avi|wmv)$'),
     GSTBackend('gst123 -k {offset} {file}',
-               r'\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+               r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     AVPlay('avplay -nodisp -autoexit -ss {offset} {file}',
-           r'\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+           r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
            r'mkv|flv|avi|wmv)$'),
     NoOffsetBackend('mikmod -q -p0 {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
