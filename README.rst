@@ -30,6 +30,7 @@ For playback, install one or more of the following players:
 
 -  `mplayer <http://www.mplayerhq.hu/>`_
 -  `gst123 <http://space.twc.de/~stefan/gst123.php>`_
+-  `ffplay <https://ffmpeg.org/ffplay.html>`_
 -  `avplay <https://www.libav.org/avplay.html>`_
 -  `sox <http://sox.sf.net/>`_
 -  `vlc <https://www.videolan.org/vlc/>`_

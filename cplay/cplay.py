@@ -2167,6 +2167,9 @@ BACKENDS = [
                r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
+    AVPlay('ffplay -nodisp -autoexit -ss {offset} {file}',
+           r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+           r'mkv|flv|avi|wmv)$'),
     AVPlay('avplay -nodisp -autoexit -ss {offset} {file}',
            r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
            r'mkv|flv|avi|wmv)$'),
