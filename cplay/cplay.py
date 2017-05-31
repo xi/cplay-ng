@@ -1112,9 +1112,9 @@ class FilelistWindow(TagListWindow):
                 pathname = os.path.join(self.cwd, filename)
                 if os.path.isdir(pathname):
                     dirs.append(pathname)
-                elif valid_song(filename):
+                elif valid_song(pathname):
                     files.append(pathname)
-                elif valid_playlist(filename):
+                elif valid_playlist(pathname):
                     files.append(pathname)
         except OSError:
             pass
@@ -1157,7 +1157,7 @@ class FilelistWindow(TagListWindow):
         elif os.path.isdir(self.current().pathname):
             self.chdir(self.current().pathname)
             self.listdir()
-        elif valid_song(self.current().filename):
+        elif valid_song(self.current().pathname):
             APP.player.play(self.current())
 
     def command_chparentdir(self):
