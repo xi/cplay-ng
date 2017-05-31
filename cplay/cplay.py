@@ -1204,12 +1204,13 @@ class FilelistWindow(TagListWindow):
     def command_add_recursively(self):
         l = self.get_tagged()
         if not l:
-            APP.playlist.add(self.current().pathname)
+            c = self.current()
+            APP.playlist.add(c.pathname, filename=c.filename)
             self.cursor_move(1)
             return
         APP.status.status(_('Adding tagged files'), 1)
         for entry in l:
-            APP.playlist.add(entry.pathname, quiet=True)
+            APP.playlist.add(entry.pathname, filename=entry.filename, quiet=True)
             entry.tagged = False
         self.update()
 
@@ -1274,7 +1275,7 @@ class Playlist(object):
             f(line.strip())
         file.close()
 
-    def _add(self, pathname, quiet=False):
+    def _add(self, pathname, filename=None, quiet=False):
         if os.path.isdir(pathname):
             if not quiet:
                 APP.status.status(_('Working...'))
@@ -1282,7 +1283,10 @@ class Playlist(object):
         elif valid_playlist(pathname):
             self.add_playlist(pathname)
         elif valid_song(pathname):
-            self.append(PlaylistEntry(pathname))
+            entry = PlaylistEntry(pathname)
+            if filename is not None:
+                entry.filename = filename
+            self.append(entry)
         else:
             return
         # FIXME: refactor
@@ -1291,9 +1295,9 @@ class Playlist(object):
             self.update()
             APP.status.status(_('Added: %s') % filename, 1)
 
-    def add(self, pathname, quiet=False):
+    def add(self, pathname, filename=None, quiet=False):
         try:
-            self._add(pathname)
+            self._add(pathname, filename=filename, quiet=quiet)
         except Exception as e:
             APP.status.status(e, 2)
 
