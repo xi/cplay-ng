@@ -58,6 +58,7 @@ gettext.install('cplay', resource_filename(__name__, 'i18n'))
 
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
+SEARCH = {}
 APP = None
 
 
@@ -1062,7 +1063,14 @@ class FilelistWindow(TagListWindow):
         APP.status.status(_('Searching...'))
 
         try:
-            results = self.fs_search(APP.input.string)
+            m = re.match('!([a-z0-9]+) +(.+)', APP.input.string)
+            if m:
+                key, query = m.groups()
+                fn = SEARCH[key]
+            else:
+                query = APP.input.string
+                fn = self.fs_search
+            results = fn(query)
         except Exception as e:
             APP.status.restore_default_status()
             APP.status.status(e, 2)
