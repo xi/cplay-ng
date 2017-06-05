@@ -61,6 +61,15 @@ MACRO = {}
 APP = None
 
 
+def u(s):
+    if isinstance(s, six.text_type):
+        return s
+    elif isinstance(s, six.binary_type):
+        return s.decode(CODE)
+    else:
+        return u(str(s))
+
+
 class Application(object):
     def __init__(self):
         self.tcattr = None
@@ -224,7 +233,7 @@ class Player(object):
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
             return False
-        logging.debug('Setting up backend for %s' % str(entry))
+        logging.debug('Setting up backend for %s' % u(entry))
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
@@ -248,7 +257,7 @@ class Player(object):
         self.play_tid = None
         if entry is None or offset is None:
             return
-        logging.debug('Starting to play %s' % str(entry))
+        logging.debug('Starting to play %s' % u(entry))
         if self.setup_backend(entry, offset):
             self.backend.play()
         else:
@@ -296,7 +305,7 @@ class Player(object):
             APP.status.status(_('No mixer.'), 1)
         else:
             getattr(self._mixer, cmd)(*args)
-            APP.status.status(str(self._mixer), 1)
+            APP.status.status(u(self._mixer), 1)
 
 
 class Input(object):
@@ -464,7 +473,7 @@ class StatusWindow(Window):
         self.refresh()
 
     def status(self, message, duration=0):
-        self.current_message = str(message)
+        self.current_message = u(message)
         if self.tid:
             APP.timeout.remove(self.tid)
         if duration:
@@ -712,7 +721,7 @@ class ListWindow(Window):
         return '%-*s  %s' % (width, cut(self.name + data, width), pos)
 
     def putstr(self, entry, *pos):
-        s = str(entry)
+        s = u(entry)
         if pos:
             self.move(*pos)
         if self.hoffset:
@@ -783,7 +792,7 @@ class ListWindow(Window):
         index = (self.bufptr + advance) % len(self.buffer)
         origin = index
         while True:
-            line = str(self.buffer[index]).lower()
+            line = u(self.buffer[index]).lower()
             if line.find(new_string.lower()) != -1:
                 APP.input.show()
                 self.update_line(refresh=False)
@@ -829,6 +838,7 @@ class HelpWindow(ListWindow):
 """).splitlines()
 
 
+@six.python_2_unicode_compatible
 class ListEntry(object):
     def __init__(self, pathname, directory=False):
         self.filename = os.path.basename(pathname)
@@ -970,7 +980,7 @@ class TagListWindow(ListWindow):
         try:
             r = re.compile(APP.input.string, re.IGNORECASE)
             for entry in self.buffer:
-                if r.search(str(entry)):
+                if r.search(u(entry)):
                     entry.tagged = self.tag_value
             self.update()
             APP.status.status(_('ok'), 1)
@@ -1521,7 +1531,7 @@ class Backend(object):
             if self.argv[i] == '{file}':
                 self.argv[i] = entry.pathname
             if self.argv[i] == '{offset}':
-                self.argv[i] = str(offset * self.fps)
+                self.argv[i] = u(offset * self.fps)
         self.entry = entry
         self.offset = offset
         if offset == 0:
@@ -2131,7 +2141,7 @@ def main():
             APP.playlist.command_toggle_random()
         if args.toggle_mixer:
             APP.player.mixer('toggle')
-        logging.debug('Preferred locale is %s' % str(CODE))
+        logging.debug('Preferred locale is %s' % u(CODE))
 
         if args.files or playlist:
             for i in args.files or playlist:
