@@ -1121,6 +1121,7 @@ class FilelistWindow(TagListWindow):
             filenames = os.listdir(self.cwd)
             filenames.sort()
             for filename in filenames:
+                filename = u(filename)
                 if filename[0] == '.':
                     continue
                 pathname = os.path.join(self.cwd, filename)
