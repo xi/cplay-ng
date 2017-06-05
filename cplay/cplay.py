@@ -401,6 +401,8 @@ class Window(object):
     def insstr(self, s):
         if not s:
             return
+        if six.PY2 and isinstance(s, six.text_type):
+            s = s.encode(CODE)
         self.w.addstr(s[:-1])
         self.w.hline(ord(s[-1]), 1)  # insch() work-around
 
