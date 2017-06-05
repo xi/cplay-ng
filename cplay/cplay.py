@@ -1070,7 +1070,7 @@ class FilelistWindow(TagListWindow):
             else:
                 query = APP.input.string
                 fn = self.fs_search
-            results = fn(query)
+            results = list(fn(query))
         except Exception as e:
             APP.status.restore_default_status()
             APP.status.status(e, 2)
