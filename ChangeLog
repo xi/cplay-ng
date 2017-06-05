@@ -1,3 +1,15 @@
+2017-06-05  Tobias Bengfirt <tobias.bengfort@posteo.de>
+
+  *** 2.3.0 released ***
+
+  - fix various unicode issues
+  - fix detection of valid song/playlist on URLs
+  - fix: terminate backend on crash
+  - internal restructuring to facilitate search plugins
+  - new backend: ffplay
+  - add http support to avplay and gst123 backends
+  - fix: infinite loop in vlc backend
+
 2017-01-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
   *** 2.2.0 released ***
