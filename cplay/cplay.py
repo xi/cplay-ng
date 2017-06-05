@@ -58,6 +58,7 @@ gettext.install('cplay', resource_filename(__name__, 'i18n'))
 
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
+SEARCH = {}
 APP = None
 
 
@@ -1059,40 +1060,56 @@ class FilelistWindow(TagListWindow):
         APP.input.start(_('search'))
 
     def stop_search_recursively(self):
+        APP.status.status(_('Searching...'))
+
         try:
-            re_tmp = re.compile(APP.input.string, re.IGNORECASE)
-        except re.error as e:
+            m = re.match('!([a-z0-9]+) +(.+)', APP.input.string)
+            if m:
+                key, query = m.groups()
+                fn = SEARCH[key]
+            else:
+                query = APP.input.string
+                fn = self.fs_search
+            results = list(fn(query))
+        except Exception as e:
+            APP.status.restore_default_status()
             APP.status.status(e, 2)
             return
-        APP.status.status(_('Searching...'))
+
+        if self.mode != self.SEARCH:
+            self.chdir(os.path.join(self.cwd, _('search results')))
+            self.mode = self.SEARCH
+        self.buffer = []
+        for pathname, filename, isdir in results:
+            entry = ListEntry(pathname, isdir)
+            if filename is not None:
+                entry.filename = filename
+            self.buffer.append(entry)
+        self.bufptr = 0
+        self.parent.update_title()
+        self.update()
+        APP.status.restore_default_status()
+
+    def fs_search(self, query):
+        re_tmp = re.compile(query, re.IGNORECASE)
         results = []
         for entry in self.buffer:
             if entry.filename == '..':
                 continue
             if re_tmp.search(entry.filename):
-                results.append(entry)
+                results.append((entry.pathname, entry.filename, False))
             elif os.path.isdir(entry.pathname):
-                try:
-                    self.search_recursively(re_tmp, entry.pathname, results)
-                except:
-                    pass
-        if self.mode != self.SEARCH:
-            self.chdir(os.path.join(self.cwd, _('search results')))
-            self.mode = self.SEARCH
-        self.buffer = results
-        self.bufptr = 0
-        self.parent.update_title()
-        self.update()
-        APP.status.restore_default_status()
+                self.search_recursively(re_tmp, entry.pathname, results)
+        return results
 
     def search_recursively(self, re_tmp, directory, results):
         for filename in os.listdir(directory):
             pathname = os.path.join(directory, filename)
             if re_tmp.search(filename):
                 if os.path.isdir(pathname):
-                    results.append(ListEntry(pathname, 1))
-                elif valid_playlist(filename) or valid_song(filename):
-                    results.append(ListEntry(pathname))
+                    results.append((pathname, None, True))
+                elif valid_playlist(pathname) or valid_song(pathname):
+                    results.append((pathname, None, False))
             elif os.path.isdir(pathname):
                 self.search_recursively(re_tmp, pathname, results)
 
@@ -1204,12 +1221,13 @@ class FilelistWindow(TagListWindow):
     def command_add_recursively(self):
         l = self.get_tagged()
         if not l:
-            APP.playlist.add(self.current().pathname)
+            c = self.current()
+            APP.playlist.add(c.pathname, filename=c.filename)
             self.cursor_move(1)
             return
         APP.status.status(_('Adding tagged files'), 1)
         for entry in l:
-            APP.playlist.add(entry.pathname, quiet=True)
+            APP.playlist.add(entry.pathname, filename=entry.filename, quiet=True)
             entry.tagged = False
         self.update()
 
@@ -1274,7 +1292,7 @@ class Playlist(object):
             f(line.strip())
         file.close()
 
-    def _add(self, pathname, quiet=False):
+    def _add(self, pathname, filename=None, quiet=False):
         if os.path.isdir(pathname):
             if not quiet:
                 APP.status.status(_('Working...'))
@@ -1282,7 +1300,10 @@ class Playlist(object):
         elif valid_playlist(pathname):
             self.add_playlist(pathname)
         elif valid_song(pathname):
-            self.append(PlaylistEntry(pathname))
+            entry = PlaylistEntry(pathname)
+            if filename is not None:
+                entry.filename = filename
+            self.append(entry)
         else:
             return
         # FIXME: refactor
@@ -1291,9 +1312,9 @@ class Playlist(object):
             self.update()
             APP.status.status(_('Added: %s') % filename, 1)
 
-    def add(self, pathname, quiet=False):
+    def add(self, pathname, filename=None, quiet=False):
         try:
-            self._add(pathname)
+            self._add(pathname, filename=filename, quiet=quiet)
         except Exception as e:
             APP.status.status(e, 2)
 
