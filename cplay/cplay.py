@@ -117,6 +117,7 @@ class Application(object):
             sys.stderr.write('\033]0;%s\a' % 'xterm')
         if tty is not None:
             tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
+        self.player.cleanup()
         # remove temporary files
         self.control.cleanup()
 
@@ -216,6 +217,9 @@ class Player(object):
             except Exception as e:
                 logging.debug('Mixer %s not available: %s', mixer.__name__, e)
                 pass
+
+    def cleanup(self):
+        self.backend.cleanup()
 
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
@@ -1526,6 +1530,13 @@ class Backend(object):
             self.length = 0
         self.time_setup = time.time()
         return self.argv[0]
+
+    def cleanup(self):
+        if self._proc is not None:
+            try:
+                self._proc.terminate()
+            except OSError as err:
+                pass
 
     def play(self):
         logging.debug('Executing %s', ' '.join(self.argv))
