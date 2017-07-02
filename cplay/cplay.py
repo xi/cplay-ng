@@ -2189,7 +2189,7 @@ def main():
         traceback.print_exc()
 
 
-MIXERS = [OssMixer, AlsaMixer, PulseMixer]
+MIXERS = [PulseMixer, AlsaMixer, OssMixer]
 BACKENDS = [
     FrameOffsetBackend('ogg123 -q -v -k {offset} {file}', r'\.ogg$'),
     FrameOffsetBackend('splay -f -k {offset} {file}',
