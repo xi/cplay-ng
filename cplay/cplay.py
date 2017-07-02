@@ -870,10 +870,12 @@ class ListEntry(object):
 
 
 class PlaylistEntry(ListEntry):
-    def __init__(self, pathname):
+    def __init__(self, pathname, displayname=None):
         ListEntry.__init__(self, pathname)
         self.metadata = None
         self.active = False
+        if displayname is not None:
+            self.filename = displayname
 
     def vp_metadata(self):
         if self.metadata is None:
@@ -1316,17 +1318,13 @@ class Playlist(object):
         elif valid_playlist(pathname):
             self.add_playlist(pathname)
         elif valid_song(pathname):
-            entry = PlaylistEntry(pathname)
-            if filename is not None:
-                entry.filename = filename
+            entry = PlaylistEntry(pathname, displayname=filename)
             self.append(entry)
         else:
             return
-        # FIXME: refactor
-        filename = os.path.basename(pathname) or pathname
         if not quiet:
             self.update()
-            APP.status.status(_('Added: %s') % filename, 1)
+            APP.status.status(_('Added: %s') % (filename or pathname), 1)
 
     def add(self, pathname, filename=None, quiet=False):
         try:
