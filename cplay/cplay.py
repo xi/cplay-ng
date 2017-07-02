@@ -216,7 +216,6 @@ class Application(object):
 class Player(object):
     def __init__(self):
         self.backend = BACKENDS[0]
-        self.channels = []
         self.play_tid = None
         self._mixer = None
         for mixer in MIXERS:
