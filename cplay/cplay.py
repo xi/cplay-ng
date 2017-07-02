@@ -1264,26 +1264,25 @@ class Playlist(object):
             self.random_left.append(item)
 
     def add_dir(self, directory):
-        filenames = sorted(os.listdir(directory))
-
         # heuristic: if there are any playlists,
         # do not add individual files to avoid duplicates
         foundplaylist = False
-        for filename in filenames:
+        songs = []
+        subdirs = []
+        for filename in sorted(os.listdir(directory)):
+            pathname = os.path.join(directory, filename)
             if valid_playlist(filename):
-                pathname = os.path.join(directory, filename)
                 self.add_playlist(pathname)
                 foundplaylist = True
+            elif valid_song(filename):
+                songs.append(pathname)
+            elif os.path.isdir(pathname):
+                subdirs.append(pathname)
         if not foundplaylist:
-            for filename in filenames:
-                if valid_song(filename):
-                    pathname = os.path.join(directory, filename)
-                    self._add(pathname, filename=filename, quiet=True)
-
-        for filename in filenames:
-            pathname = os.path.join(directory, filename)
-            if os.path.isdir(pathname):
-                self.add_dir(pathname)
+            for pathname in songs:
+                self._add(pathname, quiet=True)
+        for pathname in subdirs:
+            self.add_dir(pathname)
 
     def add_m3u(self, line):
         if re.match(r'^(#.*)?$', line):
