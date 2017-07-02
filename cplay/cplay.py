@@ -1796,7 +1796,7 @@ class MPlayer(Backend):
 
     def play(self):
         Backend.play(self)
-        self.mplayer_send('seek %d\n' % self.offset)
+        self.mplayer_send('seek %g\n' % self.offset)
 
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
