@@ -1287,10 +1287,9 @@ class Playlist(object):
             f = self.add_m3u
         elif re.search(r'\.pls$', pathname, re.IGNORECASE):
             f = self.add_pls
-        file = open(pathname)
-        for line in file.readlines():
-            f(line.strip())
-        file.close()
+        with open(pathname) as inp:
+            for line in inp:
+                f(line.strip())
 
     def _add(self, pathname, filename=None, quiet=False):
         if os.path.isdir(pathname):
