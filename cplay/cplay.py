@@ -238,7 +238,7 @@ class Player(object):
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
-                if backend.setup(entry, offset):
+                if backend.setup(entry, offset or entry.offset):
                     self.backend = backend
                     return True
         # FIXME: Needs to report suitable backends
@@ -848,6 +848,8 @@ class ListEntry(object):
         self.pathname = pathname
         self.slash = '/' if directory else ''
         self.tagged = False
+        self.offset = 0
+        self.maxoffset = None
 
     def __str__(self):
         mark = '*' if self.tagged else ' '
@@ -870,12 +872,14 @@ class ListEntry(object):
 
 
 class PlaylistEntry(ListEntry):
-    def __init__(self, pathname, displayname=None):
+    def __init__(self, pathname, displayname=None, offset=0, maxoffset=None):
         ListEntry.__init__(self, pathname)
         self.metadata = None
         self.active = False
         if displayname is not None:
             self.filename = displayname
+        self.offset = offset
+        self.maxoffset = maxoffset
 
     def vp_metadata(self):
         if self.metadata is None:
@@ -1630,9 +1634,32 @@ class Backend(object):
     def parse_progress(self):
         if self.stopped or self.step:
             self.tid = None
-        else:
-            self.parse_buf()
-            self.tid = APP.timeout.add(1.0, self.parse_progress)
+            return
+
+        self.parse_buf()
+
+        if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
+            maxoffset = self.entry.maxoffset
+            pathname = self.entry.pathname
+
+            if APP.playlist.stop:
+                entry = None
+            else:
+                entry = APP.playlist.change_active_entry(1)
+
+            if not entry:
+                self.stop(quiet=True)
+                self.tid = None
+                return
+
+            # keep playing if next song from cue file, otherwise restart player
+            if pathname != entry.pathname or maxoffset != entry.offset:
+                APP.player.play(entry)
+            else:
+                self.entry = entry
+                self.update_status()
+
+        self.tid = APP.timeout.add(1.0, self.parse_progress)
 
     def parse_buf(self):
         raise NotImplementedError
