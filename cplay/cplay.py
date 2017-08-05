@@ -1614,7 +1614,7 @@ class Backend(object):
                                           stderr=self.stderr_w,
                                           stdin=self.stdin_r)
         except OSError as err:
-            APP.status.status('play() %s' % err, 2)
+            logging.error('play() %s', err)
             return False
 
         self.paused = False
@@ -1629,7 +1629,7 @@ class Backend(object):
             try:
                 self._proc.terminate()
             except OSError as err:
-                APP.status.status('stop() %s' % err, 2)
+                logging.error('stop() %s', err)
         self._proc = None
         if not quiet:
             self.update_status()
