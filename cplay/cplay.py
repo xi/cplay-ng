@@ -237,7 +237,8 @@ class Player(object):
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
-                if backend.setup(entry, offset or entry.offset):
+                if backend.installed:
+                    backend.setup(entry, offset or entry.offset)
                     self.backend = backend
                     return True
         # FIXME: Needs to report suitable backends
@@ -1586,6 +1587,7 @@ class Backend(object):
 
     def __init__(self, commandline, files, fps=1):
         self.commandline = commandline
+        self.installed = bool(which(commandline.split()[0]))
         self.argv = None
         self.re_files = re.compile(files, re.IGNORECASE)
         self.fps = fps
@@ -1616,7 +1618,6 @@ class Backend(object):
             APP.progress.progress(0)
             self.offset = 0
             self.length = 0
-        return self.argv[0]
 
     def play(self):
         logging.debug('Executing %s', ' '.join(self.argv))
