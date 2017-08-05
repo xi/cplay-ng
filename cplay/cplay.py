@@ -1672,26 +1672,6 @@ class Backend(object):
             self.length = self.offset * 2
         self.show_position()
 
-        if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
-            maxoffset = self.entry.maxoffset
-            pathname = self.entry.pathname
-
-            if APP.playlist.stop:
-                entry = None
-            else:
-                entry = APP.playlist.change_active_entry(1)
-
-            if not entry:
-                self.stop(quiet=True)
-                return
-
-            # keep playing if next song from cue file, otherwise restart player
-            if pathname != entry.pathname or maxoffset != entry.offset:
-                APP.player.play(entry)
-            else:
-                self.entry = entry
-                self.update_status()
-
     def parse_buf(self, buf):
         raise NotImplementedError
 
@@ -1701,6 +1681,8 @@ class Backend(object):
         if self._proc is None:
             return STOPPED
         elif self._proc.poll() is not None:
+            return FINISHED
+        elif self.entry.maxoffset and self.offset >= self.entry.maxoffset:
             return FINISHED
         elif self.paused:
             return PAUSED
