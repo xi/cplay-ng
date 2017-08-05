@@ -234,15 +234,14 @@ class Player(object):
                 logging.debug('Mixer %s not available: %s', mixer.__name__, e)
                 pass
 
-    def setup_backend(self, entry, offset=0):
-        if entry is None or offset is None:
+    def pick_backend(self, entry):
+        if entry is None:
             return False
         logging.debug('Setting up backend for %s' % u(entry))
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
                 if backend.installed:
-                    backend.setup(entry, offset or entry.offset)
                     self.backend = backend
                     return True
         # FIXME: Needs to report suitable backends
@@ -256,7 +255,8 @@ class Player(object):
         if entry is None or offset is None:
             return
         logging.debug('Starting to play %s' % u(entry))
-        if self.setup_backend(entry, offset):
+        if self.pick_backend(entry):
+            self.backend.setup(entry, offset or entry.offset)
             self.backend.play()
         else:
             APP.timeout.add(1, self.next_prev_song, (1, ))
