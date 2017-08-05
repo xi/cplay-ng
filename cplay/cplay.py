@@ -1653,7 +1653,7 @@ class Backend(object):
             self.update_status()
 
     def parse_progress(self, fd):
-        if self.get_state() is STOPPED or self.step:
+        if self.step:
             return
 
         r = self.parse_buf(os.read(fd, 512))
