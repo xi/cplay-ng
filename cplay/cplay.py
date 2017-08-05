@@ -287,10 +287,7 @@ class Player(object):
     def toggle_stop(self):
         if self.backend.entry is None:
             return
-        if not self.backend.stopped:
-            self.backend.stop()
-        else:
-            self.play(self.backend.entry, self.backend.offset)
+        self.backend.toggle_stop()
 
     def key_volume(self, ch):
         self.mixer('set', [int((ch & 0x0f) * 100 / 9.0)])
@@ -1655,6 +1652,15 @@ class Backend(object):
         self._proc.send_signal(
             signal.SIGCONT if self.paused else signal.SIGSTOP)
         self.paused = not self.paused
+        if not quiet:
+            self.update_status()
+
+    def toggle_stop(self, quiet=False):
+        if not self.stopped:
+            self.stop()
+        else:
+            self.setup(self.entry, self.offset)
+            self.play()
         if not quiet:
             self.update_status()
 
