@@ -133,7 +133,7 @@ class Application(object):
             sys.stderr.write('\033]0;%s\a' % 'xterm')
         if tty is not None:
             tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
-        self.player.cleanup()
+        self.player.backend.stop(quiet=True)
         # remove temporary files
         self.control.cleanup()
 
@@ -149,11 +149,11 @@ class Application(object):
                     if not self.playlist.stop:
                         entry = self.playlist.change_active_entry(1)
                         if entry is None:
-                            self.player.backend.stop()
+                            self.player.stop()
                         else:
                             self.player.play(entry)
                     else:
-                        self.player.backend.stop()
+                        self.player.stop()
             R = [sys.stdin, self.player.backend.stdout_r,
                  self.player.backend.stderr_r]
             if self.control.fd:
@@ -234,9 +234,6 @@ class Player(object):
                 logging.debug('Mixer %s not available: %s', mixer.__name__, e)
                 pass
 
-    def cleanup(self):
-        self.backend.stop()
-
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
             return False
@@ -268,6 +265,9 @@ class Player(object):
         if self.play_tid:
             APP.timeout.remove(self.play_tid)
         self.play_tid = APP.timeout.add(0.5, self.play, (entry, offset))
+
+    def stop(self):
+        self.backend.stop()
 
     def next_prev_song(self, direction):
         new_entry = APP.playlist.change_active_entry(direction)
