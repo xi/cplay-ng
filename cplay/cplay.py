@@ -246,12 +246,6 @@ class Player(object):
         self.backend.stopped = False  # keep going
         return False
 
-    def setup_stopped(self, entry, offset=0, length=0):
-        self.setup_backend(entry)
-        self.backend.set_position(offset, length)
-        self.backend.stopped = True
-        APP.status.set_default_status(_('Stopped: %s') % entry.vp())
-
     def play(self, entry, offset=0):
         # Play executed, remove from queue
         self.play_tid = None
@@ -2259,10 +2253,10 @@ def main():
             APP.window.win_tab.change_window()
 
         if args.entry is not None:
-            APP.player.setup_stopped(
-                args.entry,
-                offset=args.offset,
-                length=args.length)
+            APP.player.setup_backend(args.entry)
+            APP.player.backend.set_position(args.offset, args.length)
+            APP.player.backend.stopped = True
+            APP.player.backend.update_status()
 
         APP.run()
     except SystemExit:
