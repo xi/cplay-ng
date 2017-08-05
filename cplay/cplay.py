@@ -161,10 +161,10 @@ class Application(object):
                 APP.keymapstack.process(c)
             # backend
             if self.player.backend.stderr_r in r:
-                self.player.backend.read_fd(self.player.backend.stderr_r)
+                self.player.backend.parse_progress(self.player.backend.stderr_r)
             # backend
             if self.player.backend.stdout_r in r:
-                self.player.backend.read_fd(self.player.backend.stdout_r)
+                self.player.backend.parse_progress(self.player.backend.stdout_r)
             # remote
             if self.control.fd in r:
                 self.control.handle_command()
@@ -1595,8 +1595,6 @@ class Backend(object):
         self.paused = False
         self.offset = 0
         self.length = 0
-        self.buf = ''
-        self.tid = None
         self.step = 0
         self._proc = None
 
@@ -1660,12 +1658,16 @@ class Backend(object):
         if not quiet:
             self.update_status()
 
-    def parse_progress(self):
+    def parse_progress(self, fd):
         if self.stopped or self.step:
-            self.tid = None
             return
 
-        self.parse_buf()
+        r = self.parse_buf(os.read(fd, 512))
+        if r is not None:
+            self.offset, self.length = r
+        if self.length is None:
+            self.length = self.offset * 2
+        self.show_position()
 
         if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
             maxoffset = self.entry.maxoffset
@@ -1678,7 +1680,6 @@ class Backend(object):
 
             if not entry:
                 self.stop(quiet=True)
-                self.tid = None
                 return
 
             # keep playing if next song from cue file, otherwise restart player
@@ -1688,15 +1689,8 @@ class Backend(object):
                 self.entry = entry
                 self.update_status()
 
-        self.tid = APP.timeout.add(1.0, self.parse_progress)
-
-    def parse_buf(self):
+    def parse_buf(self, buf):
         raise NotImplementedError
-
-    def read_fd(self, fd):
-        self.buf = os.read(fd, 512)
-        if self.tid is None:
-            self.parse_progress()
 
     def poll(self):
         if self.stopped or self._proc is None:
@@ -1712,16 +1706,6 @@ class Backend(object):
         d = offset * self.length * 0.002
         self.step = self.step + d if self.step * d > 0 else d
         self.offset = min(self.length, max(0, self.offset + self.step))
-        self.show_position()
-
-    def set_position(self, offset, length):
-        """Update the visible playback position.
-
-        offset is elapsed time, length the total length of track in seconds
-
-        """
-        self.offset = offset
-        self.length = length
         self.show_position()
 
     def show_position(self):
@@ -1744,83 +1728,81 @@ class Backend(object):
 class FrameOffsetBackend(Backend):
     re_progress = re.compile(br'Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)')
 
-    def parse_buf(self):
+    def parse_buf(self, buf):
         def parse_time(s):
             l = reversed(s.split(b':'))
             return sum([int(x) * 60 ** i for i, x in enumerate(l)])
 
-        match = self.re_progress.search(self.buf)
+        match = self.re_progress.search(buf)
         if match:
             head = parse_time(match.group(1))
             tail = parse_time(match.group(3))
-            self.set_position(head, head + tail)
+            return head, head + tail
 
 
 class FrameOffsetBackendMpp(Backend):
     re_progress = re.compile(br'.*\s(\d+):(\d+).*\s(\d+):(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             m1, s1, m2, s2 = map(int, match.groups())
-            head = m1 * 60 + s1
-            tail = (m2 * 60 + s2) - head
-            self.set_position(head, head + tail)
+            offset = m1 * 60 + s1
+            length = m2 * 60 + s2
+            return offset, length
 
 
 class TimeOffsetBackend(Backend):
     re_progress = re.compile(br'(\d+):(\d+):(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             h, m, s = map(int, match.groups())
-            tail = h * 3600 + m * 60 + s
-            head = max(self.length, tail) - tail
-            self.set_position(head, head + tail)
+            offset = h * 3600 + m * 60 + s
+            return offset, None
 
 
 class SoxBackend(Backend):
     re_progress = re.compile(br'(\d+):(\d+):(\d+)\.\d+ '
                              br'\[(\d+):(\d+):(\d+)\.\d+\]')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             h, m, s, h2, m2, s2 = map(int, match.groups())
             head = h * 3600 + m * 60 + s
             tail = h2 * 3600 + m2 * 60 + s2
-            self.set_position(head, head + tail)
+            return head, head + tail
 
 
 class GSTBackend(Backend):
     re_progress = re.compile(br'Time: (\d+):(\d+):(\d+).(\d+)'
                              br' of (\d+):(\d+):(\d+).(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             ph, pm, ps, us, lh, lm, ls, lus = map(int, match.groups())
-            position = ph * 3600 + pm * 60 + ps
+            offset = ph * 3600 + pm * 60 + ps
             length = lh * 3600 + lm * 60 + ls
-            self.set_position(position, length)
+            return offset, length
 
 
 class AVPlay(Backend):
     re_progress = re.compile(br' *(\d+)\.')
 
-    def parse_buf(self):
-        match = self.re_progress.match(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.match(buf)
         if match:
-            head = int(match.groups()[0])
-            self.set_position(head, head * 2)
+            offset = int(match.groups()[0])
+            return offset, None
 
 
 class NoOffsetBackend(Backend):
 
-    def parse_buf(self):
-        head = self.offset + 1
-        self.set_position(head, head * 2)
+    def parse_buf(self, buf):
+        pass
 
     def seek(self, *dummy):
         pass
@@ -1835,10 +1817,9 @@ class NoBufferBackend(Backend):
         self._starttime = time.time()
         Backend.play(self)
 
-    def parse_buf(self):
-        position = time.time() - self._starttime + self.offset
-        logging.debug(position)
-        self.set_position(position, 2 * position)
+    def parse_buf(self, buf):
+        offset = time.time() - self._starttime + self.offset
+        return offset, None
 
 
 class MPlayer(Backend):
@@ -1849,13 +1830,10 @@ class MPlayer(Backend):
         Backend.play(self)
         self.mplayer_send('seek %g\n' % self.offset)
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
-            position, length = map(int, match.groups())
-            self.set_position(position, length)
-        else:
-            logging.debug('Cannot parse mplayer output')
+            return map(int, match.groups())
 
     def mplayer_send(self, arg):
         logging.debug('Sending command %s' % arg)
@@ -2243,7 +2221,8 @@ def main():
 
         if args.entry is not None:
             APP.player.setup_backend(args.entry)
-            APP.player.backend.set_position(args.offset, args.length)
+            APP.player.backend.offset = args.offset
+            APP.player.backend.length = args.length
             APP.player.backend.stopped = True
             APP.player.backend.update_status()
 
