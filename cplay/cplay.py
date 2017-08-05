@@ -228,7 +228,7 @@ class Player(object):
                 pass
 
     def cleanup(self):
-        self.backend.cleanup()
+        self.backend.stop()
 
     def setup_backend(self, entry, offset=0):
         if entry is None or offset is None:
@@ -1617,13 +1617,6 @@ class Backend(object):
             self.offset = 0
             self.length = 0
         return self.argv[0]
-
-    def cleanup(self):
-        if self._proc is not None:
-            try:
-                self._proc.terminate()
-            except OSError as err:
-                pass
 
     def play(self):
         logging.debug('Executing %s', ' '.join(self.argv))
