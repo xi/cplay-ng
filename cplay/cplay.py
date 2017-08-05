@@ -265,12 +265,7 @@ class Player(object):
 
     def next_prev_song(self, direction):
         new_entry = APP.playlist.change_active_entry(direction)
-        self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
-        # The backend has to be set-up right away when changing songs.
-        # Otherwise the user can manipulate the old offset value while waiting
-        # for the delayed play to trigger, which causes the next song to play
-        # from a wrong offset instead of its beginning.
-        self.delayed_play(new_entry, 0)
+        self.play(new_entry, 0)
 
     def seek(self, offset, relative):
         if self.backend.entry is None:
