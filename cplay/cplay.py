@@ -61,6 +61,12 @@ MACRO = {}
 SEARCH = {}
 APP = None
 
+UNINITIALIZED = 1
+STOPPED = 2
+FINISHED = 3
+PAUSED = 4
+PLAYING = 5
+
 
 def u(s):
     if isinstance(s, six.text_type):
@@ -136,17 +142,18 @@ class Application(object):
             now = time.time()
             timeout = self.timeout.check(now)
             self.filelist.listdir_maybe(now)
-            if not self.player.backend.stopped:
+            if self.player.backend.get_state() is not STOPPED:
                 timeout = 0.5
-                if self.player.backend.poll():
+                if self.player.backend.get_state() is FINISHED:
                     # end of playlist hack
-                    self.player.backend.stopped = True
                     if not self.playlist.stop:
                         entry = self.playlist.change_active_entry(1)
                         if entry is None:
-                            self.player.backend.stopped = True
+                            self.player.backend.stop()
                         else:
                             self.player.play(entry)
+                    else:
+                        self.player.backend.stop()
             R = [sys.stdin, self.player.backend.stdout_r,
                  self.player.backend.stderr_r]
             if self.control.fd:
@@ -244,7 +251,6 @@ class Player(object):
         # FIXME: Needs to report suitable backends
         logging.debug('Backend not found')
         APP.status.status(_('Backend not found!'), 1)
-        self.backend.stopped = False  # keep going
         return False
 
     def play(self, entry, offset=0):
@@ -268,7 +274,7 @@ class Player(object):
         self.play(new_entry, 0)
 
     def seek(self, offset):
-        if self.backend.entry is None:
+        if self.backend.get_state() is UNINITIALIZED:
             return
         self.backend.seek(offset)
         self.delayed_play(self.backend.entry, self.backend.offset)
@@ -279,14 +285,9 @@ class Player(object):
         self.play(self.backend.entry, offset)
 
     def toggle_pause(self):
-        if self.backend.entry is None:
-            return
-        if not self.backend.stopped:
-            self.backend.toggle_pause()
+        self.backend.toggle_pause()
 
     def toggle_stop(self):
-        if self.backend.entry is None:
-            return
         self.backend.toggle_stop()
 
     def key_volume(self, ch):
@@ -1587,8 +1588,6 @@ class Backend(object):
         self.re_files = re.compile(files, re.IGNORECASE)
         self.fps = fps
         self.entry = None
-        # True only if stopped manually or playlist ran out
-        self.stopped = False
         self.paused = False
         self.offset = 0
         self.length = 0
@@ -1626,46 +1625,44 @@ class Backend(object):
             APP.status.status('play() %s' % err, 2)
             return False
 
-        self.stopped = False
         self.paused = False
         self.step = 0
         self.update_status()
         return True
 
     def stop(self, quiet=False):
-        if self._proc is None:
-            return
-        if self.paused:
-            self.toggle_pause(quiet)
-        if self.poll() is None:
+        if self.get_state() is PAUSED:
+            self.toggle_pause()
+        if self.get_state() is PLAYING:
             try:
                 self._proc.terminate()
             except OSError as err:
                 APP.status.status('stop() %s' % err, 2)
-        self.stopped = True
+        self._proc = None
         if not quiet:
             self.update_status()
 
     def toggle_pause(self, quiet=False):
-        if self._proc is None:
-            return
-        self._proc.send_signal(
-            signal.SIGCONT if self.paused else signal.SIGSTOP)
-        self.paused = not self.paused
+        if self.get_state() is PAUSED:
+            self._proc.send_signal(signal.SIGCONT)
+            self.paused = False
+        elif self.get_state() is PLAYING:
+            self._proc.send_signal(signal.SIGSTOP)
+            self.paused = True
         if not quiet:
             self.update_status()
 
     def toggle_stop(self, quiet=False):
-        if not self.stopped:
-            self.stop()
-        else:
+        if self.get_state() is STOPPED:
             self.setup(self.entry, self.offset)
             self.play()
+        else:
+            self.stop()
         if not quiet:
             self.update_status()
 
     def parse_progress(self, fd):
-        if self.stopped or self.step:
+        if self.get_state() is STOPPED or self.step:
             return
 
         r = self.parse_buf(os.read(fd, 512))
@@ -1698,15 +1695,17 @@ class Backend(object):
     def parse_buf(self, buf):
         raise NotImplementedError
 
-    def poll(self):
-        if self.stopped or self._proc is None:
-            return 0
+    def get_state(self):
+        if self.entry is None:
+            return UNINITIALIZED
+        if self._proc is None:
+            return STOPPED
         elif self._proc.poll() is not None:
-            self._proc = None
-            APP.status.set_default_status('')
-            APP.counter.counter(0, 0)
-            APP.progress.progress(0)
-            return True
+            return FINISHED
+        elif self.paused:
+            return PAUSED
+        else:
+            return PLAYING
 
     def seek(self, offset):
         d = offset * self.length * 0.002
@@ -1720,15 +1719,14 @@ class Backend(object):
                               if self.length else 0)
 
     def update_status(self):
-        if self.entry is None:
-            APP.status.set_default_status('')
-        elif self.stopped:
+        if self.get_state() is STOPPED:
             APP.status.set_default_status(_('Stopped: %s') % self.entry.vp())
-        elif self.paused:
+        elif self.get_state() is PAUSED:
             APP.status.set_default_status(_('Paused: %s') % self.entry.vp())
-        else:
-            logging.debug(self.entry.vp())
+        elif self.get_state() is PLAYING:
             APP.status.set_default_status(_('Playing: %s') % self.entry.vp())
+        else:
+            APP.status.set_default_status('')
 
 
 class FrameOffsetBackend(Backend):
@@ -2229,7 +2227,6 @@ def main():
             APP.player.setup_backend(args.entry)
             APP.player.backend.offset = args.offset
             APP.player.backend.length = args.length
-            APP.player.backend.stopped = True
             APP.player.backend.update_status()
 
         APP.run()
