@@ -267,11 +267,16 @@ class Player(object):
         new_entry = APP.playlist.change_active_entry(direction)
         self.play(new_entry, 0)
 
-    def seek(self, offset, relative):
+    def seek(self, offset):
         if self.backend.entry is None:
             return
-        self.backend.seek(offset, relative)
+        self.backend.seek(offset)
         self.delayed_play(self.backend.entry, self.backend.offset)
+
+    def jump(self, offset):
+        if offset < 0:
+            offset += self.backend.length
+        self.play(self.backend.entry, offset)
 
     def toggle_pause(self):
         if self.backend.entry is None:
@@ -548,12 +553,10 @@ class RootWindow(Window):
 
     def setup_keymap(self):
         self.keymap.bind(12, self.update, ())  # C-l
-        self.keymap.bind([curses.KEY_LEFT, 2], APP.player.seek,
-                         (-1, 1))  # C-b
-        self.keymap.bind([curses.KEY_RIGHT, 6], APP.player.seek,
-                         (1, 1))  # C-f
-        self.keymap.bind([1, '^'], APP.player.seek, (0, 0))  # C-a
-        self.keymap.bind([5, '$'], APP.player.seek, (-1, 0))  # C-e
+        self.keymap.bind([curses.KEY_LEFT, 2], APP.player.seek, (-1,))  # C-b
+        self.keymap.bind([curses.KEY_RIGHT, 6], APP.player.seek, (1,))  # C-f
+        self.keymap.bind([1, '^'], APP.player.jump, (0,))  # C-a
+        self.keymap.bind([5, '$'], APP.player.jump, (-1,))  # C-e
         # 0123456789
         self.keymap.bind(list(range(48, 58)), APP.player.key_volume)
         self.keymap.bind(['+'], APP.player.mixer, ('cue', [1]))
@@ -1703,14 +1706,10 @@ class Backend(object):
             APP.progress.progress(0)
             return True
 
-    def seek(self, offset, relative):
-        if relative:
-            d = offset * self.length * 0.002
-            self.step = self.step + d if self.step * d > 0 else d
-            self.offset = min(self.length, max(0, self.offset + self.step))
-        else:
-            self.step = 1
-            self.offset = self.length + offset if offset < 0 else offset
+    def seek(self, offset):
+        d = offset * self.length * 0.002
+        self.step = self.step + d if self.step * d > 0 else d
+        self.offset = min(self.length, max(0, self.offset + self.step))
         self.show_position()
 
     def set_position(self, offset, length):
@@ -1893,8 +1892,8 @@ class FIFOControl(object):
             'pause': [APP.player.toggle_pause, []],
             'next': [APP.player.next_prev_song, [+1]],
             'prev': [APP.player.next_prev_song, [-1]],
-            'forward': [APP.player.seek, [1, 1]],
-            'backward': [APP.player.seek, [-1, 1]],
+            'forward': [APP.player.seek, [1]],
+            'backward': [APP.player.seek, [-1]],
             'play': [APP.player.toggle_stop, []],
             'stop': [APP.player.toggle_stop, []],
             'volume': [self.volume, None],
