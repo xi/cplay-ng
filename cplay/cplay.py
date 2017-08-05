@@ -1620,6 +1620,8 @@ class Backend(object):
     def play(self):
         logging.debug('Executing %s at offset %d', ' '.join(self.argv), self.offset)
 
+        self.stop()
+
         try:
             self._proc = subprocess.Popen(self.argv,
                                           stdout=self.stdout_w,
