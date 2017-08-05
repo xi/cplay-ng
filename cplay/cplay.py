@@ -256,8 +256,7 @@ class Player(object):
             return
         logging.debug('Starting to play %s' % u(entry))
         if self.pick_backend(entry):
-            self.backend.setup(entry, offset or entry.offset)
-            self.backend.play()
+            self.backend.play(entry, offset or entry.offset)
         else:
             APP.timeout.add(1, self.next_prev_song, (1, ))
 
@@ -1584,7 +1583,6 @@ class Backend(object):
     def __init__(self, commandline, files, fps=1):
         self.commandline = commandline
         self.installed = bool(which(commandline.split()[0]))
-        self.argv = None
         self.re_files = re.compile(files, re.IGNORECASE)
         self.fps = fps
         self.entry = None
@@ -1594,30 +1592,24 @@ class Backend(object):
         self.step = 0
         self._proc = None
 
-    def setup(self, entry, offset):
-        """Ready the backend with given ListEntry and seek offset"""
-
-        self.argv = self.commandline.split()
-        self.argv[0] = which(self.argv[0])
-        for i in range(len(self.argv)):
-            if self.argv[i] == '{file}':
-                self.argv[i] = entry.pathname
-            if self.argv[i] == '{offset}':
-                self.argv[i] = u(offset * self.fps)
-        self.entry = entry
-        self.offset = offset
-        if offset == 0:
-            APP.progress.progress(0)
-            self.offset = 0
-            self.length = 0
-
-    def play(self):
-        logging.debug('Executing %s at offset %d', ' '.join(self.argv), self.offset)
-
+    def play(self, entry, offset):
         self.stop()
 
+        argv = self.commandline.split()
+        argv[0] = which(argv[0])
+        for i in range(len(argv)):
+            if argv[i] == '{file}':
+                argv[i] = entry.pathname
+            if argv[i] == '{offset}':
+                argv[i] = u(offset * self.fps)
+
+        self.entry = entry
+        self.offset = offset
+
+        logging.debug('Executing %s at offset %d', ' '.join(argv), self.offset)
+
         try:
-            self._proc = subprocess.Popen(self.argv,
+            self._proc = subprocess.Popen(argv,
                                           stdout=self.stdout_w,
                                           stderr=self.stderr_w,
                                           stdin=self.stdin_r)
@@ -1654,8 +1646,7 @@ class Backend(object):
 
     def toggle_stop(self, quiet=False):
         if self.get_state() is STOPPED:
-            self.setup(self.entry, self.offset)
-            self.play()
+            self.play(self.entry, self.offset)
         else:
             self.stop()
         if not quiet:
@@ -1799,9 +1790,9 @@ class NoBufferBackend(Backend):
         Backend.__init__(self, *args)
         self._starttime = 0
 
-    def play(self):
+    def play(self, entry, offset):
         self._starttime = time.time()
-        Backend.play(self)
+        Backend.play(self, entry, offset)
 
     def parse_buf(self, buf):
         offset = time.time() - self._starttime + self.offset
@@ -1812,9 +1803,9 @@ class MPlayer(Backend):
     re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
     eq_cur = 0
 
-    def play(self):
-        Backend.play(self)
-        self.mplayer_send('seek %g\n' % self.offset)
+    def play(self, entry, offset):
+        Backend.play(self, entry, offset)
+        self.mplayer_send('seek %g\n' % offset)
 
     def parse_buf(self, buf):
         match = self.re_progress.search(buf)
