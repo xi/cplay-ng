@@ -61,6 +61,12 @@ MACRO = {}
 SEARCH = {}
 APP = None
 
+UNINITIALIZED = 1
+STOPPED = 2
+FINISHED = 3
+PAUSED = 4
+PLAYING = 5
+
 
 def u(s):
     if isinstance(s, six.text_type):
@@ -127,7 +133,7 @@ class Application(object):
             sys.stderr.write('\033]0;%s\a' % 'xterm')
         if tty is not None:
             tty.tcsetattr(sys.stdin.fileno(), tty.TCSADRAIN, self.tcattr)
-        self.player.cleanup()
+        self.player.backend.stop(quiet=True)
         # remove temporary files
         self.control.cleanup()
 
@@ -136,17 +142,18 @@ class Application(object):
             now = time.time()
             timeout = self.timeout.check(now)
             self.filelist.listdir_maybe(now)
-            if not self.player.backend.stopped:
+            if self.player.backend.get_state() is not STOPPED:
                 timeout = 0.5
-                if self.player.backend.poll():
+                if self.player.backend.get_state() is FINISHED:
                     # end of playlist hack
-                    self.player.backend.stopped = True
                     if not self.playlist.stop:
                         entry = self.playlist.change_active_entry(1)
                         if entry is None:
-                            self.player.backend.stopped = True
+                            self.player.stop()
                         else:
                             self.player.play(entry)
+                    else:
+                        self.player.stop()
             R = [sys.stdin, self.player.backend.stdout_r,
                  self.player.backend.stderr_r]
             if self.control.fd:
@@ -161,10 +168,10 @@ class Application(object):
                 APP.keymapstack.process(c)
             # backend
             if self.player.backend.stderr_r in r:
-                self.player.backend.read_fd(self.player.backend.stderr_r)
+                self.player.backend.parse_progress(self.player.backend.stderr_r)
             # backend
             if self.player.backend.stdout_r in r:
-                self.player.backend.read_fd(self.player.backend.stdout_r)
+                self.player.backend.parse_progress(self.player.backend.stdout_r)
             # remote
             if self.control.fd in r:
                 self.control.handle_command()
@@ -227,30 +234,20 @@ class Player(object):
                 logging.debug('Mixer %s not available: %s', mixer.__name__, e)
                 pass
 
-    def cleanup(self):
-        self.backend.cleanup()
-
-    def setup_backend(self, entry, offset=0):
-        if entry is None or offset is None:
+    def pick_backend(self, entry):
+        if entry is None:
             return False
         logging.debug('Setting up backend for %s' % u(entry))
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
-                if backend.setup(entry, offset or entry.offset):
+                if backend.installed:
                     self.backend = backend
                     return True
         # FIXME: Needs to report suitable backends
         logging.debug('Backend not found')
         APP.status.status(_('Backend not found!'), 1)
-        self.backend.stopped = False  # keep going
         return False
-
-    def setup_stopped(self, entry, offset=0, length=0):
-        self.setup_backend(entry)
-        self.backend.set_position(offset, length)
-        self.backend.stopped = True
-        APP.status.set_default_status(_('Stopped: %s') % entry.vp())
 
     def play(self, entry, offset=0):
         # Play executed, remove from queue
@@ -258,8 +255,8 @@ class Player(object):
         if entry is None or offset is None:
             return
         logging.debug('Starting to play %s' % u(entry))
-        if self.setup_backend(entry, offset):
-            self.backend.play()
+        if self.pick_backend(entry):
+            self.backend.play(entry, offset or entry.offset)
         else:
             APP.timeout.add(1, self.next_prev_song, (1, ))
 
@@ -268,34 +265,27 @@ class Player(object):
             APP.timeout.remove(self.play_tid)
         self.play_tid = APP.timeout.add(0.5, self.play, (entry, offset))
 
+    def stop(self):
+        self.backend.stop()
+
     def next_prev_song(self, direction):
         new_entry = APP.playlist.change_active_entry(direction)
-        self.setup_backend(new_entry, 0)  # Fixes DB#287871 and DB#303282.
-        # The backend has to be set-up right away when changing songs.
-        # Otherwise the user can manipulate the old offset value while waiting
-        # for the delayed play to trigger, which causes the next song to play
-        # from a wrong offset instead of its beginning.
-        self.delayed_play(new_entry, 0)
+        self.play(new_entry, 0)
 
-    def seek(self, offset, relative):
-        if self.backend.entry is None:
+    def seek(self, offset):
+        if self.backend.get_state() is UNINITIALIZED:
             return
-        self.backend.seek(offset, relative)
+        self.backend.seek(offset)
         self.delayed_play(self.backend.entry, self.backend.offset)
 
+    def jump(self, offset):
+        self.backend.jump(offset)
+
     def toggle_pause(self):
-        if self.backend.entry is None:
-            return
-        if not self.backend.stopped:
-            self.backend.toggle_pause()
+        self.backend.toggle_pause()
 
     def toggle_stop(self):
-        if self.backend.entry is None:
-            return
-        if not self.backend.stopped:
-            self.backend.stop()
-        else:
-            self.play(self.backend.entry, self.backend.offset)
+        self.backend.toggle_stop()
 
     def key_volume(self, ch):
         self.mixer('set', [int((ch & 0x0f) * 100 / 9.0)])
@@ -558,12 +548,10 @@ class RootWindow(Window):
 
     def setup_keymap(self):
         self.keymap.bind(12, self.update, ())  # C-l
-        self.keymap.bind([curses.KEY_LEFT, 2], APP.player.seek,
-                         (-1, 1))  # C-b
-        self.keymap.bind([curses.KEY_RIGHT, 6], APP.player.seek,
-                         (1, 1))  # C-f
-        self.keymap.bind([1, '^'], APP.player.seek, (0, 0))  # C-a
-        self.keymap.bind([5, '$'], APP.player.seek, (-1, 0))  # C-e
+        self.keymap.bind([curses.KEY_LEFT, 2], APP.player.seek, (-1,))  # C-b
+        self.keymap.bind([curses.KEY_RIGHT, 6], APP.player.seek, (1,))  # C-f
+        self.keymap.bind([1, '^'], APP.player.jump, (0,))  # C-a
+        self.keymap.bind([5, '$'], APP.player.jump, (-1,))  # C-e
         # 0123456789
         self.keymap.bind(list(range(48, 58)), APP.player.key_volume)
         self.keymap.bind(['+'], APP.player.mixer, ('cue', [1]))
@@ -1592,156 +1580,114 @@ class Backend(object):
 
     def __init__(self, commandline, files, fps=1):
         self.commandline = commandline
-        self.argv = None
+        self.installed = bool(which(commandline.split()[0]))
         self.re_files = re.compile(files, re.IGNORECASE)
         self.fps = fps
         self.entry = None
-        # True only if stopped manually or playlist ran out
-        self.stopped = False
         self.paused = False
         self.offset = 0
         self.length = 0
-        self.time_setup = None
-        self.buf = ''
-        self.tid = None
         self.step = 0
         self._proc = None
 
-    def setup(self, entry, offset):
-        """Ready the backend with given ListEntry and seek offset"""
+    def play(self, entry, offset):
+        self.stop()
 
-        self.argv = self.commandline.split()
-        self.argv[0] = which(self.argv[0])
-        for i in range(len(self.argv)):
-            if self.argv[i] == '{file}':
-                self.argv[i] = entry.pathname
-            if self.argv[i] == '{offset}':
-                self.argv[i] = u(offset * self.fps)
+        argv = self.commandline.split()
+        argv[0] = which(argv[0])
+        for i in range(len(argv)):
+            if argv[i] == '{file}':
+                argv[i] = entry.pathname
+            if argv[i] == '{offset}':
+                argv[i] = u(offset * self.fps)
+
         self.entry = entry
         self.offset = offset
-        if offset == 0:
-            APP.progress.progress(0)
-            self.offset = 0
-            self.length = 0
-        self.time_setup = time.time()
-        return self.argv[0]
 
-    def cleanup(self):
-        if self._proc is not None:
-            try:
-                self._proc.terminate()
-            except OSError as err:
-                pass
-
-    def play(self):
-        logging.debug('Executing %s', ' '.join(self.argv))
-        logging.debug('My offset is %d', self.offset)
+        logging.debug('Executing %s at offset %d', ' '.join(argv), self.offset)
 
         try:
-            self._proc = subprocess.Popen(self.argv,
+            self._proc = subprocess.Popen(argv,
                                           stdout=self.stdout_w,
                                           stderr=self.stderr_w,
                                           stdin=self.stdin_r)
         except OSError as err:
-            APP.status.status('play() %s' % err, 2)
+            logging.error('play() %s', err)
             return False
 
-        self.stopped = False
         self.paused = False
         self.step = 0
         self.update_status()
         return True
 
     def stop(self, quiet=False):
-        if self._proc is None:
-            return
-        if self.paused:
-            self.toggle_pause(quiet)
-        if self.poll() is None:
+        if self.get_state() is PAUSED:
+            self.toggle_pause()
+        if self.get_state() is PLAYING:
             try:
                 self._proc.terminate()
             except OSError as err:
-                APP.status.status('stop() %s' % err, 2)
-        self.stopped = True
+                logging.error('stop() %s', err)
+        self._proc = None
         if not quiet:
             self.update_status()
 
     def toggle_pause(self, quiet=False):
-        if self._proc is None:
-            return
-        self._proc.send_signal(
-            signal.SIGCONT if self.paused else signal.SIGSTOP)
-        self.paused = not self.paused
+        if self.get_state() is PAUSED:
+            self._proc.send_signal(signal.SIGCONT)
+            self.paused = False
+        elif self.get_state() is PLAYING:
+            self._proc.send_signal(signal.SIGSTOP)
+            self.paused = True
         if not quiet:
             self.update_status()
 
-    def parse_progress(self):
-        if self.stopped or self.step:
-            self.tid = None
+    def toggle_stop(self, quiet=False):
+        if self.get_state() is STOPPED:
+            self.play(self.entry, self.offset)
+        else:
+            self.stop()
+        if not quiet:
+            self.update_status()
+
+    def parse_progress(self, fd):
+        if self.step:
             return
 
-        self.parse_buf()
+        r = self.parse_buf(os.read(fd, 512))
+        if r is not None:
+            self.offset, self.length = r
+        if self.length is None:
+            self.length = self.offset * 2
+        self.show_position()
 
-        if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
-            maxoffset = self.entry.maxoffset
-            pathname = self.entry.pathname
-
-            if APP.playlist.stop:
-                entry = None
-            else:
-                entry = APP.playlist.change_active_entry(1)
-
-            if not entry:
-                self.stop(quiet=True)
-                self.tid = None
-                return
-
-            # keep playing if next song from cue file, otherwise restart player
-            if pathname != entry.pathname or maxoffset != entry.offset:
-                APP.player.play(entry)
-            else:
-                self.entry = entry
-                self.update_status()
-
-        self.tid = APP.timeout.add(1.0, self.parse_progress)
-
-    def parse_buf(self):
+    def parse_buf(self, buf):
         raise NotImplementedError
 
-    def read_fd(self, fd):
-        self.buf = os.read(fd, 512)
-        if self.tid is None:
-            self.parse_progress()
-
-    def poll(self):
-        if self.stopped or self._proc is None:
-            return 0
+    def get_state(self):
+        if self.entry is None:
+            return UNINITIALIZED
+        if self._proc is None:
+            return STOPPED
         elif self._proc.poll() is not None:
-            self._proc = None
-            APP.status.set_default_status('')
-            APP.counter.counter(0, 0)
-            APP.progress.progress(0)
-            return True
-
-    def seek(self, offset, relative):
-        if relative:
-            d = offset * self.length * 0.002
-            self.step = self.step + d if self.step * d > 0 else d
-            self.offset = min(self.length, max(0, self.offset + self.step))
+            return FINISHED
+        elif self.entry.maxoffset and self.offset >= self.entry.maxoffset:
+            return FINISHED
+        elif self.paused:
+            return PAUSED
         else:
-            self.step = 1
-            self.offset = self.length + offset if offset < 0 else offset
+            return PLAYING
+
+    def seek(self, offset):
+        d = offset * self.length * 0.002
+        self.step = self.step + d if self.step * d > 0 else d
+        self.offset = min(self.length, max(0, self.offset + self.step))
         self.show_position()
 
-    def set_position(self, offset, length):
-        """Update the visible playback position.
-
-        offset is elapsed time, length the total length of track in seconds
-
-        """
-        self.offset = offset
-        self.length = length
-        self.show_position()
+    def jump(self, offset):
+        if offset < 0:
+            offset += self.length
+        self.play(self.entry, offset)
 
     def show_position(self):
         APP.counter.counter(self.offset, self.length - self.offset)
@@ -1749,97 +1695,94 @@ class Backend(object):
                               if self.length else 0)
 
     def update_status(self):
-        if self.entry is None:
-            APP.status.set_default_status('')
-        elif self.stopped:
+        if self.get_state() is STOPPED:
             APP.status.set_default_status(_('Stopped: %s') % self.entry.vp())
-        elif self.paused:
+        elif self.get_state() is PAUSED:
             APP.status.set_default_status(_('Paused: %s') % self.entry.vp())
-        else:
-            logging.debug(self.entry.vp())
+        elif self.get_state() is PLAYING:
             APP.status.set_default_status(_('Playing: %s') % self.entry.vp())
+        else:
+            APP.status.set_default_status('')
 
 
 class FrameOffsetBackend(Backend):
     re_progress = re.compile(br'Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)')
 
-    def parse_buf(self):
+    def parse_buf(self, buf):
         def parse_time(s):
             l = reversed(s.split(b':'))
             return sum([int(x) * 60 ** i for i, x in enumerate(l)])
 
-        match = self.re_progress.search(self.buf)
+        match = self.re_progress.search(buf)
         if match:
             head = parse_time(match.group(1))
             tail = parse_time(match.group(3))
-            self.set_position(head, head + tail)
+            return head, head + tail
 
 
 class FrameOffsetBackendMpp(Backend):
     re_progress = re.compile(br'.*\s(\d+):(\d+).*\s(\d+):(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             m1, s1, m2, s2 = map(int, match.groups())
-            head = m1 * 60 + s1
-            tail = (m2 * 60 + s2) - head
-            self.set_position(head, head + tail)
+            offset = m1 * 60 + s1
+            length = m2 * 60 + s2
+            return offset, length
 
 
 class TimeOffsetBackend(Backend):
     re_progress = re.compile(br'(\d+):(\d+):(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             h, m, s = map(int, match.groups())
-            tail = h * 3600 + m * 60 + s
-            head = max(self.length, tail) - tail
-            self.set_position(head, head + tail)
+            offset = h * 3600 + m * 60 + s
+            return offset, None
 
 
 class SoxBackend(Backend):
     re_progress = re.compile(br'(\d+):(\d+):(\d+)\.\d+ '
                              br'\[(\d+):(\d+):(\d+)\.\d+\]')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             h, m, s, h2, m2, s2 = map(int, match.groups())
             head = h * 3600 + m * 60 + s
             tail = h2 * 3600 + m2 * 60 + s2
-            self.set_position(head, head + tail)
+            return head, head + tail
 
 
 class GSTBackend(Backend):
     re_progress = re.compile(br'Time: (\d+):(\d+):(\d+).(\d+)'
                              br' of (\d+):(\d+):(\d+).(\d+)')
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
             ph, pm, ps, us, lh, lm, ls, lus = map(int, match.groups())
-            position = ph * 3600 + pm * 60 + ps
+            offset = ph * 3600 + pm * 60 + ps
             length = lh * 3600 + lm * 60 + ls
-            self.set_position(position, length)
+            return offset, length
 
 
 class AVPlay(Backend):
     re_progress = re.compile(br' *(\d+)\.')
 
-    def parse_buf(self):
-        match = self.re_progress.match(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.match(buf)
         if match:
-            head = int(match.groups()[0])
-            self.set_position(head, head * 2)
+            offset = int(match.groups()[0])
+            return offset, None
 
 
 class NoOffsetBackend(Backend):
 
-    def parse_buf(self):
-        head = self.offset + 1
-        self.set_position(head, head * 2)
+    def parse_buf(self, buf):
+        pass
 
     def seek(self, *dummy):
         pass
@@ -1850,31 +1793,27 @@ class NoBufferBackend(Backend):
         Backend.__init__(self, *args)
         self._starttime = 0
 
-    def play(self):
+    def play(self, entry, offset):
         self._starttime = time.time()
-        Backend.play(self)
+        Backend.play(self, entry, offset)
 
-    def parse_buf(self):
-        position = time.time() - self._starttime + self.offset
-        logging.debug(position)
-        self.set_position(position, 2 * position)
+    def parse_buf(self, buf):
+        offset = time.time() - self._starttime + self.offset
+        return offset, None
 
 
 class MPlayer(Backend):
     re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
     eq_cur = 0
 
-    def play(self):
-        Backend.play(self)
-        self.mplayer_send('seek %g\n' % self.offset)
+    def play(self, entry, offset):
+        Backend.play(self, entry, offset)
+        self.mplayer_send('seek %g\n' % offset)
 
-    def parse_buf(self):
-        match = self.re_progress.search(self.buf)
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
         if match:
-            position, length = map(int, match.groups())
-            self.set_position(position, length)
-        else:
-            logging.debug('Cannot parse mplayer output')
+            return map(int, match.groups())
 
     def mplayer_send(self, arg):
         logging.debug('Sending command %s' % arg)
@@ -1913,8 +1852,8 @@ class FIFOControl(object):
             'pause': [APP.player.toggle_pause, []],
             'next': [APP.player.next_prev_song, [+1]],
             'prev': [APP.player.next_prev_song, [-1]],
-            'forward': [APP.player.seek, [1, 1]],
-            'backward': [APP.player.seek, [-1, 1]],
+            'forward': [APP.player.seek, [1]],
+            'backward': [APP.player.seek, [-1]],
             'play': [APP.player.toggle_stop, []],
             'stop': [APP.player.toggle_stop, []],
             'volume': [self.volume, None],
@@ -2261,10 +2200,10 @@ def main():
             APP.window.win_tab.change_window()
 
         if args.entry is not None:
-            APP.player.setup_stopped(
-                args.entry,
-                offset=args.offset,
-                length=args.length)
+            APP.player.setup_backend(args.entry)
+            APP.player.backend.offset = args.offset
+            APP.player.backend.length = args.length
+            APP.player.backend.update_status()
 
         APP.run()
     except SystemExit:
