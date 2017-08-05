@@ -279,9 +279,7 @@ class Player(object):
         self.delayed_play(self.backend.entry, self.backend.offset)
 
     def jump(self, offset):
-        if offset < 0:
-            offset += self.backend.length
-        self.play(self.backend.entry, offset)
+        self.backend.jump(offset)
 
     def toggle_pause(self):
         self.backend.toggle_pause()
@@ -1685,6 +1683,11 @@ class Backend(object):
         self.step = self.step + d if self.step * d > 0 else d
         self.offset = min(self.length, max(0, self.offset + self.step))
         self.show_position()
+
+    def jump(self, offset):
+        if offset < 0:
+            offset += self.length
+        self.play(self.entry, offset)
 
     def show_position(self):
         APP.counter.counter(self.offset, self.length - self.offset)
