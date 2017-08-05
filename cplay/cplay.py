@@ -1601,7 +1601,6 @@ class Backend(object):
         self.paused = False
         self.offset = 0
         self.length = 0
-        self.time_setup = None
         self.buf = ''
         self.tid = None
         self.step = 0
@@ -1623,7 +1622,6 @@ class Backend(object):
             APP.progress.progress(0)
             self.offset = 0
             self.length = 0
-        self.time_setup = time.time()
         return self.argv[0]
 
     def cleanup(self):
