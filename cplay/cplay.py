@@ -1601,7 +1601,9 @@ class Backend(object):
             if argv[i] == '{offset}':
                 argv[i] = u(offset * self.fps)
 
-        self.entry = entry
+        if entry != self.entry:
+            self.entry = entry
+            self.length = 0
         self.offset = offset
 
         logging.debug('Executing %s at offset %d', ' '.join(argv), self.offset)
@@ -1740,8 +1742,10 @@ class TimeOffsetBackend(Backend):
         match = self.re_progress.search(buf)
         if match:
             h, m, s = map(int, match.groups())
-            offset = h * 3600 + m * 60 + s
-            return offset, None
+            tail = h * 3600 + m * 60 + s
+            length = max(self.length, tail)
+            offset = length - tail
+            return offset, length
 
 
 class SoxBackend(Backend):

@@ -364,18 +364,17 @@ class TestGetTag(unittest.TestCase): pass
 
 class TestBackend(unittest.TestCase):
     def setUp(self):
-        self.backend = cplay.Backend('', '')
+        self.backend = cplay.Backend('true', '')
 
     def _test_parse_buf(self, buf, offset, length):
-        self.backend.buf = buf
-        self.backend.parse_buf()
-        self.assertEqual(self.backend.offset, offset)
-        self.assertEqual(self.backend.length, length)
+        o, l = self.backend.parse_buf(buf)
+        self.assertEqual(o, offset)
+        self.assertEqual(l, length)
 
 
 class TestFrameOffsetBackend(TestBackend):
     def setUp(self):
-        self.backend = cplay.FrameOffsetBackend('', '', 38.28)
+        self.backend = cplay.FrameOffsetBackend('true', '', 38.28)
 
     def test_parse_buf(self):
         buf = b'Frame#   520 [93576], Time: 00:13.58 [40:44.43], RVA:   off, Vol: 100(100)'
@@ -387,7 +386,7 @@ class TestFrameOffsetBackendMpp(TestBackend): pass
 
 class TestTimeOffsetBackend(TestBackend):
     def setUp(self):
-        self.backend = cplay.TimeOffsetBackend('', '')
+        self.backend = cplay.TimeOffsetBackend('true', '')
 
     def test_parse_buf(self):
         self.backend.length = 2457
@@ -400,7 +399,7 @@ class TestTimeOffsetBackend(TestBackend):
 
 class TestGSTBackend(TestBackend):
     def setUp(self):
-        self.backend = cplay.GSTBackend('', '')
+        self.backend = cplay.GSTBackend('true', '')
 
     def test_parse_buf(self):
         buf = b'Playing file:///some/file\n\nTime: 0:01:47.17 of 0:40:57.82'
@@ -409,11 +408,11 @@ class TestGSTBackend(TestBackend):
 
 class TestNoOffsetBackend(TestBackend):
     def setUp(self):
-        self.backend = cplay.NoOffsetBackend('', '')
+        self.backend = cplay.NoOffsetBackend('true', '')
 
     def test_parse_buf(self):
         buf = b'In:3.47% 00:00:12.63 [00:05:51.84] Out:557k  [   ===|==-   ]        Clip:0 '
-        self._test_parse_buf(buf, 1, 2)
+        self.assertEqual(self.backend.parse_buf(buf), None)
 
 
 class TestMPlayer(TestBackend): pass
