@@ -1661,6 +1661,9 @@ class Backend(object):
             self.length = self.offset * 2
         self.show_position()
 
+        if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
+            self._proc.terminate()
+
     def parse_buf(self, buf):
         raise NotImplementedError
 
@@ -1670,8 +1673,6 @@ class Backend(object):
         if self._proc is None:
             return STOPPED
         elif self._proc.poll() is not None:
-            return FINISHED
-        elif self.entry.maxoffset and self.offset >= self.entry.maxoffset:
             return FINISHED
         elif self.paused:
             return PAUSED
