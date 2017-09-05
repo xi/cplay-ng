@@ -6,7 +6,7 @@ written in Python. It aims to provide a power-user-friendly interface
 with simple filelist and playlist control.
 Instead of building an elaborate database of your music library,
 ``cplay`` allows you to quickly browse the filesystem and enqueue
-directories.
+directories. Cue-files and other playlists are supported.
 
 Dependencies
 ------------
@@ -39,6 +39,10 @@ Other optional components:
    -  `alsaaudio <http://pyalsaaudio.sourceforge.net/>`_
    -  ``pulseaudio-utils``, specifically the ``pactl`` command.
 
+- detect character encodings of playlists:
+
+  - `python-magic <https://github.com/ahupp/python-magic>`_
+
 Installation
 ------------
 
@@ -48,7 +52,7 @@ Installation
 
 In Debian/Ubuntu, the following install a selection of players and optional components::
 
-    $ sudo apt-get install mplayer gst123 mpg321 vorbis-tools mikmod xmp speex sox python-alsaaudio pulseaudio-utils
+    $ sudo apt-get install mplayer gst123 mpg321 vorbis-tools python-alsaaudio pulseaudio-utils python-magic
 
 Usage
 -----
@@ -62,8 +66,8 @@ When in doubt, press ``h`` for a friendly help page.
 Configuration
 -------------
 
-If you would like to change options passed to the actual players just
-edit the ``PLAYERS`` list at the end of the cplay script.
+If you would like to change the default player or the options passed to the
+players just edit the ``PLAYERS`` list at the end of the cplay script.
 
 Miscellaneous
 -------------
@@ -74,4 +78,6 @@ local. For mpeg streaming, ``splay`` is recommended.
 It is also possible to pipe a playlist to ``cplay``, as stdin will be
 reopened on startup unless it is attached to a tty.
 
-Remote control via ``/tmp/cplay-control-$USER`` -- refer to the class ``FIFOControl`` for the list of recognized commands.
+Remote control via ``/tmp/cplay-control-$USER`` -- refer to the class
+``FIFOControl`` for the list of recognized commands.
+
