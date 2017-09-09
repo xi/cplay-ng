@@ -16,24 +16,24 @@ Requirements
 Music players supported (one of the first three provides support for most
 formats):
 
-- `mplayer <http://www.mplayerhq.hu/>`_,
-- `ffplay <https://ffmpeg.org/ffplay.html>`_
-- `gst123 <http://space.twc.de/~stefan/gst123.php>`_
-- `mpg321 <http://sourceforge.net/projects/mpg321/>`_
-- `mpg123 <http://www.mpg123.org/>`_
-- `madplay <http://www.mars.org/home/rob/proj/mpeg/>`_
-- `splay <http://splay.sourceforge.net/>`_
-- `ogg123 <http://www.vorbis.com/>`_
-- `mikmod <http://www.mikmod.org/>`_
-- `xmp <http://xmp.sf.net/>`_
-- `sox <http://sox.sf.net/>`_
-- `speex <http://www.speex.org/>`_
+`mplayer <http://www.mplayerhq.hu/>`_,
+`ffplay <https://ffmpeg.org/ffplay.html>`_,
+`gst123 <http://space.twc.de/~stefan/gst123.php>`_,
+`mpg321 <http://sourceforge.net/projects/mpg321/>`_,
+`mpg123 <http://www.mpg123.org/>`_,
+`madplay <http://www.mars.org/home/rob/proj/mpeg/>`_,
+`splay <http://splay.sourceforge.net/>`_,
+`ogg123 <http://www.vorbis.com/>`_,
+`mikmod <http://www.mikmod.org/>`_,
+`xmp <http://xmp.sf.net/>`_,
+`sox <http://sox.sf.net/>`_,
+`speex <http://www.speex.org/>`_
 
 Other optional components:
 
 - reading metadata (tags): `mutagen <https://bitbucket.org/lazka/mutagen>`_
 - volume control: `alsaaudio <http://pyalsaaudio.sourceforge.net/>`_,
-  `pulseaudio-utils`` (specifically the ``pactl`` command),
+  ``pulseaudio-utils`` (specifically the ``pactl`` command),
   OSS support is part of the standard library.
 - detect character encodings of playlists:
   `python-magic <https://github.com/ahupp/python-magic>`_
