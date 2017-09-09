@@ -1227,7 +1227,7 @@ class PlaylistWindow(TagListWindow):
                 filename = args.rsplit(' ', 1)[0].strip('"\'')
             elif keyword == 'TRACK':
                 trackno = args.split(' ', 1)[0]
-                tracks.append({'no': trackno})
+                tracks.append({'no': trackno, 'filename': filename})
             elif keyword == 'TITLE':
                 if tracks:
                     tracks[-1]['title'] = args.strip('"\'')
@@ -1245,6 +1245,7 @@ class PlaylistWindow(TagListWindow):
                         + float(frames) / 75)
                 if len(tracks) > 1 and tracks[-2].get('end') is None:
                     tracks[-2]['end'] = tracks[-1]['start']
+        addedhere = set()
         for n, track in enumerate(tracks):
             trackno = track.get('no', '%2d' % (n + 1))
             title = track.get('title', track['filename'])
@@ -1257,7 +1258,8 @@ class PlaylistWindow(TagListWindow):
                         displayname=metadata,
                         offset=track.get('start', 0),
                         maxoffset=track.get('end', None)))
-                added.add(pathname)
+                addedhere.add(pathname)
+        added.update(addedhere)
 
     def add_playlist(self, pathname, added):
         self.pathname = pathname
@@ -1278,7 +1280,7 @@ class PlaylistWindow(TagListWindow):
                 APP.status('Working...')
                 self.add_dir(os.path.abspath(pathname))
             elif valid_playlist(pathname):
-                self.add_playlist(pathname)
+                self.add_playlist(pathname, set())
             elif valid_song(pathname):
                 self.append(PlaylistEntry(pathname))
             else:
