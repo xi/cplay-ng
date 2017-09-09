@@ -1227,7 +1227,10 @@ class PlaylistWindow(TagListWindow):
                 filename = args.rsplit(' ', 1)[0].strip('"\'')
             elif keyword == 'TRACK':
                 trackno = args.split(' ', 1)[0]
-                tracks.append({'no': trackno, 'filename': filename})
+                tracks.append({
+                    'no': trackno,
+                    'filename': filename,
+                    'type': args.split()[1]})
             elif keyword == 'TITLE':
                 if tracks:
                     tracks[-1]['title'] = args.strip('"\'')
@@ -1247,6 +1250,8 @@ class PlaylistWindow(TagListWindow):
                     tracks[-2]['end'] = tracks[-1]['start']
         addedhere = set()
         for n, track in enumerate(tracks):
+            if track['type'] != 'AUDIO':
+                continue
             trackno = track.get('no', '%2d' % (n + 1))
             title = track.get('title', track['filename'])
             metadata = ' - '.join(a for a in
@@ -1671,6 +1676,16 @@ class GSTPlayer(Player):
             self.set_position(position, length)
 
 
+class FFPlay(Player):
+    re_progress = re.compile(br' *(\d+)\.')
+
+    def parse_buf(self):
+        match = self.re_progress.match(self.buf)
+        if match:
+            offset = int(match.groups()[0])
+            return offset, None
+
+
 class NoOffsetPlayer(Player):
     def parse_buf(self):
         head = self.offset + 1
@@ -2013,6 +2028,10 @@ PLAYERS = [
             r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     GSTPlayer('gst123 -x -k %d %s',
             r'\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$'),
+    FFPlay('ffplay -nodisp -autoexit -ss %d %s',
+           r'^https?://|\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$'),
+    FFPlay('avplay -nodisp -autoexit -ss %d %s',
+           r'^https?://|\.(mp[123]|ogg|opus|oga|flac|wav|m4a|m4b|aiff)$'),
     NoOffsetPlayer('mikmod -q -p0 %s',
             r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
     NoOffsetPlayer('xmp -q %s',

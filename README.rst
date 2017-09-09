@@ -8,40 +8,35 @@ Instead of building an elaborate database of your music library,
 ``cplay`` allows you to quickly browse the filesystem and enqueue
 directories. Cue-files and other playlists are supported.
 
-Dependencies
+Requirements
 ------------
 
 - `Python 2.6+ <http://www.python.org/>`_
 
-Music players supported (one of the first two provides support for most
+Music players supported (one of the first three provides support for most
 formats):
 
-- various formats: `mplayer <http://www.mplayerhq.hu/>`_,
-  `gst123 <http://space.twc.de/~stefan/gst123.php>`_
-- mp3: `mpg321 <http://sourceforge.net/projects/mpg321/>`_,
-  `mpg123 <http://www.mpg123.org/>`_,
-  `madplay <http://www.mars.org/home/rob/proj/mpeg/>`_
-- ogg, flac: `ogg123 <http://www.vorbis.com/>`_
-- various: `splay <http://splay.sourceforge.net/>`_,
-  `mikmod <http://www.mikmod.org/>`_
-  `xmp <http://xmp.sf.net/>`_,
-  `sox <http://sox.sf.net/>`_,
-  `speex <http://www.speex.org/>`_
+- `mplayer <http://www.mplayerhq.hu/>`_,
+- `ffplay <https://ffmpeg.org/ffplay.html>`_
+- `gst123 <http://space.twc.de/~stefan/gst123.php>`_
+- `mpg321 <http://sourceforge.net/projects/mpg321/>`_
+- `mpg123 <http://www.mpg123.org/>`_
+- `madplay <http://www.mars.org/home/rob/proj/mpeg/>`_
+- `splay <http://splay.sourceforge.net/>`_
+- `ogg123 <http://www.vorbis.com/>`_
+- `mikmod <http://www.mikmod.org/>`_
+- `xmp <http://xmp.sf.net/>`_
+- `sox <http://sox.sf.net/>`_
+- `speex <http://www.speex.org/>`_
 
 Other optional components:
 
--  reading metadata (tags):
-
-   -  `mutagen <https://bitbucket.org/lazka/mutagen>`_
-
--  volume control:
-
-   -  `alsaaudio <http://pyalsaaudio.sourceforge.net/>`_
-   -  ``pulseaudio-utils``, specifically the ``pactl`` command.
-
+- reading metadata (tags): `mutagen <https://bitbucket.org/lazka/mutagen>`_
+- volume control: `alsaaudio <http://pyalsaaudio.sourceforge.net/>`_,
+  `pulseaudio-utils`` (specifically the ``pactl`` command),
+  OSS support is part of the standard library.
 - detect character encodings of playlists:
-
-  - `python-magic <https://github.com/ahupp/python-magic>`_
+  `python-magic <https://github.com/ahupp/python-magic>`_
 
 Installation
 ------------
@@ -50,7 +45,7 @@ Installation
 
     $ make install
 
-In Debian/Ubuntu, the following install a selection of players and optional components::
+In Debian/Ubuntu, the following installs a selection of players and optional components::
 
     $ sudo apt-get install mplayer gst123 mpg321 vorbis-tools python-alsaaudio pulseaudio-utils python-magic
 
