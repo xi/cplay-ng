@@ -1322,14 +1322,16 @@ class Playlist(object):
         for n, track in enumerate(tracks):
             trackno = track.get('no', '%2d' % (n + 1))
             title = track.get('title', track['filename'])
-            entry = PlaylistEntry(
-                os.path.join(dirname, track['filename']),
-                displayname=title,
-                offset=track.get('start', 0),
-                maxoffset=track.get('end', None))
-            entry.metadata = ' - '.join(a for a in
+            pathname = os.path.join(dirname, track['filename'])
+            if os.path.exists(pathname):
+                entry = PlaylistEntry(
+                    pathname,
+                    displayname=title,
+                    offset=track.get('start', 0),
+                    maxoffset=track.get('end', None))
+                entry.metadata = ' - '.join(a for a in
                     (trackno, track.get('artist', artist), title, album) if a)
-            self.append(entry)
+                self.append(entry)
 
 
     def add_playlist(self, pathname):
