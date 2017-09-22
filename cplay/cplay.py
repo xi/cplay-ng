@@ -1262,7 +1262,7 @@ class Playlist(object):
         subdirs = []
         for filename in sorted(os.listdir(directory)):
             pathname = os.path.join(directory, filename)
-            if valid_playlist(filename):
+            if valid_playlist(filename) and not foundplaylist:
                 self.add_playlist(pathname)
                 foundplaylist = True
             elif valid_song(filename):
