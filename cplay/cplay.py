@@ -1333,7 +1333,6 @@ class Playlist(object):
                     (trackno, track.get('artist', artist), title, album) if a)
                 self.append(entry)
 
-
     def add_playlist(self, pathname):
         self.pathname = pathname
         if re.search(r'\.cue$', pathname, re.IGNORECASE):
@@ -2242,14 +2241,14 @@ BACKENDS = [
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
         r'mkv|flv|avi|wmv)$'),
     GSTBackend('gst123 -k {offset} {file}',
-               r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+               r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     FFPlay('ffplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
            r'mkv|flv|avi|wmv)$'),
     FFPlay('avplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
+           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
            r'mkv|flv|avi|wmv)$'),
     NoOffsetBackend('mikmod -q -p0 {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
@@ -2260,7 +2259,7 @@ BACKENDS = [
                     r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
     NoBufferBackend(
         'cvlc --play-and-exit --no-loop --start-time {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
         r'mkv|flv|avi|wmv)$'),
 ]
