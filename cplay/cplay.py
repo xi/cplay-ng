@@ -1811,24 +1811,11 @@ class NoBufferBackend(Backend):
 
 class MPlayer(Backend):
     re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
-    eq_cur = 0
-
-    def play(self, entry, offset):
-        Backend.play(self, entry, offset)
-        self.mplayer_send('seek %g\n' % offset)
 
     def parse_buf(self, buf):
         match = self.re_progress.search(buf)
         if match:
             return map(int, match.groups())
-
-    def mplayer_send(self, arg):
-        logging.debug('Sending command %s' % arg)
-        try:
-            os.write(self.stdin_w, (arg + '\n').encode(CODE))
-        except IOError:
-            logging.debug('Can\'t write to stdin_w.')
-            APP.status.status(_('ERROR: Cannot send commands to mplayer!'), 3)
 
 
 class Timeout(object):
@@ -2234,10 +2221,9 @@ BACKENDS = [
                           r'\.mp[cp+]$'),
     TimeOffsetBackend('madplay -v --display-time=remaining -s {offset} {file}',
                       r'\.mp[123]$'),
-    MPlayer('mplayer -slave -vc null -vo null {file}',
-            r'^https?://|\.(mp[1234]|ogg|oga|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-            r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
-            r'mkv|flv|avi|wmv)$'),
+    MPlayer('mplayer -ss {offset} {file}',
+            r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+            r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$'),
     GSTBackend('gst123 -k {offset} {file}',
                r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
