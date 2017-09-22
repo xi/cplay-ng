@@ -1,8 +1,10 @@
 language: python
 python:
   - "2.7"
+  - "3.5"
+  - "pypy"
 install:
-  - "pip install tox"
+  - "pip install tox-travis"
 script: tox
 os:
   - linux
