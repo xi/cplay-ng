@@ -1818,6 +1818,19 @@ class MPlayer(Backend):
             return map(int, match.groups())
 
 
+class MPV(Backend):
+    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+)'
+                             br' / (\d+):(\d+):(\d+)')
+
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
+        if match:
+            ph, pm, ps, lh, lm, ls = map(int, match.groups())
+            offset = ph * 3600 + pm * 60 + ps
+            length = lh * 3600 + lm * 60 + ls
+            return offset, length
+
+
 class Timeout(object):
     def __init__(self):
         self._next = 0
@@ -2224,6 +2237,10 @@ BACKENDS = [
     MPlayer('mplayer -ss {offset} {file}',
             r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
             r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$'),
+    MPV('mpv --start {offset} {file}',
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
+        r'mkv|flv|avi|wmv)$'),
     GSTBackend('gst123 -k {offset} {file}',
                r'^https?://|\.(mp[1234]|ogg|opus|oga|flac|wav|m4a|m4b|aiff|'
                r'mkv|flv|avi|wmv)$'),
