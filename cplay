@@ -1815,11 +1815,19 @@ class AlsaMixer(Mixer):
     def __init__(self):
         import alsaaudio
         self._Mixer = alsaaudio.Mixer
-        self._channels = [(name, cardindex)
-            for cardindex, _card in enumerate(alsaaudio.cards())
-                for name in alsaaudio.mixers(cardindex)
-                if 'Capture Volume' not in
-                self._Mixer(name, cardindex=cardindex).volumecap()]
+        self._channels = []
+        # HACK: guess valid card indexes (0 could be disabled)
+        for cardindex in range(3):
+            try:
+                for name in alsaaudio.mixers(cardindex):
+                    volumecap = self._Mixer(
+                            name, cardindex=cardindex).volumecap()
+                    if volumecap and 'Capture Volume' not in volumecap:
+                        self._channels.append((name, cardindex))
+            except alsaaudio.ALSAAudioError:
+                pass
+        if not self._channels:
+            raise ValueError
         self._mixer = self._Mixer(
                 control=self._channels[0][0], cardindex=self._channels[0][1])
 
@@ -1847,6 +1855,8 @@ class PulseMixer(Mixer):
     def __init__(self):
         self._channels = [('Master', sink) for sink
                 in re.findall(b'Sink #([0-9]+)', self._list_sinks())]
+        if not self._channels:
+            raise ValueError
         self.set(self.get())
 
     def _list_sinks(self):
