@@ -2038,8 +2038,8 @@ PLAYERS = [
             r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     # raw FLAC workaround.
     # https://lists.mplayerhq.hu/pipermail/mplayer-users/2010-November/081557.html
-    MPlayer('mplayer -demuxer lavf --ss %d %s', r'\.flac$'),
-    MPlayer('mplayer --ss %d %s',
+    MPlayer('mplayer -demuxer lavf -ss %d %s', r'\.flac$'),
+    MPlayer('mplayer -ss %d %s',
             r'^https?://|\.(mp[123cp+]|ogg|flac|spx|cdr|wav|aiff|ape|m4a|wma'
             r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     GSTPlayer('gst123 -x -k %d %s',
