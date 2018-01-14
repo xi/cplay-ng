@@ -1655,8 +1655,8 @@ class MPV(Player):
     re_progress = re.compile(
             br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
 
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
+    def parse_buf(self):
+        match = self.re_progress.search(self.buf)
         if match:
             ph, pm, ps, lh, lm, ls = map(int, match.groups())
             position = ph * 3600 + pm * 60 + ps
