@@ -1644,22 +1644,24 @@ class MPlayer(Player):
     # e.g.: 'A:   3.2 (03.1) of 306.8 (05:06.7)  0.4%'
     re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
 
-    def play(self):
-        Player.play(self)
-        # seek <value> 2: seek to absolute position <value> (seconds)
-        self.mplayer_send('seek %g 2\n' % self.offset)
-
     def parse_buf(self):
         match = self.re_progress.search(self.buf)
         if match:
             position, length = [int(x) for x in match.groups()]
             self.set_position(position, length)
 
-    def mplayer_send(self, arg):
-        try:
-            os.write(self.stdin_w, (arg + '\n').encode('utf8'))
-        except IOError:
-            APP.status('ERROR: Cannot send commands to mplayer!', 3)
+
+class MPV(Player):
+    re_progress = re.compile(
+            br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
+
+    def parse_buf(self, buf):
+        match = self.re_progress.search(buf)
+        if match:
+            ph, pm, ps, lh, lm, ls = map(int, match.groups())
+            position = ph * 3600 + pm * 60 + ps
+            length = lh * 3600 + lm * 60 + ls
+            self.set_position(position, length)
 
 
 class GSTPlayer(Player):
@@ -2031,10 +2033,13 @@ PLAYERS = [
             r'(^https?://|\.mp[123]$)', 38.28),
     TimeOffsetPlayer('madplay -v --display-time=remaining -s %d %s',
             r'\.mp[123]$'),
+    MPV('mpv --no-video --start %d %s',
+            r'^https?://|\.(mp[123cp+]|ogg|flac|spx|cdr|wav|aiff|ape|m4a|wma'
+            r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     # raw FLAC workaround.
     # https://lists.mplayerhq.hu/pipermail/mplayer-users/2010-November/081557.html
-    MPlayer('mplayer -slave -vc null -vo null -demuxer lavf %s', r'\.flac$'),
-    MPlayer('mplayer -slave -vc null -vo null %s',
+    MPlayer('mplayer -demuxer lavf --ss %d %s', r'\.flac$'),
+    MPlayer('mplayer --ss %d %s',
             r'^https?://|\.(mp[123cp+]|ogg|flac|spx|cdr|wav|aiff|ape|m4a|wma'
             r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     GSTPlayer('gst123 -x -k %d %s',
