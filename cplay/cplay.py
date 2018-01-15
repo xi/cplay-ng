@@ -1987,24 +1987,27 @@ class AlsaMixer(Mixer):
 class PulseMixer(Mixer):
     def __init__(self):
         Mixer.__init__(self)
-        self._channels = [('Master',)]
-        self._sink = re.search(b'Sink #([0-9]+)', self._list_sinks()).group(1)
+        self._channels = [('Master', sink) for sink in self._list_sinks()]
+        if not self._channels:
+            raise ValueError
         self.set(self.get())
 
     def _list_sinks(self):
-        return subprocess.Popen(
-            ['pactl', 'list', 'sinks'],
-            shell=False, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE).communicate()[0]
+        result = subprocess.Popen(['pactl', 'list', 'sinks'],
+                shell=False, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
+        return dict((re.match(b'Sink #([0-9]+)', a).group(1), a)
+                for a in result)
 
     def get(self):
-        return int(re.search(
-            b'Volume: .* ([0-9]+)%',
-            self._list_sinks()).group(1))
+        return int(re.search(br'^\s+Volume: .* ([0-9]+)%',
+                self._list_sinks()[self._channels[0][1]],
+                flags=re.MULTILINE).group(1))
 
     def set(self, vol):
         subprocess.check_call([
-            'pactl', '--', 'set-sink-volume', self._sink, '%s%%' % vol])
+                'pactl', '--', 'set-sink-volume', self._channels[0][1],
+                '%s%%' % vol])
 
     def cue(self, inc):
         self.set('%+d' % inc)
