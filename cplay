@@ -1862,7 +1862,7 @@ class PulseMixer(Mixer):
     def _list_sinks(self):
         result = subprocess.Popen(['pactl', 'list', 'sinks'],
                 shell=False, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE).communicate()[0].split('\n\n')
+                stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
         return dict((re.match(b'Sink #([0-9]+)', a).group(1), a)
                 for a in result)
 
