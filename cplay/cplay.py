@@ -634,10 +634,11 @@ class TabWindow(Window):
     def help(self):
         if self.children[self.active_child] == self.win_help:
             self.change_window(self.win_last)
+            APP.status.restore_default_status()
         else:
             self.win_last = self.children[self.active_child]
             self.change_window(self.win_help)
-            APP.status.status(__version__, 2)
+            APP.status.status(__version__)
 
 
 class ListWindow(Window):
@@ -802,7 +803,7 @@ class ListWindow(Window):
 class HelpWindow(ListWindow):
     def __init__(self, parent):
         ListWindow.__init__(self, parent)
-        self.name = _('Help')
+        self.name = _('Help: ')
         self.keymap.bind('q', self.parent.help, ())
         self.buffer = _("""\
   Global                               t, T  : tag current/regex
