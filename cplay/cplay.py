@@ -1967,11 +1967,20 @@ class AlsaMixer(Mixer):
     def __init__(self):
         Mixer.__init__(self)
         import alsaaudio
-        self._channels = [
-            (name, alsaaudio.Mixer(name))
-            for name in ['Master', 'PCM']
-            if name in alsaaudio.mixers()
-        ]
+        self._channels = []
+        # HACK: guess valid card indexes (0 could be disabled)
+        for cardindex in range(3):
+            try:
+                for name in alsaaudio.mixers(cardindex):
+                    mixer = alsaaudio.Mixer(name, cardindex=cardindex)
+                    volumecap = mixer.volumecap()
+                    if volumecap and 'Capture Volume' not in volumecap:
+                        full_name = '%i %s' % (cardindex, name)
+                        self._channels.append((full_name, mixer))
+            except alsaaudio.ALSAAudioError:
+                pass
+        if not self._channels:
+            raise ValueError
 
     def get(self):
         return self._channels[0][1].getvolume()[0]
