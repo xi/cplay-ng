@@ -2249,7 +2249,7 @@ BACKENDS = [
     MPlayer('mplayer -ss {offset} {file}',
             r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
             r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$'),
-    MPV('mpv --start {offset} {file}',
+    MPV('mpv --audio-display=no --start {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
         r'mkv|flv|avi|wmv)$'),
