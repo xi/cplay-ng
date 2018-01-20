@@ -2033,7 +2033,7 @@ PLAYERS = [
             r'(^https?://|\.mp[123]$)', 38.28),
     TimeOffsetPlayer('madplay -v --display-time=remaining -s %d %s',
             r'\.mp[123]$'),
-    MPV('mpv --no-video --start %d %s',
+    MPV('mpv --audio-display=no --start %d %s',
             r'^https?://|\.(mp[123cp+]|ogg|flac|spx|cdr|wav|aiff|ape|m4a|wma'
             r'|mod|xm|fm|s3m|med|col|669|it|mtm|stm|au)$'),
     # raw FLAC workaround.
