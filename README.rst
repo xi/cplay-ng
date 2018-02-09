@@ -8,6 +8,9 @@ Instead of building an elaborate database of your music library,
 ``cplay`` allows you to quickly browse the filesystem and enqueue
 directories. Cue-files and other playlists are supported.
 
+.. image:: screenshot.png
+   :alt: screenshot of cplay with file browser
+
 Requirements
 ------------
 
