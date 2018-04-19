@@ -72,7 +72,7 @@ Configuration
 =============
 
 If you would like to change options passed to the actual players just edit
-the ``PLAYERS`` list in the cplay-ng script or put the ``PLAYERS``
+the ``BACKENDS`` list in the cplay-ng script or put the ``BACKENDS``
 definition in either ``~/.cplayrc`` or ``/etc/cplayrc``. If one of these
 files is available, it is executed by cplay-ng before initialization.
 
