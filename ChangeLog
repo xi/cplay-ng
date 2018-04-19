@@ -1,5 +1,12 @@
 2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
 
+  *** 2.4.1 released ***
+
+  - fix an issue with translation
+  - fix outdated references in README
+
+2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
+
   *** 2.4.0 released ***
 
   - do not add individual files when there are playlists

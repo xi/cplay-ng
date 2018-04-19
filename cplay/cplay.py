@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from __future__ import unicode_literals
 
-__version__ = 'cplay-ng 2.4.0'
+__version__ = 'cplay-ng 2.4.1'
 
 import os
 import re
