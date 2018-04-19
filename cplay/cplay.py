@@ -1557,7 +1557,7 @@ class PlaylistWindow(TagListWindow, Playlist):
     def get_title(self):
         space_out = lambda value, s: s if value else ' ' * len(s)
         self.name = _('Playlist %s %s %s') % (
-            space_out(self.repeat, _('[repeat]')),
+            space_out(self.repeat, _('[repeat all]')),
             space_out(self.random, _('[random]')),
             space_out(self.stop, _('[stop]')))
         return ListWindow.get_title(self)
