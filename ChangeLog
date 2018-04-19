@@ -1,4 +1,13 @@
-2017-06-05  Tobias Bengfirt <tobias.bengfort@posteo.de>
+2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+  *** 2.4.0 released ***
+
+  - do not add individual files when there are playlists
+  - add support for cue files
+  - add mpv backend
+  - a lot of refactoring an small fixes
+
+2017-06-05  Tobias Bengfort <tobias.bengfort@posteo.de>
 
   *** 2.3.0 released ***
 
