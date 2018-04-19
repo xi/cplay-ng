@@ -85,6 +85,7 @@ class Application(object):
         self.tcattr = None
         self.restricted = False
         self.video = False
+        self.quit_after_playlist = False
         self.fifo = ('%s/cplay-control-%s' % (
             os.environ.get('TMPDIR', '/tmp'),
             os.environ['USER']))
@@ -151,10 +152,12 @@ class Application(object):
                     # end of playlist hack
                     if not self.playlist.stop:
                         entry = self.playlist.change_active_entry(1)
-                        if entry is None:
-                            self.player.stop()
-                        else:
+                        if entry is not None:
                             self.player.play(entry)
+                        elif self.quit_after_playlist:
+                            self.quit()
+                        else:
+                            self.player.stop()
                     else:
                         self.player.stop()
             R = [sys.stdin, self.player.backend.stdout_r,
@@ -2149,6 +2152,8 @@ def parse_args():
                         help=_('Start in repeat mode.'))
     parser.add_argument('-R', '--random', action='store_true',
                         help=_('Start in random mode.'))
+    parser.add_argument('-q', '--autoexit', action='store_true',
+                        help=_('quit at the end of the playlist'))
     parser.add_argument('-m', '--toggle-mixer', action='store_true',
                         help=_('Switch mixer channels.'))
     parser.add_argument('-V', '--video', action='store_true',
@@ -2208,6 +2213,8 @@ def main():
             APP.playlist.command_toggle_repeat()
         if args.random:
             APP.playlist.command_toggle_random()
+        if args.autoexit:
+            APP.quit_after_playlist = True
         if args.toggle_mixer:
             APP.player.mixer('toggle')
         logging.debug('Preferred encoding is %s' % u(CODE))
