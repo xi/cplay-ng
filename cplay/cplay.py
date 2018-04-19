@@ -53,8 +53,11 @@ import six
 locale.setlocale(locale.LC_ALL, '')
 CODE = locale.getpreferredencoding()
 
-t = gettext.translation('cplay', resource_filename(__name__, 'i18n'))
-_ = t.gettext
+try:
+    t = gettext.translation('cplay', resource_filename(__name__, 'i18n'))
+    _ = t.gettext
+except IOError:
+    _ = lambda x: x
 
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
