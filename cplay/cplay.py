@@ -2207,7 +2207,7 @@ def main():
             APP.playlist.command_toggle_random()
         if args.toggle_mixer:
             APP.player.mixer('toggle')
-        logging.debug('Preferred locale is %s' % u(CODE))
+        logging.debug('Preferred encoding is %s' % u(CODE))
 
         if args.files or playlist:
             for i in args.files or playlist:
