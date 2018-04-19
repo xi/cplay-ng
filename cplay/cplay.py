@@ -2224,6 +2224,7 @@ def main():
                 i = os.path.abspath(i) if os.path.exists(i) else i
                 APP.playlist.add(i)
             APP.window.win_tab.change_window()
+            APP.player.next_prev_song(1)
         elif args.buffer:
             APP.playlist.buffer = args.buffer
             APP.window.win_tab.change_window()
