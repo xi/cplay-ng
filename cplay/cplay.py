@@ -2259,18 +2259,18 @@ BACKENDS = [
                       r'\.mp[123]$'),
     MPlayer('mplayer -ss {offset} {file}',
             r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-            r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b)$'),
+            r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
     MPV('mpv --audio-display=no --start {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
-        r'mkv|flv|avi|wmv)$'),
+        r'mkv|flv|avi|wmv|webm)$'),
     GSTBackend('gst123 -k {offset} {file}',
                r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-               r'mkv|flv|avi|wmv)$'),
+               r'mkv|flv|avi|wmv|webm)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     FFPlay('ffplay -nodisp -autoexit -ss {offset} {file}',
            r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-           r'mkv|flv|avi|wmv)$'),
+           r'mkv|flv|avi|wmv|webm)$'),
     FFPlay('avplay -nodisp -autoexit -ss {offset} {file}',
            r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
            r'mkv|flv|avi|wmv)$'),
@@ -2285,7 +2285,7 @@ BACKENDS = [
         'cvlc --play-and-exit --no-loop --start-time {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
-        r'mkv|flv|avi|wmv)$'),
+        r'mkv|flv|avi|wmv|webm)$'),
 ]
 RE_VIDEO = r'\.(mkv|flv|avi|wmv|mp4)$'
 
