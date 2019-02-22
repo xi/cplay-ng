@@ -1285,7 +1285,7 @@ class Playlist(object):
         if re.match(r'^(#.*)?$', line):
             return
         if re.match(r'^(/|https?://)', line):
-            self.append(PlaylistEntry(self.fix_url(line)))
+            self.append(PlaylistEntry(line))
         else:
             dirname = os.path.dirname(self.pathname)
             self.append(PlaylistEntry(os.path.join(dirname, line)))
@@ -1294,7 +1294,7 @@ class Playlist(object):
         # FIXME: support title & length
         m = re.match(r'File(\d+)=(.*)', line)
         if m:
-            self.append(PlaylistEntry(self.fix_url(m.group(2))))
+            self.append(PlaylistEntry(m.group(2)))
 
     def add_cue(self, pathname):
         tracks = []
@@ -1373,9 +1373,6 @@ class Playlist(object):
             self._add(pathname, filename=filename, quiet=quiet)
         except Exception as e:
             APP.status.status(e, 2)
-
-    def fix_url(self, url):
-        return re.sub(r'(https?://[^/]+)/?(.*)', r'\1/\2', url)
 
     def change_active_entry(self, direction):
         if not self.buffer:
