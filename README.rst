@@ -34,7 +34,6 @@ For playback, install one or more of the following players:
 -  `ffplay <https://ffmpeg.org/ffplay.html>`_
 -  `avplay <https://www.libav.org/avplay.html>`_
 -  `sox <http://sox.sf.net/>`_
--  `vlc <https://www.videolan.org/vlc/>`_
 -  `mpg321 <http://sourceforge.net/projects/mpg321/>`_
 -  `ogg123 <http://www.vorbis.com/>`_
 -  `mpg123 <http://www.mpg123.org/>`_
