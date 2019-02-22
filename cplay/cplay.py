@@ -3,7 +3,7 @@
 
 """cplay - A curses front-end for various audio players
 Copyright (C) 1998-2005 Ulf Betlehem <flu@iki.fi>
-              2005-2010 see AUTHORS
+              2005-2019 see AUTHORS
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -57,7 +57,8 @@ try:
     t = gettext.translation('cplay', resource_filename(__name__, 'i18n'))
     _ = t.gettext
 except IOError:
-    _ = lambda x: x
+    def _(x):
+        return x
 
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 MACRO = {}
@@ -173,10 +174,12 @@ class Application(object):
                 APP.keymapstack.process(c)
             # backend
             if self.player.backend.stderr_r in r:
-                self.player.backend.parse_progress(self.player.backend.stderr_r)
+                self.player.backend.parse_progress(
+                    self.player.backend.stderr_r)
             # backend
             if self.player.backend.stdout_r in r:
-                self.player.backend.parse_progress(self.player.backend.stdout_r)
+                self.player.backend.parse_progress(
+                    self.player.backend.stdout_r)
             # remote
             if self.control.fd in r:
                 self.control.handle_command()
@@ -405,8 +408,8 @@ class Window(object):
         return getattr(self.w, name)
 
     def newwin(self):
-        return curses.newwin(curses.tigetnum('lines'),
-                             curses.tigetnum('cols'), 0, 0)
+        return curses.newwin(
+            curses.tigetnum('lines'), curses.tigetnum('cols'), 0, 0)
 
     def resize(self):
         self.w = self.newwin()
@@ -508,8 +511,8 @@ class CounterWindow(Window):
         self.mode = self.REMAINING
 
     def newwin(self):
-        return curses.newwin(1, 11, self.parent.rows - 1,
-                             self.parent.cols - 11)
+        return curses.newwin(
+            1, 11, self.parent.rows - 1, self.parent.cols - 11)
 
     def update(self):
         h, s = divmod(self.values[self.mode], 3600)
@@ -523,8 +526,9 @@ class CounterWindow(Window):
 
     def counter(self, elapsed, remaining):
         if elapsed < 0 or remaining < 0:
-            logging.debug('Backend reported negative value '
-                          'for (remaining) playing time.')
+            logging.debug(
+                'Backend reported negative value for (remaining) playing '
+                'time.')
         else:
             self.values[0] = elapsed
             self.values[1] = remaining
@@ -662,20 +666,22 @@ class ListWindow(Window):
         self.keymap.bind(['J', curses.KEY_NPAGE], self.cursor_npage, ())
         self.keymap.bind(['g', curses.KEY_HOME], self.cursor_home, ())
         self.keymap.bind(['G', curses.KEY_END], self.cursor_end, ())
-        self.keymap.bind(['?', 18], self.start_search,
-                         (_('backward-isearch'), -1))
-        self.keymap.bind(['/', 19], self.start_search,
-                         (_('forward-isearch'), 1))
+        self.keymap.bind(
+            ['?', 18], self.start_search, (_('backward-isearch'), -1))
+        self.keymap.bind(
+            ['/', 19], self.start_search, (_('forward-isearch'), 1))
         self.keymap.bind(['>'], self.hscroll, (8, ))
         self.keymap.bind(['<'], self.hscroll, (-8, ))
 
     def newwin(self):
-        return curses.newwin(self.parent.rows - 2, self.parent.cols,
-                             self.parent.ypos + 2, self.parent.xpos)
+        return curses.newwin(
+            self.parent.rows - 2, self.parent.cols,
+            self.parent.ypos + 2, self.parent.xpos)
 
     def update(self, force=True):
         self.bufptr = max(0, min(self.bufptr, len(self.buffer) - 1))
-        first, last = self.scrptr, self.scrptr + self.rows - 1
+        first = self.scrptr
+        last = self.scrptr + self.rows - 1
         if self.bufptr < first:
             first = self.bufptr
         if self.bufptr > last:
@@ -709,9 +715,11 @@ class ListWindow(Window):
             self.refresh()
 
     def get_title(self, data=''):
-        pos = '%s-%s/%s' % (self.scrptr + min(1, len(self.buffer)),
-                            min(self.scrptr + self.rows, len(self.buffer)),
-                            len(self.buffer))
+        pos = '%s-%s/%s' % (
+            self.scrptr + min(1, len(self.buffer)),
+            min(self.scrptr + self.rows, len(self.buffer)),
+            len(self.buffer)
+        )
         width = self.cols - len(pos) - 2
         data = cut(data, width - len(self.name), left=True)
         return '%-*s  %s' % (width, cut(self.name + data, width), pos)
@@ -845,17 +853,14 @@ class ListEntry(object):
         self.maxoffset = None
 
     def __str__(self):
-        mark = '*' if self.tagged else ' '
+        mark = '#' if self.tagged else ' '
         return '%s %s%s' % (mark, self.vp(), self.slash)
 
     def vp(self):
         return self.vps[0][1](self)
 
     def vp_filename(self):
-        if self.filename:
-            return self.filename
-        else:
-            return self.pathname
+        return self.filename or self.pathname
 
     def vp_pathname(self):
         return self.pathname
@@ -904,22 +909,21 @@ class TagListWindow(ListWindow):
         APP.input.start(_('shell$ '), colon=False)
 
     def stop_shell(self):
-        s = APP.input.string
         curses.endwin()
         sys.stderr.write('\n')
         argv = [x.pathname for x in self.get_tagged()]
         if not argv and self.current():
             argv.append(self.current().pathname)
-        ret_value = subprocess.call([s, '--'] + argv, shell=True)
-        if ret_value != 0:
-            sys.stderr.write('\nshell returned %s, press return!\n' %
-                             ret_value)
+        argv = [APP.input.string, '--'] + argv
+        result = subprocess.call(argv, shell=True)
+        if result == 0:
+            APP.status.status(_('Command successfully executed.\n'), 2)
+            APP.window.update()
+        else:
+            sys.stderr.write('\nshell returned %s, press return!\n' % result)
             sys.stdin.readline()
             APP.window.update()
             APP.status.restore_default_status()
-        else:
-            APP.status.status(_('Command successfully executed.\n'), 2)
-            APP.window.update()
         APP.cursor(0)
 
     def complete_shell(self, line):
@@ -927,7 +931,7 @@ class TagListWindow(ListWindow):
 
     def complete_generic(self, line, quote=False):
         if quote:
-            s = re.sub(r".*[^\\][ \''()\[\]{}$`]", '', line)
+            s = re.sub(r'.*[^\\][ \'"()\[\]{}$`]', '', line)
             s, part = re.sub(r'\\', '', s), line[:len(line) - len(s)]
         else:
             s, part = line, ''
@@ -946,7 +950,7 @@ class TagListWindow(ListWindow):
                         lm = lm[:i]
                         break
         if quote:
-            lm = re.sub(r"([ \''()\[\]{}$`])", r'\\\1', lm)
+            lm = re.sub(r'([ \'"()\[\]{}$`])', r'\\\1', lm)
         return part + lm
 
     def command_change_viewpoint(self, cls=ListEntry):
@@ -1012,10 +1016,10 @@ class FilelistWindow(TagListWindow):
         self.mtime_when = 0
         self.mtime = None
         self.mode = self.DIR
-        self.keymap.bind(['\n', curses.KEY_ENTER],
-                         self.command_chdir_or_play, ())
-        self.keymap.bind(['.', 127, curses.KEY_BACKSPACE],
-                         self.command_chparentdir, ())
+        self.keymap.bind(
+            ['\n', curses.KEY_ENTER], self.command_chdir_or_play, ())
+        self.keymap.bind(
+            ['.', 127, curses.KEY_BACKSPACE], self.command_chparentdir, ())
         self.keymap.bind('a', self.command_add_recursively, ())
         self.keymap.bind('o', self.command_goto, ())
         self.keymap.bind('s', self.command_search_recursively, ())
@@ -1218,15 +1222,16 @@ class FilelistWindow(TagListWindow):
         self.listdir()
 
     def command_add_recursively(self):
-        l = self.get_tagged()
-        if not l:
+        entries = self.get_tagged()
+        if not entries:
             c = self.current()
             APP.playlist.add(c.pathname, filename=c.filename)
             self.cursor_move(1)
             return
         APP.status.status(_('Adding tagged files'), 1)
-        for entry in l:
-            APP.playlist.add(entry.pathname, filename=entry.filename, quiet=True)
+        for entry in entries:
+            APP.playlist.add(
+                entry.pathname, filename=entry.filename, quiet=True)
             entry.tagged = False
         self.update()
 
@@ -1321,8 +1326,8 @@ class Playlist(object):
                         artist = args.strip('"\'')
                 elif line.strip().startswith('INDEX 01') and tracks:
                     mins, secs, frames = args.split(' ')[1].split(':')
-                    tracks[-1]['start'] = (int(mins) * 60 + int(secs)
-                            + float(frames) / 75)
+                    tracks[-1]['start'] = (
+                        int(mins) * 60 + int(secs) + float(frames) / 75)
                     if len(tracks) > 1 and tracks[-2].get('end') is None:
                         tracks[-2]['end'] = tracks[-1]['start']
         for n, track in enumerate(tracks):
@@ -1335,8 +1340,9 @@ class Playlist(object):
                     displayname=title,
                     offset=track.get('start', 0),
                     maxoffset=track.get('end', None))
-                entry.metadata = ' - '.join(a for a in
-                    (trackno, track.get('artist', artist), title, album) if a)
+                artist = track.get('artist', artist)
+                entry.metadata = ' - '.join(
+                    a for a in (trackno, artist, title, album) if a)
                 self.append(entry)
 
     def add_playlist(self, pathname):
@@ -1472,14 +1478,14 @@ class Playlist(object):
         if not self.buffer:
             return
         current_entry = self.current()
-        l = self.get_tagged()
-        if not l or current_entry.tagged:
+        entries = self.get_tagged()
+        if not entries or current_entry.tagged:
             return
         self.buffer = self.not_tagged(self.buffer)
         self.bufptr = self.buffer.index(current_entry)
         if after:
             self.bufptr += 1
-        self.buffer[self.bufptr:self.bufptr] = l
+        self.buffer[self.bufptr:self.bufptr] = entries
         self.update()
 
     def command_shuffle(self):
@@ -1507,10 +1513,10 @@ class Playlist(object):
     def command_toggle_stop(self):
         self.toggle('stop', _('Stop playlist: %s'))
 
-    def toggle(self, attr, format):
+    def toggle(self, attr, msg):
         setattr(self, attr, not getattr(self, attr))
-        APP.status.status(format % (_('on') if getattr(self, attr)
-                                    else _('off')), 1)
+        APP.status.status(msg % (
+            _('on') if getattr(self, attr) else _('off')), 1)
 
     def command_save_playlist(self):
         if APP.restricted:
@@ -1557,7 +1563,9 @@ class PlaylistWindow(TagListWindow, Playlist):
         TagListWindow.command_change_viewpoint(self, cls)
 
     def get_title(self):
-        space_out = lambda value, s: s if value else ' ' * len(s)
+        def space_out(value, s):
+            return s if value else ' ' * len(s)
+
         self.name = _('Playlist %s %s %s') % (
             space_out(self.repeat, _('[repeat all]')),
             space_out(self.random, _('[random]')),
@@ -1613,10 +1621,11 @@ class Backend(object):
         logging.debug('Executing %s at offset %d', ' '.join(argv), self.offset)
 
         try:
-            self._proc = subprocess.Popen(argv,
-                                          stdout=self.stdout_w,
-                                          stderr=self.stderr_w,
-                                          stdin=self.stdin_r)
+            self._proc = subprocess.Popen(
+                argv,
+                stdout=self.stdout_w,
+                stderr=self.stderr_w,
+                stdin=self.stdin_r)
         except OSError as err:
             logging.error('play() %s', err)
             return False
@@ -1698,8 +1707,8 @@ class Backend(object):
 
     def show_position(self):
         APP.counter.counter(self.offset, self.length - self.offset)
-        APP.progress.progress((float(self.offset) / self.length)
-                              if self.length else 0)
+        APP.progress.progress(
+            (float(self.offset) / self.length) if self.length else 0)
 
     def update_status(self):
         if self.get_state() is STOPPED:
@@ -1717,8 +1726,8 @@ class FrameOffsetBackend(Backend):
 
     def parse_buf(self, buf):
         def parse_time(s):
-            l = reversed(s.split(b':'))
-            return sum([int(x) * 60 ** i for i, x in enumerate(l)])
+            parts = reversed(s.split(b':'))
+            return sum([int(x) * 60 ** i for i, x in enumerate(parts)])
 
         match = self.re_progress.search(buf)
         if match:
@@ -1753,8 +1762,8 @@ class TimeOffsetBackend(Backend):
 
 
 class SoxBackend(Backend):
-    re_progress = re.compile(br'(\d+):(\d+):(\d+)\.\d+ '
-                             br'\[(\d+):(\d+):(\d+)\.\d+\]')
+    re_progress = re.compile(
+        br'(\d+):(\d+):(\d+)\.\d+ \[(\d+):(\d+):(\d+)\.\d+\]')
 
     def parse_buf(self, buf):
         match = self.re_progress.search(buf)
@@ -1766,8 +1775,8 @@ class SoxBackend(Backend):
 
 
 class GSTBackend(Backend):
-    re_progress = re.compile(br'Time: (\d+):(\d+):(\d+).(\d+)'
-                             br' of (\d+):(\d+):(\d+).(\d+)')
+    re_progress = re.compile(
+        br'Time: (\d+):(\d+):(\d+).(\d+) of (\d+):(\d+):(\d+).(\d+)')
 
     def parse_buf(self, buf):
         match = self.re_progress.search(buf)
@@ -1821,8 +1830,7 @@ class MPlayer(Backend):
 
 
 class MPV(Backend):
-    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+)'
-                             br' / (\d+):(\d+):(\d+)')
+    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
 
     def parse_buf(self, buf):
         match = self.re_progress.search(buf)
@@ -1883,7 +1891,7 @@ class FIFOControl(object):
 
     def handle_command(self):
         argv = self.fd.readline().decode(CODE).strip().split(' ', 1)
-        if argv[0] in self.commands.keys():
+        if argv[0] in self.commands:
             f, a = self.commands[argv[0]]
             if a is None:
                 a = argv[1:]
@@ -1914,6 +1922,10 @@ class MacroController(object):
 class Mixer(object):
     def __init__(self):
         self._channels = []
+
+    @property
+    def channel(self):
+        return self._channels[0][1]
 
     def get(self):
         raise NotImplementedError
@@ -2004,21 +2016,23 @@ class PulseMixer(Mixer):
         self.set(self.get())
 
     def _list_sinks(self):
-        result = subprocess.Popen(['pactl', 'list', 'sinks'],
-                shell=False, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
-        return dict((re.match(b'Sink #([0-9]+)', a).group(1), a)
-                for a in result)
+        result = subprocess.Popen(
+            ['pactl', 'list', 'sinks'],
+            shell=False, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
+        return dict(
+            (re.match(b'Sink #([0-9]+)', a).group(1), a) for a in result)
 
     def get(self):
-        return int(re.search(br'^\s+Volume: .* ([0-9]+)%',
-                self._list_sinks()[self._channels[0][1]],
-                flags=re.MULTILINE).group(1))
+        sink = self._list_sinks()[self.channel]
+        return int(re.search(
+            br'^\s+Volume: .* ([0-9]+)%', sink, flags=re.MULTILINE
+        ).group(1))
 
     def set(self, vol):
         subprocess.check_call([
-                'pactl', '--', 'set-sink-volume', self._channels[0][1],
-                '%s%%' % vol])
+            'pactl', '--', 'set-sink-volume', self.channel, '%s%%' % vol
+        ])
 
     def cue(self, inc):
         self.set('%+d' % inc)
@@ -2061,14 +2075,15 @@ class Keymap(object):
 #        in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
     fallback = os.path.basename(pathname)
-    if re.compile(r'^https?://').match(pathname) or not os.path.exists(pathname):
+    is_url = re.compile(r'^https?://').match(pathname)
+    if is_url or not os.path.exists(pathname):
         return fallback
     try:
         import mutagen
     except ImportError:
         logging.debug('No mutagen available')
-        APP.status.status(_('Can\'t read metadata, module mutagen not '
-                            'available'), 2)
+        APP.status.status(
+            _('Can\'t read metadata, module mutagen not available'), 2)
         return fallback
 
     try:
@@ -2079,9 +2094,11 @@ def get_tag(pathname):
         APP.status.status('Error reading metadata', 1)
         return fallback
 
+    def get(key):
+        return ' '.join(metadata.get(key, ('?', )))
+
     # FIXME: Allow user to configure metadata view
     try:
-        get = lambda key: ' '.join(metadata.get(key, ('?', )))
         s = '%s - %s - %s %s' % (
             get('artist'),
             get('album'),
@@ -2100,14 +2117,12 @@ def valid_song(name):
 
 
 def valid_playlist(name):
-    if re.search(r'\.(m3u|pls|cue)$', name, re.IGNORECASE):
-        return True
-    return False
+    return re.search(r'\.(m3u|pls|cue)$', name, re.IGNORECASE)
 
 
 def which(program):
     for path in os.environ.get('PATH', os.defpath).split(':'):
-        if os.path.exists(os.path.join(path, program)):
+        if path and os.path.exists(os.path.join(path, program)):
             return os.path.join(path, program)
 
 
@@ -2126,18 +2141,21 @@ for rc in [os.path.expanduser('~/.cplayrc'), '/etc/cplayrc']:
         break
     except IOError:
         pass
-    except Exception as err:
+    except:
         logging.warning('Could not execute %s', rc, exc_info=True)
 
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0],
-                                     epilog=_('When in doubt, press \'h\' for '
-                                              'a friendly help page.'))
+    parser = argparse.ArgumentParser(
+        description=__doc__.split('\n')[0],
+        epilog=_('When in doubt, press \'h\' for a friendly help page.'))
     parser.add_argument('--version', action='version', version=__version__)
-    parser.add_argument('-d', '--debug', metavar=_('filename'),
-                        help=_('Enable debugging output to <filename>.'))
+    parser.add_argument(
+        '-d',
+        '--debug',
+        metavar=_('filename'),
+        help=_('Enable debugging output to <filename>.'))
     parser.add_argument('-n', '--restricted', action='store_true',
                         help=_('Start in restricted mode: No shell commands, '
                                'changing directory, goto, or saving '
@@ -2237,38 +2255,41 @@ def main():
 MIXERS = [PulseMixer, AlsaMixer, OssMixer]
 BACKENDS = [
     FrameOffsetBackend('ogg123 -q -v -k {offset} {file}', r'\.ogg$'),
-    FrameOffsetBackend('splay -f -k {offset} {file}',
-                       r'(^https?://|\.mp[123]$)',
-                       38.28),
-    FrameOffsetBackend('mpg123 -q -v -k {offset} {file}',
-                       r'(^https?://|\.mp[123]$)', 38.28),
-    FrameOffsetBackend('mpg321 -q -v -k {offset} {file}',
-                       r'(^https?://|\.mp[123]$)', 38.28),
-    FrameOffsetBackendMpp('mppdec --gain 2 --start {offset} {file}',
-                          r'\.mp[cp+]$'),
-    TimeOffsetBackend('madplay -v --display-time=remaining -s {offset} {file}',
-                      r'\.mp[123]$'),
-    MPlayer('mplayer -ss {offset} {file}',
-            r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-            r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
+    FrameOffsetBackend(
+        'splay -f -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
+    FrameOffsetBackend(
+        'mpg123 -q -v -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
+    FrameOffsetBackend(
+        'mpg321 -q -v -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
+    FrameOffsetBackendMpp(
+        'mppdec --gain 2 --start {offset} {file}', r'\.mp[cp+]$'),
+    TimeOffsetBackend(
+        'madplay -v --display-time=remaining -s {offset} {file}',
+        r'\.mp[123]$'),
+    MPlayer(
+        'mplayer -ss {offset} {file}',
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
     MPV('mpv --audio-display=no --start {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
         r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
-    GSTBackend('gst123 -k {offset} {file}',
-               r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-               r'webm)$'),
+    GSTBackend(
+        'gst123 -k {offset} {file}',
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
-    FFPlay('ffplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
-    FFPlay('avplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff)$'),
-    NoOffsetBackend('mikmod -q -p0 {file}',
-                    r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
-    NoOffsetBackend('xmp -q {file}',
-                    r'\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$'),
+    FFPlay(
+        'ffplay -nodisp -autoexit -ss {offset} {file}',
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
+    FFPlay(
+        'avplay -nodisp -autoexit -ss {offset} {file}',
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff)$'),
+    NoOffsetBackend(
+        'mikmod -q -p0 {file}', r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
+    NoOffsetBackend(
+        'xmp -q {file}', r'\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$'),
     NoOffsetBackend('speexdec {file}', r'\.spx$'),
-    NoOffsetBackend('timidity {file}',
-                    r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
+    NoOffsetBackend(
+        'timidity {file}', r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
 ]
 
 
