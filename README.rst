@@ -77,12 +77,8 @@ cnq-ng to remote-control a running cplay-ng.
 Configuration
 -------------
 
-If you would like to change options passed to the actual players just edit
-the ``BACKENDS`` list in the cplay-ng script or put the ``BACKENDS``
-definition in either ``~/.cplayrc`` or ``/etc/cplayrc``. If one of these
-files is available, it is executed by cplay-ng before initialization.
-
-Note, there is currently no version control for the rc-file!
+If you would like to change the default player or the options passed to the
+players just edit the ``BACKENDS`` list at the end of the cplay script.
 
 Miscellaneous
 -------------

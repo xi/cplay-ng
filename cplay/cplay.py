@@ -2064,16 +2064,6 @@ def cut(s, n, left=False):
         return '%s>' % s[:n - 1]
 
 
-for rc in [os.path.expanduser('~/.cplayrc'), '/etc/cplayrc']:
-    try:
-        exec(compile(open(rc).read(), rc, 'exec'))
-        break
-    except IOError:
-        pass
-    except:
-        logging.warning('Could not execute %s', rc, exc_info=True)
-
-
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
