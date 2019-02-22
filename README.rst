@@ -44,9 +44,6 @@ Other optional components:
 - `pyalsaaudio <http://pyalsaaudio.sourceforge.net/>`_ (optional) For
   Alsa mixer support
 
-- `python-oss <http://net.indra.com/~tim/ossmodule/>`_ (optional) For
-  OSS mixer support
-
 - pulseaudio-utils, specifically the ``pactl`` command (optional) For
   PulseAudio mixer support
 

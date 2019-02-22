@@ -1909,12 +1909,7 @@ class Mixer:
 class OssMixer(Mixer):
     def __init__(self):
         super().__init__()
-        try:
-            import ossaudiodev as oss
-            self._ossaudiodev = True
-        except ImportError:
-            import oss
-            self._ossaudiodev = False
+        import ossaudiodev as oss
         self._mixer = oss.openmixer()
         self._channels = [
             ('PCM', oss.SOUND_MIXER_PCM),
@@ -1922,16 +1917,10 @@ class OssMixer(Mixer):
         ]
 
     def get(self):
-        if self._ossaudiodev:
-            return self._mixer.get(self._channels[0][1])[0]
-        else:
-            return self._mixer.read_channel(self._channels[0][1])[0]
+        return self._mixer.get(self.channel)[0]
 
     def set(self, level):
-        if self._ossaudiodev:
-            self._mixer.set(self._channels[0][1], (level, level))
-        else:
-            self._mixer.write_channel(self._channels[0][1], (level, level))
+        self._mixer.set(self.channel, (level, level))
 
     def close(self):
         self._mixer.close()
