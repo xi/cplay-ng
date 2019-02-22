@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 import time
+from unittest import mock
 
 try:
     from StringIO import BytesIO
@@ -14,6 +15,22 @@ except ImportError:
     import unittest
 
 from cplay import cplay
+
+
+class MockWindowMixin(object):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.rows = 0
+        self.w = mock.MagicMock()
+
+    def insstr(self, s):
+        pass
+
+    def resize(self):
+        pass
+
+    def update(self):
+        pass
 
 
 class MockKeymap(object):
@@ -259,7 +276,10 @@ dir/file3.wav""",
             self.playlist.add(path)
 
     def setUp(self):
-        self.playlist = cplay.Playlist()
+        class PatchedPlaylist(MockWindowMixin, cplay.PlaylistWindow):
+            pass
+
+        self.playlist = PatchedPlaylist(mock.MagicMock())
         self.path = None
         self.generate_files()
 
