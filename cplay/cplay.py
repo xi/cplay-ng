@@ -20,8 +20,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """
 
-from __future__ import unicode_literals
-
 __version__ = 'cplay-ng 2.4.1'
 
 import os
@@ -48,8 +46,6 @@ try:
 except ImportError:
     tty = None
 
-import six
-
 locale.setlocale(locale.LC_ALL, '')
 CODE = locale.getpreferredencoding()
 
@@ -72,16 +68,7 @@ PAUSED = 4
 PLAYING = 5
 
 
-def u(s):
-    if isinstance(s, six.text_type):
-        return s
-    elif isinstance(s, six.binary_type):
-        return s.decode(CODE)
-    else:
-        return u(str(s))
-
-
-class Application(object):
+class Application:
     def __init__(self):
         self.tcattr = None
         self.restricted = False
@@ -228,7 +215,7 @@ class Application(object):
         self.quit(1)
 
 
-class Player(object):
+class Player:
     def __init__(self):
         self.backend = BACKENDS[0]
         self.play_tid = None
@@ -245,7 +232,7 @@ class Player(object):
     def pick_backend(self, entry):
         if entry is None:
             return False
-        logging.debug('Setting up backend for %s' % u(entry))
+        logging.debug('Setting up backend for %s' % str(entry))
         self.backend.stop(quiet=True)
         for backend in BACKENDS:
             if backend.re_files.search(entry.pathname):
@@ -262,7 +249,7 @@ class Player(object):
         self.play_tid = None
         if entry is None or offset is None:
             return
-        logging.debug('Starting to play %s' % u(entry))
+        logging.debug('Starting to play %s' % str(entry))
         if self.pick_backend(entry):
             self.backend.play(entry, offset or entry.offset)
         else:
@@ -303,10 +290,10 @@ class Player(object):
             APP.status.status(_('No mixer.'), 1)
         else:
             getattr(self._mixer, cmd)(*args)
-            APP.status.status(u(self._mixer), 1)
+            APP.status.status(str(self._mixer), 1)
 
 
-class Input(object):
+class Input:
     def __init__(self):
         self.active = False
         self.string = ''
@@ -382,7 +369,7 @@ class UIInput(Input):
             APP.status.status(_('cancel'), 1)
 
 
-class Window(object):
+class Window:
     chars = (string.ascii_letters + string.digits + string.punctuation +
              string.whitespace)
 
@@ -399,8 +386,6 @@ class Window(object):
     def insstr(self, s):
         if not s:
             return
-        if six.PY2 and isinstance(s, six.text_type):
-            s = s.encode(CODE)
         self.w.addstr(s[:-1])
         self.w.hline(ord(s[-1]), 1)  # insch() work-around
 
@@ -473,7 +458,7 @@ class StatusWindow(Window):
         self.refresh()
 
     def status(self, message, duration=0):
-        self.current_message = u(message)
+        self.current_message = str(message)
         if self.tid:
             APP.timeout.remove(self.tid)
         if duration:
@@ -725,7 +710,7 @@ class ListWindow(Window):
         return '%-*s  %s' % (width, cut(self.name + data, width), pos)
 
     def putstr(self, entry, *pos):
-        s = u(entry)
+        s = str(entry)
         if pos:
             self.move(*pos)
         if self.hoffset:
@@ -796,7 +781,7 @@ class ListWindow(Window):
         index = (self.bufptr + advance) % len(self.buffer)
         origin = index
         while True:
-            line = u(self.buffer[index]).lower()
+            line = str(self.buffer[index]).lower()
             if line.find(new_string.lower()) != -1:
                 APP.input.show()
                 self.update_line(refresh=False)
@@ -842,8 +827,7 @@ class HelpWindow(ListWindow):
 """).splitlines()
 
 
-@six.python_2_unicode_compatible
-class ListEntry(object):
+class ListEntry:
     def __init__(self, pathname, directory=False):
         self.filename = os.path.basename(pathname)
         self.pathname = pathname
@@ -986,7 +970,7 @@ class TagListWindow(ListWindow):
         try:
             r = re.compile(APP.input.string, re.IGNORECASE)
             for entry in self.buffer:
-                if r.search(u(entry)):
+                if r.search(str(entry)):
                     entry.tagged = self.tag_value
             self.update()
             APP.status.status(_('ok'), 1)
@@ -1143,7 +1127,6 @@ class FilelistWindow(TagListWindow):
             filenames = os.listdir(self.cwd)
             filenames.sort()
             for filename in filenames:
-                filename = u(filename)
                 if filename[0] == '.':
                     continue
                 pathname = os.path.join(self.cwd, filename)
@@ -1561,7 +1544,7 @@ class PlaylistWindow(TagListWindow):
             APP.status.status(e, 2)
 
 
-class Backend(object):
+class Backend:
 
     stdin_r, stdin_w = os.pipe()
     stdout_r, stdout_w = os.pipe()
@@ -1588,7 +1571,7 @@ class Backend(object):
             if argv[i] == '{file}':
                 argv[i] = entry.pathname
             if argv[i] == '{offset}':
-                argv[i] = u(offset * self.fps)
+                argv[i] = str(offset * self.fps)
 
         if entry != self.entry:
             self.entry = entry
@@ -1818,7 +1801,7 @@ class MPV(Backend):
             return offset, length
 
 
-class Timeout(object):
+class Timeout:
     def __init__(self):
         self._next = 0
         self._dict = {}
@@ -1840,7 +1823,7 @@ class Timeout(object):
         return 0.2 if self._dict else None
 
 
-class FIFOControl(object):
+class FIFOControl:
     def __init__(self):
         self.commands = {
             'pause': [APP.player.toggle_pause, []],
@@ -1882,7 +1865,7 @@ class FIFOControl(object):
             pass
 
 
-class MacroController(object):
+class MacroController:
     def command_macro(self):
         APP.input.do_hook = self.do_macro
         APP.input.start(_('macro'))
@@ -1896,7 +1879,7 @@ class MacroController(object):
             APP.keymapstack.process(ord(i))
 
 
-class Mixer(object):
+class Mixer:
     def __init__(self):
         self._channels = []
 
@@ -2025,7 +2008,7 @@ class KeymapStack(list):
                 break
 
 
-class Keymap(object):
+class Keymap:
     def __init__(self):
         self.methods = dict()
 
@@ -2034,7 +2017,7 @@ class Keymap(object):
             for i in key:
                 self.bind(i, method, args)
             return
-        elif isinstance(key, six.string_types):
+        elif isinstance(key, str):
             key = ord(key)
         self.methods[key] = (method, args)
 
@@ -2081,8 +2064,6 @@ def get_tag(pathname):
             get('album'),
             get('tracknumber'),
             get('title'))
-        if six.PY2:
-            s = s.encode(CODE, 'replace')
         return s
     except:
         logging.debug(traceback.format_exc())
@@ -2203,7 +2184,7 @@ def main():
             APP.quit_after_playlist = True
         if args.toggle_mixer:
             APP.player.mixer('toggle')
-        logging.debug('Preferred encoding is %s' % u(CODE))
+        logging.debug('Preferred encoding is %s' % str(CODE))
 
         if args.files or playlist:
             for i in args.files or playlist:

@@ -2,17 +2,10 @@ from __future__ import unicode_literals
 
 import os
 import time
+import unittest
 from unittest import mock
+from io import BytesIO
 
-try:
-    from StringIO import BytesIO
-except:
-    from io import BytesIO
-
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
 
 from cplay import cplay
 

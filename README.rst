@@ -12,7 +12,7 @@ developments (e.g. python3) and adding new features.
 Requirements
 ============
 
--  `python <http://www.python.org/>`_
+-  `python3 <http://www.python.org/>`_
 
 -  `pyalsaaudio <http://pyalsaaudio.sourceforge.net/>`_ (optional) For
    Alsa mixer support
