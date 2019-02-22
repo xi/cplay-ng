@@ -1,34 +1,34 @@
 2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.4.1 released ***
+	*** 2.4.1 ***
 
-  - fix an issue with translation
-  - fix outdated references in README
+	- fix an issue with translation
+	- fix outdated references in README
 
 2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.4.0 released ***
+	*** 2.4.0 ***
 
-  - do not add individual files when there are playlists
-  - add support for cue files
-  - add mpv backend
-  - a lot of refactoring an small fixes
+	- do not add individual files when there are playlists
+	- add support for cue files
+	- add mpv backend
+	- a lot of refactoring an small fixes
 
 2017-06-05  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.3.0 released ***
+	*** 2.3.0 ***
 
-  - fix various unicode issues
-  - fix detection of valid song/playlist on URLs
-  - fix: terminate backend on crash
-  - internal restructuring to facilitate search plugins
-  - new backend: ffplay
-  - add http support to avplay and gst123 backends
-  - fix: infinite loop in vlc backend
+	- fix various unicode issues
+	- fix detection of valid song/playlist on URLs
+	- fix: terminate backend on crash
+	- internal restructuring to facilitate search plugins
+	- new backend: ffplay
+	- add http support to avplay and gst123 backends
+	- fix: infinite loop in vlc backend
 
 2017-01-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.2.0 released ***
+	*** 2.2.0 ***
 
 	- fix: space not allowed in extra requirement name
 	- fix unicode issue with mplayer
@@ -39,7 +39,7 @@
 
 2016-01-03  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.1.2 released ***
+	*** 2.1.2 ***
 
 	- fix warning when using setup.py without babel installed
 	- allow http protocol
@@ -47,14 +47,14 @@
 
 2015-12-28  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.1.1 released ***
+	*** 2.1.1 ***
 
 	- add --version option
 	- fix displaying bytestrings in python3
 
 2015-10-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.1.0 released ***
+	*** 2.1.0 ***
 
 	- dropped support for ncurses
 	- dropped support for mplayer specific features (speed, equalizer)
@@ -73,7 +73,7 @@
 
 2015-03-20  Tobias Bengfort <tobias.bengfort@posteo.de>
 
-  *** 2.0.3 released ***
+	*** 2.0.3 ***
 
 	- test are now run with python2.7, python3.4 and pypy
 	- some fixes to the pulseaudio volumn mixer (Andreas van Cranenburgh)
@@ -81,7 +81,7 @@
 
 2014-07-13  Tobias Bengfort <tobias.bengfort@gmx.net>
 
-  *** 2.0.2 released ***
+	*** 2.0.2 ***
 
 	- fix regression where cplay crashed when opened with an argument
 	- replace getopt by argparse which provides a better command line
@@ -90,23 +90,23 @@
 
 2014-06-18  Tobias Bengfort <tobias.bengfort@gmx.net>
 
-  *** 2.0.1 released ***
+	*** 2.0.1 ***
 
 	This release brings a basic testing environment and some internal
 	restructuring.  The following bugs have been fixed:
 
-	* cplay
+	* cplay:
 	- fix regular expressions in python3
 	- only add valid songs to playlist
 	- don't crash on missing backend
 	- don't require babel for installation
 
-	* cnq
+	* cnq:
 	- declare missing argparse dependency
 
 2014-06-15  Tobias Bengfort <tobias.bengfort@gmx.net>
 
-  *** 2.0.0 released ***
+	*** 2.0.0 ***
 
 	cplay has been unmaintained for many years now. I tried to contact the
 	original developers but without luck. So now I am announcing a fork of
@@ -116,7 +116,7 @@
 	This goals has now been reached. Future plans include new features and a
 	test suite.
 
-	* cplay
+	* cplay:
 	- renamed to cplay-ng
 	- dropped support for python < 2.6
 	- python3 compatibility
@@ -128,14 +128,13 @@
 	- midi support through timidity
 	- scale key-volume mapping such that 9 is 100%
 
-	* cnq
+	* cnq:
 	- renamed to cnq-ng
 	- complete rework to become a full featured remote control for cplay-ng
 
-
 2011-04-27  Tomi Pieviläinen <tomi.pievilainen@iki.fi>
 
-	*** 1.50 released ***
+	*** 1.50 ***
 
 	* cplay:
 	- fix insecure /tmp handling (DB#255768, DB#324913) (Peter Samuelson)
@@ -154,58 +153,58 @@
 
 2011-04-15  Daniel Michalik <cplay-dev@blackamp.de>
 
-  Five years after the last pre-release by Ulf Betlehem some development
-  took place, individually distributed amongst various persons. This
-  version of cplay collects the found fixes and improvements and
-  provides:
-  - proper MPlayer support,
-  - volume control using ALSA and OSS, 
-  - fixes of all known critical bugs, more bug fixes and clean up work.
-  Enjoy your updated cplay experience!
+	Five years after the last pre-release by Ulf Betlehem some development
+	took place, individually distributed amongst various persons. This
+	version of cplay collects the found fixes and improvements and
+	provides:
+	- proper MPlayer support,
+	- volume control using ALSA and OSS,
+	- fixes of all known critical bugs, more bug fixes and clean up work.
+	Enjoy your updated cplay experience!
 
-  For you information and entertainment the following list contains the
-  "recent" development history, trying to give proper credits to the
-  developers involved. I tried to be as complete and accurate as possible,
-  please let me know if there is someone I forgot or if there is
-  something that I put down incorrectly.
+	For you information and entertainment the following list contains the
+	"recent" development history, trying to give proper credits to the
+	developers involved. I tried to be as complete and accurate as possible,
+	please let me know if there is someone I forgot or if there is
+	something that I put down incorrectly.
 
-  - Peter Samuelson fixed the insecure /tmp handling (DB#255768,
-    DB#324913) together with Martin Michlmayr.
-  - Tom Adams collected the complete version history of cplay and
-    published it on github. Furthermore he provided basic MPlayer
-    support, the cnq script and ALSA mixer control.
-  - Tomi Pieviläinen fixed the shell crashing bug (DB#375060), added
-    logging and added mutagen support for reading meta data information
-    from played files (DB#413738). Various other improvements include the
-    removal of the kludge variable and clean up work/commenting.
-  - Adrian C. fixed various small bugs and made cplay ready for ncurses 5.8.
-  - Daniel Michalik replaced the mplayer FIFO by internal pipes to
-    prevent permission and IO blocking problems, added speed control and
-    equalizer support when using MPlayer and fixed some bugs (DB#387871,
-    DB#303282, sanity check of counter values).
+	- Peter Samuelson fixed the insecure /tmp handling (DB#255768,
+	  DB#324913) together with Martin Michlmayr.
+	- Tom Adams collected the complete version history of cplay and
+	  published it on github. Furthermore he provided basic MPlayer
+	  support, the cnq script and ALSA mixer control.
+	- Tomi Pieviläinen fixed the shell crashing bug (DB#375060), added
+	  logging and added mutagen support for reading meta data information
+	  from played files (DB#413738). Various other improvements include the
+	  removal of the kludge variable and clean up work/commenting.
+	- Adrian C. fixed various small bugs and made cplay ready for ncurses 5.8.
+	- Daniel Michalik replaced the mplayer FIFO by internal pipes to
+	  prevent permission and IO blocking problems, added speed control and
+	  equalizer support when using MPlayer and fixed some bugs (DB#387871,
+	  DB#303282, sanity check of counter values).
 
 2006-05-09  Ulf Betlehem  <flu@iki.fi>
-	
+
 	*** 1.50pre7 ***
-	
+
 	* cplay:
 	- work-around backspace problem (shrizza)
 	- shell crash work-around
 
 2005-11-10  Ulf Betlehem  <flu@iki.fi>
-	
+
 	*** 1.50pre6 ***
-	
+
 	* cplay:
 	- share filedescriptors (Antoine Reilles)
 
 2005-10-21  Ulf Betlehem  <flu@iki.fi>
-	
+
 	*** 1.50pre5 ***
-	
+
 	Over a year since last pre-release! I will probably have broken more
 	things than I have fixed, but here goes:
-	
+
 	* cplay:
 	- fixed URL bug on command line (Georg Lehner)
 	- replaced deprecated apply()
@@ -215,9 +214,9 @@
 	- handle_command a bit differently
 
 2004-07-25  Ulf Betlehem  <flu@iki.fi>
-	
+
 	*** 1.50pre4 ***
-	
+
 	* cplay:
 	- ogg123 now handles .flac and .spx
 	- require either ID3 or ogg modules for viewing metadata
@@ -225,7 +224,7 @@
 2004-02-09  Ulf Betlehem  <flu@iki.fi>
 
 	*** 1.50pre3 ***
-	
+
 	* cplay:
 	- replaced volup and voldown FIFOControl commands with
 	  one "volume set|cue|toggle N" command
@@ -238,7 +237,7 @@
 2004-02-07  Ulf Betlehem  <flu@iki.fi>
 
 	*** 1.50pre2 ***
-	
+
 	* po/pt_BR.po:
 	- new file (Ricardo Niederberger Cabral)
 
@@ -253,7 +252,7 @@
 2004-02-07  Ulf Betlehem  <flu@iki.fi>
 
 	*** 1.50pre1 ***
-	
+
 	* cplay:
 	- user definable macros (for example MACRO['d'] = '!rm "$@"\n')
 	- new remote control commands: macro <key>, add <pathname>
@@ -273,7 +272,7 @@
 
 2003-12-05  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.49 released ***
+	*** 1.49 ***
 
 	* README, cplay.1:
 	- document restricted mode
@@ -327,7 +326,7 @@
 2003-10-01  Ulf Betlehem  <flu@iki.fi>
 
 	*** 1.49pre2 ***
-	
+
 	* cplay:
 	- possible bugfix for increasing CPU usage
 
@@ -339,7 +338,7 @@
 2003-09-13  Ulf Betlehem  <flu@iki.fi>
 
 	*** 1.49pre1 ***
-	
+
 	* cplay:
 	- support and prefer ossaudiodev (dorphell)
 
@@ -365,7 +364,7 @@
 
 2003-08-26  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.48 released ***
+	*** 1.48 ***
 
 	* cplay:
 	- xmp regexp (Yuri D'Elia)
@@ -395,7 +394,7 @@
 
 	* po/hu.po:
 	- new file (Gergely Nagy)
-	
+
 	* po/pl.po:
 	- new file (Perry)
 	- fixed help text not showing
@@ -412,7 +411,7 @@
 
 2003-04-13  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.47 released ***
+	*** 1.47 ***
 
 	* README:
 	- mp3info and ogginfo modules are both required
@@ -509,8 +508,8 @@
 
 2002-12-16  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.46 released ***
-	
+	*** 1.46 ***
+
 	* cplay:
 	- documented @ command
 	- get_tag improvement (Martin Michlmayr)
@@ -591,7 +590,7 @@
 	* cplay (1.46pre5)
 	- string.punctuation kludge for python 1.5
 	- recursive search in filelist!
-  - include 669|mtm|it in mikmod regex (Samium Gromoff)
+	- include 669|mtm|it in mikmod regex (Samium Gromoff)
 
 2002-08-28  Ulf Betlehem  <flu@iki.fi>
 
@@ -618,14 +617,14 @@
 	* LICENSE: new file
 
 2002-03-31  Ulf Betlehem  <flu@iki.fi>
-	
+
 	* cplay (1.46pre1)
 	- remember playlist filename (Patrice Neff)
 2002-03-24  Ulf Betlehem  <flu@iki.fi>
-	
-	*** 1.45 released ***
+
+	*** 1.45 ***
 2002-03-19  Ulf Betlehem  <flu@iki.fi>
-	
+
 	* cplay (1.45pre5):
 	- emulate insstr() for python1.5
 	- new commands m/M = move after/before
@@ -652,8 +651,8 @@
 
 2001-12-01  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.44 released ***
-	
+	*** 1.44 ***
+
 	* cplay:
 	- partial support for madplay
 	- partial support for mikmod (yason)
@@ -671,16 +670,16 @@
 	- added 'g' (home) and 'G' (end) keys
 	- added '/' and '?' keys for searching
 	- misc tweaks
-	
+
 	* cplay.1:
 	- update
-	
+
 	* README:
 	- update
 2001-03-15  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.43 released ***
-	
+	*** 1.43 ***
+
 	* cplay:
 	- partial support for splay
 	- commandline arguments: repeat/random (Gerald Stieglbauer)
@@ -689,8 +688,8 @@
 	- mark/clear regexp
 2001-01-18  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.42 released ***
-	
+	*** 1.42 ***
+
 	* cplay:
 	- ignore bogus gettext module
 	- correct devfs paths
@@ -701,10 +700,10 @@
 
 2000-12-08  Ulf Betlehem  <flu@iki.fi>
 
-	*** 1.41 released ***
+	*** 1.41 ***
 
 	* README: a few words about mpg123 and streaming
-	
+
 	* po/de.po, cplay.1: updated (Martin Michlmayr)
 
 	* po/Makefile, Makefile: use "install -c" for compatibility
@@ -720,7 +719,7 @@
 
 2000-10-19  Ulf Betlehem  <flu@iki.fi>
 
-	*** v1.40 released ***
+	*** 1.40 ***
 
 	* README: added instructions on how to change player options
 
