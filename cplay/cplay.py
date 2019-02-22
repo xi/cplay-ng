@@ -811,7 +811,7 @@ class HelpWindow(ListWindow):
   n, p            : next/prev track    a     : add (tagged) to playlist
   z, x            : toggle pause/stop  s     : recursive search
                                        BS, o : goto parent/specified dir
-  Left, Right,                         m, '  : set/get bookmark
+  Left, Right,
   C-f, C-b    : seek forward/backward
   C-a, C-e    : restart/end track      Playlist
   C-s, C-r, / : isearch                --------
@@ -1004,40 +1004,6 @@ class FilelistWindow(TagListWindow):
         self.keymap.bind('a', self.command_add_recursively, ())
         self.keymap.bind('o', self.command_goto, ())
         self.keymap.bind('s', self.command_search_recursively, ())
-        self.keymap.bind('m', self.command_set_bookmark, ())
-        self.keymap.bind('\'', self.command_get_bookmark, ())
-        self.bookmarks = {39: [self.cwd, 0]}
-
-    def command_get_bookmark(self):
-        APP.input.do_hook = self.do_get_bookmark
-        APP.input.start(_('bookmark'))
-
-    def do_get_bookmark(self, ch):
-        APP.input.string = ch
-        bookmark = self.bookmarks.get(ch)
-        if bookmark:
-            self.bookmarks[39] = [self.cwd, self.bufptr]
-            directory, pos = bookmark
-            self.chdir(directory)
-            self.listdir()
-            self.bufptr = pos
-            self.update()
-            APP.status.status(_('ok'), 1)
-        else:
-            APP.status.status(_('Not found!'), 1)
-        APP.input.stop()
-
-    def command_set_bookmark(self):
-        APP.input.do_hook = self.do_set_bookmark
-        APP.input.start(_('set bookmark'))
-
-    def do_set_bookmark(self, ch):
-        APP.input.string = ch
-        self.bookmarks[ch] = [self.cwd, self.bufptr]
-        if ch:
-            APP.status.status(_('ok'), 1)
-        else:
-            APP.input.stop()
 
     def command_search_recursively(self):
         APP.input.stop_hook = self.stop_search_recursively
