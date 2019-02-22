@@ -82,12 +82,6 @@ the ``BACKENDS`` list in the cplay-ng script or put the ``BACKENDS``
 definition in either ``~/.cplayrc`` or ``/etc/cplayrc``. If one of these
 files is available, it is executed by cplay-ng before initialization.
 
-Macros are defined using the ``MACRO`` dictionary, where the key is a key
-and the value is a string of cplay-ng input. For example, the following
-would make ``,d`` delete tagged (or current) files::
-
-    MACRO['d'] = '!rm "$@"\n'
-
 Note, there is currently no version control for the rc-file!
 
 Miscellaneous

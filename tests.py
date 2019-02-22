@@ -37,12 +37,6 @@ class MockKeymap(object):
             return True
 
 
-class MockMacro(object):
-    def command_macro(self): pass
-    def do_macro(self, ch): pass
-    def run_macro(self, c): pass
-
-
 class MockCounter(object):
     def counter(self, elapsed, remaining): pass
     def toggle_mode(self): pass
@@ -138,7 +132,6 @@ def patch_services():
     cplay.APP.player = MockPlayer()
     cplay.APP.timeout = MockTimeout()
     cplay.APP.input = cplay.Input()
-    cplay.APP.macro = MockMacro()
     cplay.APP.status = MockStatus()
     cplay.APP.progress = MockProgress()
     cplay.APP.counter = MockCounter()
@@ -538,22 +531,6 @@ class TestInput(unittest.TestCase):
         self.input.do(ord('a'))
         self.input.stop(1, 2)
         self.assertListEqual(state, [3])
-
-
-class TestMacroController(unittest.TestCase):
-    def setUp(self):
-        patch_services()
-        self.macro_controller = cplay.MacroController()
-        cplay.MACRO = dict()
-
-    def test_macro_controller(self):
-        cplay.MACRO['a'] = 'abc'
-        self.macro_controller.command_macro()
-        cplay.APP.input.do(ord('a'))
-
-        actual = cplay.APP.keymapstack.log
-        expected = [ord(c) for c in 'abc']
-        self.assertListEqual(actual, expected)
 
 
 class TestApplication(unittest.TestCase): pass

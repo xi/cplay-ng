@@ -57,7 +57,6 @@ except IOError:
         return x
 
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
-MACRO = {}
 SEARCH = {}
 APP = None
 
@@ -103,7 +102,6 @@ class Application:
         self.player = Player()
         self.timeout = Timeout()
         self.input = UIInput()
-        self.macro = MacroController()
         self.status = self.window.win_status
         self.progress = self.window.win_progress
         self.counter = self.window.win_counter
@@ -558,7 +556,6 @@ class RootWindow(Window):
         self.keymap.bind('Q', APP.quit, ())
         self.keymap.bind('q', self.command_quit, ())
         self.keymap.bind('v', APP.player.mixer, ('toggle', ))
-        self.keymap.bind(',', APP.macro.command_macro, ())
 
     def command_quit(self):
         APP.input.do_hook = self.do_quit
@@ -807,7 +804,7 @@ class HelpWindow(ListWindow):
   Global                               t, T  : tag current/regex
   ------                               u, U  : untag current/regex
   Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all
-  PgUp, PgDn, K, J,                    !, ,  : shell, macro
+  PgUp, PgDn, K, J,                    !     : shell
   Home, End, g, G : movement
   Enter           : chdir or play      Filelist
   Tab             : filelist/playlist  --------
@@ -1834,7 +1831,6 @@ class FIFOControl:
             'play': [APP.player.toggle_stop, []],
             'stop': [APP.player.toggle_stop, []],
             'volume': [self.volume, None],
-            'macro': [APP.macro.run_macro, None],
             'add': [APP.playlist.add, None],
             'empty': [APP.playlist.command_delete_all, []],
             'quit': [APP.quit, []]
@@ -1863,20 +1859,6 @@ class FIFOControl:
             APP.player.mixer(argv[0], [int(argv[1])])
         except:
             pass
-
-
-class MacroController:
-    def command_macro(self):
-        APP.input.do_hook = self.do_macro
-        APP.input.start(_('macro'))
-
-    def do_macro(self, ch):
-        APP.input.stop()
-        self.run_macro(chr(ch))
-
-    def run_macro(self, c):
-        for i in MACRO.get(c, ''):
-            APP.keymapstack.process(ord(i))
 
 
 class Mixer:
