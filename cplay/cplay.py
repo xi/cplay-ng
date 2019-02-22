@@ -84,7 +84,6 @@ class Application(object):
     def __init__(self):
         self.tcattr = None
         self.restricted = False
-        self.video = False
         self.quit_after_playlist = False
         self.fifo = ('%s/cplay-control-%s' % (
             os.environ.get('TMPDIR', '/tmp'),
@@ -2100,8 +2099,6 @@ def get_tag(pathname):
 
 
 def valid_song(name):
-    if not APP.video and re.search(RE_VIDEO, name):
-        return False
     return any(backend.re_files.search(name) for backend in BACKENDS)
 
 
@@ -2156,8 +2153,6 @@ def parse_args():
                         help=_('quit at the end of the playlist'))
     parser.add_argument('-m', '--toggle-mixer', action='store_true',
                         help=_('Switch mixer channels.'))
-    parser.add_argument('-V', '--video', action='store_true',
-                        help=_('Allow to play videos.'))
     parser.add_argument('-s', '--save',
                         nargs='?', default=False, metavar='FILE',
                         help=_('Save state on close and restore on open.'))
@@ -2206,7 +2201,6 @@ def main():
     try:
         APP.setup()
         APP.restricted = args.restricted
-        APP.video = args.video
         APP.recover = args.save
 
         if args.repeat:
@@ -2262,18 +2256,15 @@ BACKENDS = [
             r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
     MPV('mpv --audio-display=no --start {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
-        r'mkv|flv|avi|wmv|webm)$'),
+        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
     GSTBackend('gst123 -k {offset} {file}',
                r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-               r'mkv|flv|avi|wmv|webm)$'),
+               r'webm)$'),
     SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
     FFPlay('ffplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-           r'mkv|flv|avi|wmv|webm)$'),
+           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
     FFPlay('avplay -nodisp -autoexit -ss {offset} {file}',
-           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|'
-           r'mkv|flv|avi|wmv)$'),
+           r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff)$'),
     NoOffsetBackend('mikmod -q -p0 {file}',
                     r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
     NoOffsetBackend('xmp -q {file}',
@@ -2284,10 +2275,8 @@ BACKENDS = [
     NoBufferBackend(
         'cvlc --play-and-exit --no-loop --start-time {offset} {file}',
         r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|'
-        r'mkv|flv|avi|wmv|webm)$'),
+        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
 ]
-RE_VIDEO = r'\.(mkv|flv|avi|wmv|mp4)$'
 
 
 if __name__ == '__main__':
