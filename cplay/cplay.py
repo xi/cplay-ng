@@ -353,7 +353,7 @@ class Input(object):
 
 class UIInput(Input):
     def __init__(self):
-        Input.__init__(self)
+        super().__init__()
         self.prompt = ''
         self.keymap = Keymap()
         self.keymap.bind(list(Window.chars), self.do)
@@ -368,14 +368,14 @@ class UIInput(Input):
         APP.status.status('%s%s ' % (self.prompt, s))
 
     def start(self, prompt='', data='', colon=True):
-        Input.start(self, prompt=prompt, data=data, colon=colon)
+        super().start(prompt=prompt, data=data, colon=colon)
         APP.cursor(1)
         APP.keymapstack.push(self.keymap)
         self.prompt = prompt + (': ' if colon else '')
         self.show()
 
     def stop(self, *args):
-        Input.stop(self, *args)
+        super().stop(*args)
         APP.cursor(0)
         APP.keymapstack.pop()
         if not self.string:
@@ -430,7 +430,7 @@ class Window(object):
 
 class ProgressWindow(Window):
     def __init__(self, parent):
-        Window.__init__(self, parent)
+        super().__init__(parent)
         self.value = 0
 
     def newwin(self):
@@ -456,7 +456,7 @@ class ProgressWindow(Window):
 
 class StatusWindow(Window):
     def __init__(self, parent):
-        Window.__init__(self, parent)
+        super().__init__(parent)
         self.default_message = ''
         self.current_message = ''
         self.tid = None
@@ -505,7 +505,7 @@ class CounterWindow(Window):
     REMAINING = 1
 
     def __init__(self, parent):
-        Window.__init__(self, parent)
+        super().__init__(parent)
         # [seconds elapsed, seconds remaining of current track]
         self.values = [0, 0]
         self.mode = self.REMAINING
@@ -547,7 +547,7 @@ class CounterWindow(Window):
 
 class RootWindow(Window):
     def __init__(self):
-        Window.__init__(self, None)
+        super().__init__(None)
         self.keymap = Keymap()
         APP.keymapstack.push(self.keymap)
         self.win_progress = ProgressWindow(self)
@@ -587,7 +587,7 @@ class RootWindow(Window):
 
 class TabWindow(Window):
     def __init__(self, parent):
-        Window.__init__(self, parent)
+        super().__init__(parent)
         self.active_child = 0
 
         self.win_filelist = self.add(FilelistWindow)
@@ -652,7 +652,7 @@ class TabWindow(Window):
 
 class ListWindow(Window):
     def __init__(self, parent):
-        Window.__init__(self, parent)
+        super().__init__(parent)
         self.buffer = []
         self.bufptr = 0
         self.scrptr = 0
@@ -815,7 +815,7 @@ class ListWindow(Window):
 
 class HelpWindow(ListWindow):
     def __init__(self, parent):
-        ListWindow.__init__(self, parent)
+        super().__init__(parent)
         self.name = _('Help: ')
         self.keymap.bind('q', self.parent.help, ())
         self.buffer = _("""\
@@ -871,7 +871,7 @@ class ListEntry(object):
 
 class PlaylistEntry(ListEntry):
     def __init__(self, pathname, displayname=None, offset=0, maxoffset=None):
-        ListEntry.__init__(self, pathname)
+        super().__init__(pathname)
         self.metadata = None
         self.active = False
         if displayname is not None:
@@ -890,7 +890,7 @@ class PlaylistEntry(ListEntry):
 
 class TagListWindow(ListWindow):
     def __init__(self, parent):
-        ListWindow.__init__(self, parent)
+        super().__init__(parent)
         self.tag_value = None
         self.keymap.bind(' ', self.command_tag_untag, ())
         self.keymap.bind('i', self.command_invert_tags, ())
@@ -1005,7 +1005,7 @@ class FilelistWindow(TagListWindow):
     SEARCH = 1
 
     def __init__(self, parent):
-        TagListWindow.__init__(self, parent)
+        super().__init__(parent)
         self.oldposition = {}
         self.cwd = None
         try:
@@ -1118,7 +1118,7 @@ class FilelistWindow(TagListWindow):
 
     def get_title(self):
         self.name = _('Filelist: ')
-        return ListWindow.get_title(self, re.sub('/?$', '/', self.cwd))
+        return super().get_title(re.sub('/?$', '/', self.cwd))
 
     def listdir_maybe(self, now=0):
         if now < self.mtime_when + 2:
@@ -1238,7 +1238,7 @@ class FilelistWindow(TagListWindow):
 
 class PlaylistWindow(TagListWindow):
     def __init__(self, parent):
-        TagListWindow.__init__(self, parent)
+        super().__init__(parent)
         self.pathname = None
         self.repeat = False
         self.random = False
@@ -1260,7 +1260,7 @@ class PlaylistWindow(TagListWindow):
         self.keymap.bind('@', self.command_jump_to_active, ())
 
     def command_change_viewpoint(self, cls=PlaylistEntry):
-        TagListWindow.command_change_viewpoint(self, cls)
+        super().command_change_viewpoint(cls)
 
     def get_title(self):
         def space_out(value, s):
@@ -1269,7 +1269,7 @@ class PlaylistWindow(TagListWindow):
             space_out(self.repeat, _('[repeat all]')),
             space_out(self.random, _('[random]')),
             space_out(self.stop, _('[stop]')))
-        return ListWindow.get_title(self)
+        return super().get_title()
 
     def append(self, item):
         self.buffer.append(item)
@@ -1394,7 +1394,7 @@ class PlaylistWindow(TagListWindow):
     def putstr(self, entry, *pos):
         if entry.active:
             self.attron(curses.A_BOLD)
-        ListWindow.putstr(self, entry, *pos)
+        super().putstr(entry, *pos)
         if entry.active:
             self.attroff(curses.A_BOLD)
 
@@ -1785,12 +1785,12 @@ class NoOffsetBackend(Backend):
 
 class NoBufferBackend(Backend):
     def __init__(self, *args):
-        Backend.__init__(self, *args)
+        super().__init__(*args)
         self._starttime = 0
 
     def play(self, entry, offset):
         self._starttime = time.time()
-        Backend.play(self, entry, offset)
+        super().play(entry, offset)
 
     def parse_buf(self, buf):
         offset = time.time() - self._starttime + self.offset
@@ -1925,7 +1925,7 @@ class Mixer(object):
 
 class OssMixer(Mixer):
     def __init__(self):
-        Mixer.__init__(self)
+        super().__init__()
         try:
             import ossaudiodev as oss
             self._ossaudiodev = True
@@ -1956,7 +1956,7 @@ class OssMixer(Mixer):
 
 class AlsaMixer(Mixer):
     def __init__(self):
-        Mixer.__init__(self)
+        super().__init__()
         import alsaaudio
         self._channels = []
         # HACK: guess valid card indexes (0 could be disabled)
@@ -1986,7 +1986,7 @@ class AlsaMixer(Mixer):
 
 class PulseMixer(Mixer):
     def __init__(self):
-        Mixer.__init__(self)
+        super().__init__()
         self._channels = [('Master', sink) for sink in self._list_sinks()]
         if not self._channels:
             raise ValueError
