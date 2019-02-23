@@ -801,26 +801,52 @@ class HelpWindow(ListWindow):
         self.name = _('Help: ')
         self.keymap.bind('q', self.parent.help, ())
         self.buffer = _("""\
-  Global                               t, T  : tag current/regex
-  ------                               u, U  : untag current/regex
-  Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all
-  PgUp, PgDn, K, J,                    !     : shell
-  Home, End, g, G : movement
-  Enter           : chdir or play      Filelist
-  Tab             : filelist/playlist  --------
-  n, p            : next/prev track    a     : add (tagged) to playlist
-  z, x            : toggle pause/stop  s     : recursive search
-                                       BS, o : goto parent/specified dir
-  Left, Right,
-  C-f, C-b    : seek forward/backward
-  C-a, C-e    : restart/end track      Playlist
-  C-s, C-r, / : isearch                --------
-  C-g, Esc    : cancel                 d, D  : delete (tagged) tracks/playlist
-  1..9, +, -  : volume control         m, M  : move tagged tracks after/before
-  c, v        : counter/volume mode    r, R  : toggle repeat/Random mode
-  <, >        : horizontal scrolling   s, S  : shuffle/Sort playlist
-  C-l, l      : refresh, list mode     w, @  : write playlist, jump to active
-  h, q, Q     : help, quit?, Quit!     X     : stop playlist after each track
+ Global
+ ------
+ Up, k, C-p   : move to previous item
+ Down, j, C-n : move to next item
+ PageUp, K    : move to previous page
+ PageDown, J  : move to next page
+ Home, g      : move to top
+ End, G       : move to bottom
+ Enter        : chdir or play
+ Tab          : switch between filelist/playlist
+ n, p         : next/prev track
+ z, x         : toggle pause/stop
+
+ Left, C-f    : seek backward
+ Right, C-b   : seek forward
+ C-a, C-e     : restart/end track
+ C-s, C-r, /  : isearch
+ C-g, Esc     : cancel
+ 1..9, +, -   : volume control
+ c, v         : counter/volume mode
+ <, >         : horizontal scrolling
+ C-l          : refresh
+ l            : list mode
+ h            : help
+ q, Q         : quit?, Quit!
+
+ t, T         : tag current/regex
+ u, U         : untag current/regex
+ Sp, i        : invert current/all
+ !            : shell
+
+ Filelist
+ --------
+ a            : add (tagged) to playlist
+ s            : recursive search
+ BS, o        : go to parent/specified dir
+
+ Playlist
+ --------
+ d, D         : delete (tagged) items/all
+ m, M         : move tagged tracks after/before
+ r, R         : toggle repeat/Random mode
+ s, S         : shuffle/Sort playlist
+ w            : write playlist to file
+ @            : jump to current track
+ X            : stop playlist after each track
 """).splitlines()
 
 
