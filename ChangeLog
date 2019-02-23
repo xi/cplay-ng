@@ -10,6 +10,7 @@ unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
 	- drop support for playing videos
 	- drop support for vlc backend
 	- drop support for deprecated python-oss
+	- drop "stop after each track" feature
 
 	* new features:
 	- add --autoexit option to close at the end of the playlist

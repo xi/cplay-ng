@@ -135,14 +135,11 @@ class Application:
                 timeout = 0.5
                 if self.player.backend.get_state() is FINISHED:
                     # end of playlist hack
-                    if not self.playlist.stop:
-                        entry = self.playlist.change_active_entry(1)
-                        if entry is not None:
-                            self.player.play(entry)
-                        elif self.quit_after_playlist:
-                            self.quit()
-                        else:
-                            self.player.stop()
+                    entry = self.playlist.change_active_entry(1)
+                    if entry is not None:
+                        self.player.play(entry)
+                    elif self.quit_after_playlist:
+                        self.quit()
                     else:
                         self.player.stop()
             R = [sys.stdin, self.player.backend.stdout_r,
@@ -846,7 +843,6 @@ class HelpWindow(ListWindow):
  s, S         : shuffle/Sort playlist
  w            : write playlist to file
  @            : jump to current track
- X            : stop playlist after each track
 """).splitlines()
 
 
@@ -1217,7 +1213,6 @@ class PlaylistWindow(TagListWindow):
         self.random_prev = []
         self.random_next = []
         self.random_left = []
-        self.stop = False
         self.keymap.bind(['\n', curses.KEY_ENTER], self.command_play, ())
         self.keymap.bind('d', self.command_delete, ())
         self.keymap.bind('D', self.command_delete_all, ())
@@ -1227,7 +1222,6 @@ class PlaylistWindow(TagListWindow):
         self.keymap.bind('S', self.command_sort, ())
         self.keymap.bind('r', self.command_toggle_repeat, ())
         self.keymap.bind('R', self.command_toggle_random, ())
-        self.keymap.bind('X', self.command_toggle_stop, ())
         self.keymap.bind('w', self.command_save_playlist, ())
         self.keymap.bind('@', self.command_jump_to_active, ())
 
@@ -1237,10 +1231,9 @@ class PlaylistWindow(TagListWindow):
     def get_title(self):
         def space_out(value, s):
             return s if value else ' ' * len(s)
-        self.name = _('Playlist %s %s %s') % (
+        self.name = _('Playlist %s %s') % (
             space_out(self.repeat, _('[repeat all]')),
-            space_out(self.random, _('[random]')),
-            space_out(self.stop, _('[stop]')))
+            space_out(self.random, _('[random]')))
         return super().get_title()
 
     def append(self, item):
@@ -1499,9 +1492,6 @@ class PlaylistWindow(TagListWindow):
         self.random_prev = []
         self.random_next = []
         self.random_left = self.buffer[:]
-
-    def command_toggle_stop(self):
-        self.toggle('stop', _('Stop playlist: %s'))
 
     def toggle(self, attr, msg):
         setattr(self, attr, not getattr(self, attr))

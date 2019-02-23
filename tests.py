@@ -355,13 +355,6 @@ dir/file3.wav""",
         self.playlist.command_toggle_random()
         self.assertFalse(self.playlist.random)
 
-    def test_command_toggle_stop(self):
-        self.playlist.stop = False
-        self.playlist.command_toggle_stop()
-        self.assertTrue(self.playlist.stop)
-        self.playlist.command_toggle_stop()
-        self.assertFalse(self.playlist.stop)
-
 
 class TestPlaylistWindow(unittest.TestCase): pass
 class TestGetType(unittest.TestCase): pass
