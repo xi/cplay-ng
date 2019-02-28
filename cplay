@@ -155,12 +155,11 @@ class Application(object):
                 timeout = 0.5
                 if self.player.poll() is TERMINATED:
                     self.player.stopped = True  # end of playlist hack
-                    if not self.win_playlist.stop:
-                        entry = self.win_playlist.change_active_entry(1)
-                        if not entry:
-                            self.player.stopped = True
-                        else:
-                            self.play(entry)
+                    entry = self.win_playlist.change_active_entry(1)
+                    if not entry:
+                        self.player.stopped = True
+                    else:
+                        self.play(entry)
             R = [sys.stdin, self.player.stdout_r, self.player.stderr_r]
             if self.control.fd:
                 R.append(self.control.fd)
@@ -732,7 +731,7 @@ class HelpWindow(ListWindow):
   <, >        : horizontal scrolling   r, R  : toggle repeat/Random mode
   C-l, l      : refresh, list mode     s, S  : shuffle/Sort playlist
   D           : clear playlist         w, @  : write playlist, jump to active
-  h, q, Q     : help, quit?, Quit!     X     : stop playlist after each track
+  h, q, Q     : help, quit?, Quit!
 '''.splitlines()
 
 
@@ -1058,7 +1057,7 @@ class PlaylistWindow(TagListWindow):
     def __init__(self, parent):
         TagListWindow.__init__(self, parent)
         self.pathname = self.active_entry = None
-        self.repeat = self.random = self.stop = False
+        self.repeat = self.random = False
         self.random_prev = []
         self.random_next = []
         self.random_left = []
@@ -1071,7 +1070,6 @@ class PlaylistWindow(TagListWindow):
         self.keymap.bind('S', self.command_sort, ())
         self.keymap.bind('r', self.command_toggle_repeat, ())
         self.keymap.bind('R', self.command_toggle_random, ())
-        self.keymap.bind('X', self.command_toggle_stop, ())
         self.keymap.bind('w', self.command_save_playlist, ())
         self.keymap.bind('@', self.command_jump_to_active, ())
         self.keymap.bind(['.', 127, curses.KEY_BACKSPACE],
@@ -1084,10 +1082,9 @@ class PlaylistWindow(TagListWindow):
     def get_title(self):
         def space_out(value, s):
             return s if value else (' ' * len(s))
-        self.name = 'Playlist %s %s %s' % (
+        self.name = 'Playlist %s %s' % (
             space_out(self.repeat, '[repeat]'),
-            space_out(self.random, '[random]'),
-            space_out(self.stop, '[stop]'))
+            space_out(self.random, '[random]'))
         return ListWindow.get_title(self)
 
     def append(self, item):
@@ -1360,9 +1357,6 @@ class PlaylistWindow(TagListWindow):
         self.random_next = []
         self.random_left = self.buffer[:]
 
-    def command_toggle_stop(self):
-        self.toggle('stop', 'Stop playlist: %s')
-
     def toggle(self, attr, msg):
         setattr(self, attr, not getattr(self, attr))
         APP.status(msg % ('on' if getattr(self, attr) else 'off'), 1)
@@ -1476,10 +1470,7 @@ class Player(object):
         if self.entry.maxoffset and self.offset >= self.entry.maxoffset:
             maxoffset = self.entry.maxoffset
             pathname = self.entry.pathname
-            if APP.win_playlist.stop:
-                entry = None
-            else:
-                entry = APP.win_playlist.change_active_entry(1)
+            entry = APP.win_playlist.change_active_entry(1)
             # keep playing if next song from cue file, otherwise restart player
             if not entry:
                 self.stop(quiet=True)
