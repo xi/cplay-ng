@@ -838,7 +838,7 @@ class HelpWindow(ListWindow):
  Playlist
  --------
  d, D         : delete (tagged) items/all
- m, M         : move tagged tracks after/before
+ m, M         : move (tagged) tracks after/before
  r, R         : toggle repeat/Random mode
  s, S         : shuffle/Sort playlist
  w            : write playlist to file
@@ -1462,12 +1462,19 @@ class PlaylistWindow(TagListWindow):
             return
         current_entry = self.current()
         entries = self.get_tagged()
-        if not entries or current_entry.tagged:
-            return
-        self.buffer = self.not_tagged(self.buffer)
-        self.bufptr = self.buffer.index(current_entry)
-        if after:
-            self.bufptr += 1
+        if entries:
+            if current_entry.tagged:
+                return
+            self.buffer = self.not_tagged(self.buffer)
+            self.bufptr = self.buffer.index(current_entry)
+            if after:
+                self.bufptr += 1
+        else:
+            entries = [current_entry]
+            self.buffer.pop(self.bufptr)
+            self.bufptr += 1 if after else -1
+            if self.bufptr < 0:
+                self.bufptr = 0
         self.buffer[self.bufptr:self.bufptr] = entries
         self.update()
 

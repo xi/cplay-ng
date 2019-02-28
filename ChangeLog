@@ -16,6 +16,7 @@ unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
 	- add --autoexit option to close at the end of the playlist
 	- automatically start playing if a file was passed
 	- add support for webm
+	- allow moving the current track if none is tagged
 
 2018-04-10  Tobias Bengfort <tobias.bengfort@posteo.de>
 
