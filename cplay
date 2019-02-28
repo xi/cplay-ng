@@ -716,7 +716,7 @@ class HelpWindow(ListWindow):
   Global                               t, T  : tag current/regex
   ------                               u, U  : untag current/regex
   Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all
-  PgUp, PgDn, K, J,                    !     : shell
+  PgUp, PgDn, K, J,
   Home, End, g, G : movement
   Enter           : chdir or play      Filelist
   Tab             : filelist/playlist  --------
@@ -793,34 +793,6 @@ class TagListWindow(ListWindow):
         self.keymap.bind('T', self.command_tag_regexp, (True, ))
         self.keymap.bind('U', self.command_tag_regexp, (False, ))
         self.keymap.bind('l', self.command_change_viewpoint, ())
-        self.keymap.bind('!', self.command_shell, ())
-
-    def command_shell(self):
-        if APP.restricted:
-            return
-        APP.stop_input_hook = self.stop_shell
-        APP.complete_input_hook = self.complete_shell
-        APP.start_input('shell$ ', colon=False)
-
-    def stop_shell(self):
-        curses.endwin()
-        sys.stderr.write('\n')
-        argv = [x.pathname for x in self.get_tagged()]
-        if not argv and self.current():
-            argv.append(self.current().pathname)
-        argv = [APP.input_string, '--'] + argv
-        result = subprocess.call(argv, shell=True)
-        if result == 0:
-            sys.stderr.write('\npress return to continue..\n')
-        else:
-            sys.stderr.write('\nshell returned %s, press return!\n' % result)
-        sys.stdin.readline()
-        APP.win_root.update()
-        APP.restore_default_status()
-        APP.cursor(0)
-
-    def complete_shell(self, line):
-        return self.complete_generic(line, quote=True)
 
     def complete_generic(self, line, quote=False):
         if quote:
