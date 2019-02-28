@@ -723,7 +723,7 @@ class HelpWindow(ListWindow):
   n, p            : next/prev track    a     : add (tagged) to playlist
   z, x            : toggle pause/stop  s, S  : recursive search, toggle sort
   Left, Right,                         BS, o : goto parent/specified dir
-  C-f, C-b    : seek forward/backward  m, '  : set/get bookmark
+  C-f, C-b    : seek forward/backward
   C-a, C-e    : restart/end track
   C-s, C-r, / : isearch                Playlist
   C-g, Esc    : cancel                 --------
@@ -886,46 +886,12 @@ class FilelistWindow(TagListWindow):
         self.keymap.bind('o', self.command_goto, ())
         self.keymap.bind('s', self.command_search_recursively, ())
         self.keymap.bind('S', self.togglesort, ())
-        self.keymap.bind('m', self.command_set_bookmark, ())
-        self.keymap.bind("'", self.command_get_bookmark, ())
-        self.bookmarks = {39: [self.cwd, 0]}
 
     def togglesort(self):
         self.sortdate = not self.sortdate
         self.listdir(prevdir=self.buffer[self.bufptr].filename)
         APP.status('Sort filelist by %s' % (
                 'name', 'modification time')[self.sortdate], 1)
-
-    def command_get_bookmark(self):
-        APP.do_input_hook = self.do_get_bookmark
-        APP.start_input('bookmark')
-
-    def do_get_bookmark(self, ch):
-        APP.input_string = ch
-        bookmark = self.bookmarks.get(ch)
-        if bookmark:
-            self.bookmarks[39] = [self.cwd, self.bufptr]
-            directory, pos = bookmark
-            self.chdir(directory)
-            self.listdir()
-            self.bufptr = pos
-            self.update()
-            APP.status('ok', 1)
-        else:
-            APP.status('Not found!', 1)
-        APP.stop_input()
-
-    def command_set_bookmark(self):
-        APP.do_input_hook = self.do_set_bookmark
-        APP.start_input('set bookmark')
-
-    def do_set_bookmark(self, ch):
-        APP.input_string = ch
-        self.bookmarks[ch] = [self.cwd, self.bufptr]
-        if ch:
-            APP.status('ok', 1)
-        else:
-            APP.stop_input()
 
     def command_search_recursively(self):
         APP.stop_input_hook = self.stop_search_recursively
