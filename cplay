@@ -649,37 +649,32 @@ class ListWindow(Window):
             self.bufptr = len(self.buffer) - 1
         return self.buffer[self.bufptr]
 
-    def cursor_move(self, ydiff):
+    def cursor_set(self, bufptr):
         if APP.input_mode:
             APP.cancel_input()
         if not self.buffer:
             return
         self.update_line(refresh=False)
-        if ydiff == 'random':
-            self.bufptr = random.randint(0, len(self.buffer))
-        else:
-            self.bufptr = (self.bufptr + ydiff) % len(self.buffer)
+        self.bufptr = max(0, min(len(self.buffer) - 1, bufptr))
         self.update(force=False)
 
+    def cursor_move(self, ydiff):
+        if ydiff == 'random':
+            self.cursor_set(random.randint(0, len(self.buffer)))
+        else:
+            self.cursor_set(self.bufptr + ydiff)
+
     def cursor_ppage(self):
-        self.bufptr = self.scrptr - 1
-        if self.bufptr < 0:
-            self.bufptr = len(self.buffer) - 1
-        self.scrptr = max(0, self.bufptr - self.rows)
-        self.update()
+        self.cursor_set(self.bufptr - (self.rows - 2))
 
     def cursor_npage(self):
-        self.bufptr = self.scrptr + self.rows
-        if self.bufptr > len(self.buffer) - 1:
-            self.bufptr = 0
-        self.scrptr = self.bufptr
-        self.update()
+        self.cursor_set(self.bufptr + (self.rows - 2))
 
     def cursor_home(self):
-        self.cursor_move(-self.bufptr)
+        self.cursor_set(0)
 
     def cursor_end(self):
-        self.cursor_move(-self.bufptr - 1)
+        self.cursor_set(len(self.buffer))
 
     def start_search(self, prompt, direction):
         self.search_direction = direction
