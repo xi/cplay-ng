@@ -55,7 +55,6 @@ locale.setlocale(locale.LC_ALL, '')
 XTERM = re.search('rxvt|xterm', os.environ.get('TERM', ''))
 CONTROL_FIFO = '%s/cplay-control-%s' % (
         os.environ.get('TMPDIR', '/tmp'), os.environ['USER'])
-MACRO = {}
 APP = None
 USAGE = '''Usage: %s [-nrRv] [ file | dir | playlist ] ...
   -n Enable restricted mode
@@ -95,18 +94,6 @@ class Application(object):
                 pass
             else:
                 break
-
-    def command_macro(self):
-        APP.do_input_hook = self.do_macro
-        APP.start_input('macro')
-
-    def do_macro(self, ch):
-        APP.stop_input()
-        self.run_macro(chr(ch))
-
-    def run_macro(self, c):
-        for i in MACRO.get(c, ''):
-            self.keymapstack.process(ord(i))
 
     def setup(self):
         if tty:
@@ -491,7 +478,6 @@ class RootWindow(Window):
         keymap.bind('Q', APP.quit, ())
         keymap.bind('q', self.command_quit, ())
         keymap.bind('v', APP.mixer, ('toggle', ))
-        keymap.bind(',', APP.command_macro, ())
 
     def command_quit(self):
         APP.do_input_hook = self.do_quit
@@ -730,7 +716,7 @@ class HelpWindow(ListWindow):
   Global                               t, T  : tag current/regex
   ------                               u, U  : untag current/regex
   Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all
-  PgUp, PgDn, K, J,                    !, ,  : shell, macro
+  PgUp, PgDn, K, J,                    !     : shell
   Home, End, g, G : movement
   Enter           : chdir or play      Filelist
   Tab             : filelist/playlist  --------
@@ -1729,7 +1715,6 @@ class FIFOControl(object):
             'play': [APP.toggle_stop, []],
             'stop': [APP.toggle_stop, []],
             'volume': [self.volume, None],
-            'macro': [APP.run_macro, None],
             'add': [APP.win_playlist.add, None],
             'empty': [APP.win_playlist.command_delete_all, []],
             'quit': [APP.quit, []]}
