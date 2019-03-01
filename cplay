@@ -727,7 +727,7 @@ class HelpWindow(ListWindow):
   C-s, C-r, / : isearch                Playlist
   C-g, Esc    : cancel                 --------
   1..9, +, -  : volume control         d     : delete (tagged) tracks
-  c, v        : counter/volume mode    m, M  : move tagged tracks after/before
+  c, v        : counter/volume mode    m, M  : move (tagged) tracks after/before
   <, >        : horizontal scrolling   r, R  : toggle repeat/Random mode
   C-l, l      : refresh, list mode     s, S  : shuffle/Sort playlist
   D           : clear playlist         w, @  : write playlist, jump to active
@@ -1321,10 +1321,17 @@ class PlaylistWindow(TagListWindow):
         if not self.buffer:
             return
         current_entry, l = self.current(), self.get_tagged()
-        if not l or current_entry.tagged:
-            return
-        self.buffer = self.not_tagged(self.buffer)
-        self.bufptr = self.buffer.index(current_entry) + after
+        if l:
+            if current_entry.tagged:
+                return
+            self.buffer = self.not_tagged(self.buffer)
+            self.bufptr = self.buffer.index(current_entry) + after
+        else:
+            l = [current_entry]
+            self.buffer.pop(self.bufptr)
+            self.bufptr += 1 if after else -1
+            if self.bufptr < 0:
+                self.bufptr = 0
         self.buffer[self.bufptr:self.bufptr] = l
         self.update()
 
