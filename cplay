@@ -1775,34 +1775,25 @@ class AlsaMixer(Mixer):
 
 class PulseMixer(Mixer):
     def __init__(self):
-        self._channels = [('Master', sink) for sink in self._list_sinks()]
+        import pulsectl
+        self.pulse = pulsectl.Pulse('cplay')
+        self._channels = [
+            (sink.description, sink) for sink in self.pulse.sink_list()]
         if not self._channels:
             raise ValueError
         self.set(self.get())
 
-    def _list_sinks(self):
-        result = subprocess.Popen(['pactl', 'list', 'sinks'],
-                shell=False, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
-        return dict((re.match(b'Sink #([0-9]+)', a).group(1), a)
-                for a in result)
-
     def get(self):
-        return int(re.search(br'^\s+Volume: .* ([0-9]+)%',
-                self._list_sinks()[self._channels[0][1]],
-                flags=re.MULTILINE).group(1))
+        return int(self.channel.volume.value_flat * 100)
 
     def set(self, vol):
-        subprocess.check_call([
-                'pactl', '--', 'set-sink-volume', self._channels[0][1],
-                '%s%%' % vol])
+        self.pulse.volume_set_all_chans(self.channel, vol / 100)
 
-    def cue(self, inc):
-        self.set('%+d' % inc)
+    def cue(self, increment):
+        self.pulse.volume_change_all_chans(self.channel, increment / 100)
 
     def __str__(self):
-        return 'volume %s%% (Pulse %s %s)' % (self.get(),
-                self._channels[0][0], self._channels[0][1])
+        return 'volume %s%% (Pulse %s)' % (self.get(), self._channels[0][0])
 
 
 class Stack(object):

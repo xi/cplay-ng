@@ -36,7 +36,7 @@ Other optional components:
 
 - reading metadata (tags): `mutagen <https://bitbucket.org/lazka/mutagen>`_
 - volume control: `alsaaudio <http://pyalsaaudio.sourceforge.net/>`_,
-  ``pulseaudio-utils`` (specifically the ``pactl`` command),
+  `pulsectl <https://github.com/mk-fg/python-pulse-control>`_,
   OSS support is part of the standard library.
 - detect character encodings of playlists:
   `python-magic <https://github.com/ahupp/python-magic>`_
@@ -50,7 +50,7 @@ Installation
 
 In Debian/Ubuntu, the following installs a selection of players and optional components::
 
-    $ sudo apt-get install mplayer gst123 mpg321 vorbis-tools python-alsaaudio pulseaudio-utils python-magic
+    $ sudo apt-get install mplayer gst123 mpg321 vorbis-tools python-alsaaudio python-magic
 
 Usage
 -----
