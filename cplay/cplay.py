@@ -101,7 +101,7 @@ class Application:
         self.window = RootWindow()
         self.player = Player()
         self.timeout = Timeout()
-        self.input = UIInput()
+        self.input = Input()
         self.status = self.window.win_status
         self.progress = self.window.win_progress
         self.counter = self.window.win_counter
@@ -292,17 +292,30 @@ class Input:
     def __init__(self):
         self.active = False
         self.string = ''
+        self.prompt = ''
         # optionally patch these
         self.do_hook = None
         self.stop_hook = None
         self.complete_hook = None
+        self.keymap = Keymap()
+        self.keymap.bind(list(Window.chars), self.do)
+        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8, ))
+        self.keymap.bind([21, 23], self.do)
+        self.keymap.bind(['\a', 27], self.cancel, ())
+        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
 
     def show(self):
-        pass
+        n = len(self.prompt) + 1
+        s = cut(self.string, APP.status.length() - n, left=True)
+        APP.status.status('%s%s ' % (self.prompt, s))
 
     def start(self, prompt='', data='', colon=True):
         self.active = True
         self.string = data
+        APP.cursor(1)
+        APP.keymapstack.push(self.keymap)
+        self.prompt = prompt + (': ' if colon else '')
+        self.show()
 
     def do(self, *args):
         if self.do_hook:
@@ -322,7 +335,11 @@ class Input:
 
     def stop(self, *args):
         self.active = False
-        if self.string and self.stop_hook:
+        APP.cursor(0)
+        APP.keymapstack.pop()
+        if not self.string:
+            APP.status.status(_('cancel'), 1)
+        elif self.stop_hook:
             self.stop_hook(*args)
         self.do_hook = None
         self.stop_hook = None
@@ -331,37 +348,6 @@ class Input:
     def cancel(self):
         self.string = ''
         self.stop()
-
-
-class UIInput(Input):
-    def __init__(self):
-        super().__init__()
-        self.prompt = ''
-        self.keymap = Keymap()
-        self.keymap.bind(list(Window.chars), self.do)
-        self.keymap.bind([127, curses.KEY_BACKSPACE], self.do, (8, ))
-        self.keymap.bind([21, 23], self.do)
-        self.keymap.bind(['\a', 27], self.cancel, ())
-        self.keymap.bind(['\n', curses.KEY_ENTER], self.stop, ())
-
-    def show(self):
-        n = len(self.prompt) + 1
-        s = cut(self.string, APP.status.length() - n, left=True)
-        APP.status.status('%s%s ' % (self.prompt, s))
-
-    def start(self, prompt='', data='', colon=True):
-        super().start(prompt=prompt, data=data, colon=colon)
-        APP.cursor(1)
-        APP.keymapstack.push(self.keymap)
-        self.prompt = prompt + (': ' if colon else '')
-        self.show()
-
-    def stop(self, *args):
-        super().stop(*args)
-        APP.cursor(0)
-        APP.keymapstack.pop()
-        if not self.string:
-            APP.status.status(_('cancel'), 1)
 
 
 class Window:

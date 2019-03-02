@@ -470,6 +470,7 @@ class TestPlayer(unittest.TestCase): pass
 class TestInput(unittest.TestCase):
     def setUp(self):
         self.input = cplay.Input()
+        self.input.show = mock.MagicMock()
         self.input.start()
 
     def test_input(self):
