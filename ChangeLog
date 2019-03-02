@@ -6,6 +6,7 @@ unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
 	- drop support for python 2
 	- drop support for configuration
 	- drop support for macros
+	- drop support for executing shell commands
 	- drop support for bookmarks
 	- drop support for playing videos
 	- drop support for vlc backend

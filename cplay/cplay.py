@@ -808,7 +808,6 @@ class HelpWindow(ListWindow):
  t, T         : tag current/regex
  u, U         : untag current/regex
  Sp, i        : invert current/all
- !            : shell
 
  Filelist
  --------
@@ -883,35 +882,6 @@ class TagListWindow(ListWindow):
         self.keymap.bind('T', self.command_tag_regexp, (True, ))
         self.keymap.bind('U', self.command_tag_regexp, (False, ))
         self.keymap.bind('l', self.command_change_viewpoint, ())
-        self.keymap.bind('!', self.command_shell, ())
-
-    def command_shell(self):
-        if APP.restricted:
-            return
-        APP.input.stop_hook = self.stop_shell
-        APP.input.complete_hook = self.complete_shell
-        APP.input.start(_('shell$ '), colon=False)
-
-    def stop_shell(self):
-        curses.endwin()
-        sys.stderr.write('\n')
-        argv = [x.pathname for x in self.get_tagged()]
-        if not argv and self.current():
-            argv.append(self.current().pathname)
-        argv = [APP.input.string, '--'] + argv
-        result = subprocess.call(argv, shell=True)
-        if result == 0:
-            APP.status.status(_('Command successfully executed.\n'), 2)
-            APP.window.update()
-        else:
-            sys.stderr.write('\nshell returned %s, press return!\n' % result)
-            sys.stdin.readline()
-            APP.window.update()
-            APP.status.restore_default_status()
-        APP.cursor(0)
-
-    def complete_shell(self, line):
-        return self.complete_generic(line, quote=True)
 
     def complete_generic(self, line, quote=False):
         if quote:
