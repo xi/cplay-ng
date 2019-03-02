@@ -795,7 +795,8 @@ class HelpWindow(ListWindow):
  Left, C-f    : seek backward
  Right, C-b   : seek forward
  C-a, C-e     : restart/end track
- C-s, C-r, /  : isearch
+ C-s, /       : forward isearch
+ C-r, ?       : backword isearch
  C-g, Esc     : cancel
  1..9, +, -   : volume control
  c, v         : counter/volume mode
