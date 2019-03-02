@@ -246,9 +246,10 @@ class Application(object):
         s = cut(self.input_string, self.win_status.cols - n, left=True)
         APP.status('%s%s ' % (self.input_prompt, s))
 
-    def start_input(self, prompt='', data='', colon=True):
+    def start_input(self, prompt='', data='', colon=True, ignored=[]):
         self.input_mode = 1
         self.cursor(1)
+        self.input_keymap.ignored = ignored
         APP.keymapstack.push(self.input_keymap)
         self.input_prompt = prompt + (': ' if colon else '')
         self.input_string = data
@@ -674,7 +675,7 @@ class ListWindow(Window):
         else:
             APP.do_input_hook = self.do_search
             APP.stop_input_hook = self.stop_search
-            APP.start_input(prompt)
+            APP.start_input(prompt, ignored=[ord('/'), ord('?')])
 
     def stop_search(self):
         self.last_search = APP.input_string
@@ -1826,6 +1827,7 @@ class KeymapStack(Stack):
 class Keymap(object):
     def __init__(self):
         self.methods = [None] * curses.KEY_MAX
+        self.ignored = []
 
     def bind(self, key, method, args=None):
         if isinstance(key, (tuple, list)):
@@ -1837,6 +1839,8 @@ class Keymap(object):
         self.methods[key] = (method, args)
 
     def process(self, key):
+        if key in self.ignored:
+            return False
         if self.methods[key] is None:
             return False
         method, args = self.methods[key]
