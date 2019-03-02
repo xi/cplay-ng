@@ -1859,7 +1859,10 @@ class AlsaMixer(Mixer):
         return self._channels[0][1].getvolume()[0]
 
     def set(self, level):
-        self._channels[0][1].setvolume(level)
+        try:
+            self._channels[0][1].setvolume(level)
+        except:
+            pass
 
     def close(self):
         for ch in self._channels:
