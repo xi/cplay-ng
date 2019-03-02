@@ -44,7 +44,7 @@ Other optional components:
 - `pyalsaaudio <http://pyalsaaudio.sourceforge.net/>`_ (optional) For
   Alsa mixer support
 
-- pulseaudio-utils, specifically the ``pactl`` command (optional) For
+- `pulsectl <https://github.com/mk-fg/python-pulse-control>`_ (optional) For
   PulseAudio mixer support
 
 - `mutagen <http://code.google.com/p/mutagen/>`_ (optional) For

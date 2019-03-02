@@ -54,6 +54,7 @@ setup(
     extras_require={
         'metadata': ['mutagen'],
         'alsa_mixer': ['pyalsaaudio'],
+        'pulse_mixer': ['pulsectl'],
     },
     entry_points={'console_scripts': [
         'cplay-ng=cplay.cplay:main',
