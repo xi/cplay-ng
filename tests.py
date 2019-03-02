@@ -521,10 +521,10 @@ class TestInput(unittest.TestCase):
 
     def test_stop_hook(self):
         state = []
-        self.input.stop_hook = lambda x, y: state.append(x + y)
+        self.input.stop_hook = lambda s: state.append(s)
         self.input.do(ord('a'))
-        self.input.stop(1, 2)
-        self.assertListEqual(state, [3])
+        self.input.stop()
+        self.assertListEqual(state, ['a'])
 
 
 class TestApplication(unittest.TestCase): pass

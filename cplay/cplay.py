@@ -307,20 +307,17 @@ class Input:
     def show(self):
         n = len(self.prompt) + 1
         s = cut(self.string, APP.status.length() - n, left=True)
-        APP.status.status('%s%s ' % (self.prompt, s))
+        APP.status.status('%s: %s ' % (self.prompt, s))
 
-    def start(self, prompt='', data='', colon=True):
+    def start(self, prompt='', initial=''):
         self.active = True
-        self.string = data
+        self.prompt = prompt
+        self.string = initial
         APP.cursor(1)
         APP.keymapstack.push(self.keymap)
-        self.prompt = prompt + (': ' if colon else '')
         self.show()
 
-    def do(self, *args):
-        if self.do_hook:
-            return self.do_hook(*args)
-        ch = args[0] if args else None
+    def do(self, ch):
         if ch in [8, 127]:  # backspace
             self.string = self.string[:-1]
         elif ch == 9 and self.complete_hook:
@@ -332,15 +329,17 @@ class Input:
         elif ch:
             self.string = '%s%c' % (self.string, ch)
         self.show()
+        if self.do_hook:
+            self.do_hook(self.string)
 
-    def stop(self, *args):
+    def stop(self):
         self.active = False
         APP.cursor(0)
         APP.keymapstack.pop()
         if not self.string:
             APP.status.status(_('cancel'), 1)
         elif self.stop_hook:
-            self.stop_hook(*args)
+            self.stop_hook(self.string)
         self.do_hook = None
         self.stop_hook = None
         self.complete_hook = None
@@ -544,10 +543,11 @@ class RootWindow(Window):
         APP.input.do_hook = self.do_quit
         APP.input.start(_('Quit? (y/N)'))
 
-    def do_quit(self, ch):
-        if chr(ch) == 'y':
+    def do_quit(self, string):
+        if string == 'y':
             APP.quit()
-        APP.input.stop()
+        else:
+            APP.input.cancel()
 
 
 class TabWindow(Window):
@@ -728,44 +728,33 @@ class ListWindow(Window):
     def cursor_end(self):
         self.cursor_set(len(self.buffer))
 
-    def start_search(self, prompt_text, direction):
+    def start_search(self, prompt, direction):
         self.search_direction = direction
         if APP.input.active:
-            APP.input.prompt = '%s: ' % prompt_text
-            self.do_search(advance=direction)
+            APP.input.prompt = prompt
+            self.do_search(APP.input.string, advance=direction)
         else:
             APP.input.do_hook = self.do_search
             APP.input.stop_hook = self.stop_search
-            APP.input.start(prompt_text)
+            APP.input.start(prompt)
 
-    def stop_search(self):
-        self.last_search = APP.input.string
+    def stop_search(self, string):
+        self.last_search = string
         APP.status.status(_('ok'), 1)
 
-    def do_search(self, ch=None, advance=0):
-        old_string = APP.input.string
-        if ch in [8, 127]:
-            new_string = old_string[:-1]
-        elif ch:
-            new_string = '%s%c' % (old_string, ch)
-        elif not old_string:
-            new_string = self.last_search
-        else:
-            new_string = old_string
-        APP.input.string = new_string
+    def do_search(self, string, advance=0):
         index = (self.bufptr + advance) % len(self.buffer)
         origin = index
         while True:
             line = str(self.buffer[index]).lower()
-            if line.find(new_string.lower()) != -1:
-                APP.input.show()
+            if line.find(string.lower()) != -1:
                 self.update_line(refresh=False)
                 self.bufptr = index
                 self.update(force=False)
                 break
             index = (index + self.search_direction) % len(self.buffer)
             if index == origin:
-                APP.status.status(_('Not found: %s ') % new_string)
+                APP.status.status(_('Not found: %s ') % string)
                 break
 
     def hscroll(self, value):
@@ -937,9 +926,9 @@ class TagListWindow(ListWindow):
         APP.input.stop_hook = self.stop_tag_regexp
         APP.input.start(_('Tag regexp') if value else _('Untag regexp'))
 
-    def stop_tag_regexp(self):
+    def stop_tag_regexp(self, string):
         try:
-            r = re.compile(APP.input.string, re.IGNORECASE)
+            r = re.compile(string, re.IGNORECASE)
             for entry in self.buffer:
                 if r.search(str(entry)):
                     entry.tagged = self.tag_value
@@ -983,16 +972,15 @@ class FilelistWindow(TagListWindow):
         APP.input.stop_hook = self.stop_search_recursively
         APP.input.start(_('search'))
 
-    def stop_search_recursively(self):
+    def stop_search_recursively(self, query):
         APP.status.status(_('Searching...'))
 
         try:
-            m = re.match('!([a-z0-9]+) +(.+)', APP.input.string)
+            m = re.match('!([a-z0-9]+) +(.+)', query)
             if m:
                 key, query = m.groups()
                 fn = SEARCH[key]
             else:
-                query = APP.input.string
                 fn = self.fs_search
             results = list(fn(query))
         except Exception as e:
@@ -1131,8 +1119,8 @@ class FilelistWindow(TagListWindow):
         APP.input.complete_hook = self.complete_generic
         APP.input.start(_('goto'))
 
-    def stop_goto(self):
-        directory = os.path.expanduser(APP.input.string)
+    def stop_goto(self, string):
+        directory = os.path.expanduser(string)
         if directory[0] != '/':
             directory = os.path.join(self.cwd, directory)
         if not os.path.isdir(directory):
@@ -1465,8 +1453,7 @@ class PlaylistWindow(TagListWindow):
         APP.input.stop_hook = self.stop_save_playlist
         APP.input.start(_('Save playlist'), default)
 
-    def stop_save_playlist(self):
-        pathname = APP.input.string
+    def stop_save_playlist(self, pathname):
         if pathname[0] != '/':
             pathname = os.path.join(APP.filelist.cwd, pathname)
         if not re.search(r'\.m3u$', pathname, re.IGNORECASE):
