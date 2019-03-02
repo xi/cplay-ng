@@ -1,324 +1,302 @@
-# Hungarian translations for cplay-ng.
-# Copyright (C) 2015 ORGANIZATION
+# Translations template for cplay-ng.
+# Copyright (C) 2019 ORGANIZATION
 # This file is distributed under the same license as the cplay-ng project.
-#
+# 
 # Translators:
+# Tobias Bengfort <tobias.bengfort@posteo.de>, 2019
 msgid ""
 msgstr ""
-"Project-Id-Version:  cplay-ng\n"
+"Project-Id-Version: cplay-ng\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-04-19 12:17+0200\n"
-"PO-Revision-Date: 2015-03-28 09:47+0000\n"
+"POT-Creation-Date: 2019-03-02 18:18+0100\n"
+"PO-Revision-Date: 2019-03-02 17:19+0000\n"
 "Last-Translator: Tobias Bengfort <tobias.bengfort@posteo.de>\n"
-"Language: hu\n"
-"Language-Team: Hungarian (http://www.transifex.com/projects/p/cplay-"
-"ng/language/hu/)\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Language-Team: Hungarian (http://www.transifex.com/cplay-ng/cplay-ng/language/hu/)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.5.3\n"
+"Generated-By: Babel 2.6.0\n"
+"Language: hu\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: cplay/cplay.py:808
+#: cplay/cplay.py:771
 msgid ""
-"  Global                               t, T  : tag current/regex\n"
-"  ------                               u, U  : untag current/regex\n"
-"  Up, Down, k, j, C-p, C-n,            Sp, i : invert current/all\n"
-"  PgUp, PgDn, K, J,                    !, ,  : shell, macro\n"
-"  Home, End, g, G : movement\n"
-"  Enter           : chdir or play      Filelist\n"
-"  Tab             : filelist/playlist  --------\n"
-"  n, p            : next/prev track    a     : add (tagged) to playlist\n"
-"  z, x            : toggle pause/stop  s     : recursive search\n"
-"                                       BS, o : goto parent/specified dir\n"
-"  Left, Right,                         m, '  : set/get bookmark\n"
-"  C-f, C-b    : seek forward/backward\n"
-"  C-a, C-e    : restart/end track      Playlist\n"
-"  C-s, C-r, / : isearch                --------\n"
-"  C-g, Esc    : cancel                 d, D  : delete (tagged) "
-"tracks/playlist\n"
-"  1..9, +, -  : volume control         m, M  : move tagged tracks "
-"after/before\n"
-"  c, v        : counter/volume mode    r, R  : toggle repeat/Random mode\n"
-"  <, >        : horizontal scrolling   s, S  : shuffle/Sort playlist\n"
-"  C-l, l      : refresh, list mode     w, @  : write playlist, jump to "
-"active\n"
-"  h, q, Q     : help, quit?, Quit!     X     : stop playlist after each "
-"track\n"
+" Global\n"
+" ------\n"
+" Up, k, C-p   : move to previous item\n"
+" Down, j, C-n : move to next item\n"
+" PageUp, K    : move to previous page\n"
+" PageDown, J  : move to next page\n"
+" Home, g      : move to top\n"
+" End, G       : move to bottom\n"
+" Enter        : chdir or play\n"
+" Tab          : switch between filelist/playlist\n"
+" n, p         : next/prev track\n"
+" z, x         : toggle pause/stop\n"
+"\n"
+" Left, C-f    : seek backward\n"
+" Right, C-b   : seek forward\n"
+" C-a, C-e     : restart/end track\n"
+" C-s, /       : forward isearch\n"
+" C-r, ?       : backword isearch\n"
+" C-g, Esc     : cancel\n"
+" 1..9, +, -   : volume control\n"
+" c, v         : counter/volume mode\n"
+" <, >         : horizontal scrolling\n"
+" C-l          : refresh\n"
+" l            : list mode\n"
+" h            : help\n"
+" q, Q         : quit?, Quit!\n"
+"\n"
+" t, T         : tag current/regex\n"
+" u, U         : untag current/regex\n"
+" Sp, i        : invert current/all\n"
+"\n"
+" Filelist\n"
+" --------\n"
+" a            : add (tagged) to playlist\n"
+" s            : recursive search\n"
+" BS, o        : go to parent/specified dir\n"
+"\n"
+" Playlist\n"
+" --------\n"
+" d, D         : delete (tagged) items/all\n"
+" m, M         : move (tagged) tracks after/before\n"
+" r, R         : toggle repeat/Random mode\n"
+" s, S         : shuffle/Sort playlist\n"
+" w            : write playlist to file\n"
+" @            : jump to current track\n"
 msgstr ""
 
-#: cplay/cplay.py:1929
+#: cplay/cplay.py:1816
 #, python-format
 msgid "%s volume %s%%"
 msgstr ""
 
-#: cplay/cplay.py:1364
+#: cplay/cplay.py:1294
 #, python-format
 msgid "Added: %s"
 msgstr "Hozzáadva: %s"
 
-#: cplay/cplay.py:1222
+#: cplay/cplay.py:1142
 msgid "Adding tagged files"
 msgstr ""
 
-#: cplay/cplay.py:2152
-msgid "Allow to play videos."
-msgstr ""
-
-#: cplay/cplay.py:249
+#: cplay/cplay.py:240
 msgid "Backend not found!"
 msgstr ""
 
-#: cplay/cplay.py:2068
+#: cplay/cplay.py:1950
 msgid "Can't read metadata, module mutagen not available"
 msgstr ""
 
-#: cplay/cplay.py:916
-msgid "Command successfully executed.\n"
-msgstr ""
-
-#: cplay/cplay.py:535
+#: cplay/cplay.py:510
 #, python-format
 msgid "Counting %s time"
 msgstr ""
 
-#: cplay/cplay.py:2140
+#: cplay/cplay.py:1997
 msgid "Enable debugging output to <filename>."
 msgstr ""
 
-#: cplay/cplay.py:2156
+#: cplay/cplay.py:2013
 msgid "FIFO socket used by cnq"
 msgstr ""
 
-#: cplay/cplay.py:1111
+#: cplay/cplay.py:1032
 msgid "Filelist: "
 msgstr "Állománylista: "
 
-#: cplay/cplay.py:806
-#, fuzzy
+#: cplay/cplay.py:769
 msgid "Help: "
-msgstr "Segítség"
+msgstr "Segítség: "
 
-#: cplay/cplay.py:949
+#: cplay/cplay.py:905
 #, python-format
 msgid "Listing %s"
 msgstr ""
 
-#: cplay/cplay.py:295
+#: cplay/cplay.py:286
 msgid "No mixer."
 msgstr ""
 
-#: cplay/cplay.py:1210
+#: cplay/cplay.py:1130
 msgid "Not a directory!"
 msgstr "Nem könyvtár!"
 
-#: cplay/cplay.py:1037
-msgid "Not found!"
-msgstr ""
-
-#: cplay/cplay.py:795
+#: cplay/cplay.py:758
 #, python-format
 msgid "Not found: %s "
-msgstr ""
+msgstr "Nem található: %s"
 
-#: cplay/cplay.py:1706
+#: cplay/cplay.py:1605
 #, python-format
 msgid "Paused: %s"
 msgstr "Szünetel: %s"
 
-#: cplay/cplay.py:1708
+#: cplay/cplay.py:1607
 #, python-format
 msgid "Playing: %s"
 msgstr "Lejátszás: %s"
 
-#: cplay/cplay.py:1559
+#: cplay/cplay.py:1177
 #, python-format
-msgid "Playlist %s %s %s"
+msgid "Playlist %s %s"
 msgstr ""
 
-#: cplay/cplay.py:1466
+#: cplay/cplay.py:1400
 msgid "Playlist cleared"
 msgstr ""
 
-#: cplay/cplay.py:571
+#: cplay/cplay.py:545
 msgid "Quit? (y/N)"
 msgstr ""
 
-#: cplay/cplay.py:1500
+#: cplay/cplay.py:1441
 #, python-format
 msgid "Random: %s"
-msgstr ""
+msgstr "Véletlenszerű: %s"
 
-#: cplay/cplay.py:1127
+#: cplay/cplay.py:1048
 msgid "Reading directory..."
 msgstr "Könyvtár olvasása..."
 
-#: cplay/cplay.py:1497
+#: cplay/cplay.py:1438
 #, python-format
 msgid "Repeat: %s"
-msgstr ""
+msgstr "Ismétel: %s"
 
-#: cplay/cplay.py:1518
+#: cplay/cplay.py:1457
 msgid "Save playlist"
 msgstr "Számlista mentése"
 
-#: cplay/cplay.py:2155
+#: cplay/cplay.py:2012
 msgid "Save state on close and restore on open."
 msgstr ""
 
-#: cplay/cplay.py:1057
+#: cplay/cplay.py:979
 msgid "Searching..."
 msgstr ""
 
-#: cplay/cplay.py:1487
+#: cplay/cplay.py:1428
 msgid "Shuffled playlist... Oops?"
 msgstr "Kevert számlista... Hopsz?"
 
-#: cplay/cplay.py:1494
+#: cplay/cplay.py:1435
 msgid "Sorted playlist"
 msgstr ""
 
-#: cplay/cplay.py:2148
+#: cplay/cplay.py:2005
 msgid "Start in random mode."
 msgstr ""
 
-#: cplay/cplay.py:2146
+#: cplay/cplay.py:2003
 msgid "Start in repeat mode."
 msgstr ""
 
-#: cplay/cplay.py:2142
+#: cplay/cplay.py:1999
 msgid ""
-"Start in restricted mode: No shell commands, changing directory, goto, or"
-" saving playlists."
+"Start in restricted mode: No shell commands, changing directory, goto, or "
+"saving playlists."
 msgstr ""
 
-#: cplay/cplay.py:1506
-#, python-format
-msgid "Stop playlist: %s"
-msgstr ""
-
-#: cplay/cplay.py:1704
+#: cplay/cplay.py:1603
 #, python-format
 msgid "Stopped: %s"
 msgstr "Megállítva: %s"
 
-#: cplay/cplay.py:2150
+#: cplay/cplay.py:2009
 msgid "Switch mixer channels."
 msgstr ""
 
-#: cplay/cplay.py:974
+#: cplay/cplay.py:930
 msgid "Tag regexp"
 msgstr ""
 
-#: cplay/cplay.py:974
+#: cplay/cplay.py:930
 msgid "Untag regexp"
 msgstr ""
 
-#: cplay/cplay.py:2136
+#: cplay/cplay.py:1991
 msgid "When in doubt, press 'h' for a friendly help page."
 msgstr ""
 
-#: cplay/cplay.py:1353 cplay/cplay.py:1490
+#: cplay/cplay.py:1283 cplay/cplay.py:1431
 msgid "Working..."
 msgstr ""
 
-#: cplay/cplay.py:1561
+#: cplay/cplay.py:1179
 msgid "[random]"
 msgstr "[véletlenszerű]"
 
-#: cplay/cplay.py:1560
-#, fuzzy
+#: cplay/cplay.py:1178
 msgid "[repeat all]"
-msgstr "[ismétlés]"
-
-#: cplay/cplay.py:1562
-msgid "[stop]"
 msgstr ""
 
-#: cplay/cplay.py:661
+#: cplay/cplay.py:636
 msgid "backward-isearch"
 msgstr "keresés hátra"
 
-#: cplay/cplay.py:1023
-msgid "bookmark"
-msgstr ""
-
-#: cplay/cplay.py:374
+#: cplay/cplay.py:341
 msgid "cancel"
 msgstr "mégsem"
 
-#: cplay/cplay.py:534
+#: cplay/cplay.py:509
 msgid "elapsed"
 msgstr ""
 
-#: cplay/cplay.py:2157
+#: cplay/cplay.py:2014
 msgid "file"
 msgstr ""
 
-#: cplay/cplay.py:2158
+#: cplay/cplay.py:2015
 msgid "file, dir or playlist"
 msgstr ""
 
-#: cplay/cplay.py:858 cplay/cplay.py:2139
+#: cplay/cplay.py:842 cplay/cplay.py:1996
 msgid "filename"
 msgstr ""
 
-#: cplay/cplay.py:663
+#: cplay/cplay.py:638
 msgid "forward-isearch"
 msgstr "keresés előre"
 
-#: cplay/cplay.py:1203
+#: cplay/cplay.py:1123
 msgid "goto"
 msgstr "ugrás"
 
-#: cplay/cplay.py:1901
-msgid "macro"
-msgstr ""
-
-#: cplay/cplay.py:878
+#: cplay/cplay.py:864
 msgid "metadata"
 msgstr ""
 
-#: cplay/cplay.py:1511
+#: cplay/cplay.py:1449
 msgid "off"
 msgstr "ki"
 
-#: cplay/cplay.py:770 cplay/cplay.py:983 cplay/cplay.py:1035
-#: cplay/cplay.py:1048 cplay/cplay.py:1532
+#: cplay/cplay.py:744 cplay/cplay.py:939 cplay/cplay.py:1470
 msgid "ok"
 msgstr "ok"
 
-#: cplay/cplay.py:1510
+#: cplay/cplay.py:1449
 msgid "on"
 msgstr "be"
 
-#: cplay/cplay.py:859
+#: cplay/cplay.py:843
 msgid "pathname"
 msgstr ""
 
-#: cplay/cplay.py:531
+#: cplay/cplay.py:2007
+msgid "quit at the end of the playlist"
+msgstr ""
+
+#: cplay/cplay.py:506
 msgid "remaining"
 msgstr ""
 
-#: cplay/cplay.py:1054
+#: cplay/cplay.py:976
 msgid "search"
 msgstr ""
 
-#: cplay/cplay.py:1074
+#: cplay/cplay.py:995
 msgid "search results"
 msgstr ""
-
-#: cplay/cplay.py:1042
-msgid "set bookmark"
-msgstr ""
-
-#: cplay/cplay.py:899
-msgid "shell$ "
-msgstr ""
-
-#~ msgid "Deleted playlist"
-#~ msgstr ""
-
-#~ msgid "ERROR: Cannot send commands to mplayer!"
-#~ msgstr ""
-
