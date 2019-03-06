@@ -169,8 +169,8 @@ class TestKeymapStack(unittest.TestCase):
         self.keymapstack.pop()
         self.keymapstack.process('c')
 
-        self.assertListEqual(keymap1.log, ['a', 'a', 'b', 'c'])
-        self.assertListEqual(keymap2.log, ['c', 'd'])
+        self.assertEqual(keymap1.log, ['a', 'a', 'b', 'c'])
+        self.assertEqual(keymap2.log, ['c', 'd'])
 
 
 class TestKeymap(unittest.TestCase):
@@ -186,13 +186,13 @@ class TestKeymap(unittest.TestCase):
         self.assertFalse(self.keymap.process(ord('b')))
         self.assertFalse(self.keymap.process(9999999999999999))
         self.assertTrue(self.keymap.process(ord('a')))
-        self.assertListEqual(state, [ord('a')])
+        self.assertEqual(state, [ord('a')])
 
     def test_bind_with_args(self):
         state = []
         self.keymap.bind('a', lambda x, y: state.append(x + y), [1, 2])
         self.assertTrue(self.keymap.process(ord('a')))
-        self.assertListEqual(state, [3])
+        self.assertEqual(state, [3])
 
     def test_bind_multiple(self):
         state = []
@@ -200,7 +200,7 @@ class TestKeymap(unittest.TestCase):
         self.assertTrue(self.keymap.process(ord('a')))
         self.assertTrue(self.keymap.process(ord('b')))
         self.assertTrue(self.keymap.process(ord('a')))
-        self.assertListEqual(state, [ord('a'), ord('b'), ord('a')])
+        self.assertEqual(state, [ord('a'), ord('b'), ord('a')])
 
 
 class TestWindow(unittest.TestCase): pass
@@ -277,12 +277,12 @@ dir/file3.wav""",
         non_songs = ['foo', 'foo.xyz', 'ftp://foo.com']
         for f in songs + non_songs:
             self.playlist.add(f)
-        self.assertListEqual(
+        self.assertEqual(
             [entry.pathname for entry in self.playlist.buffer], songs)
 
     def test_add_pls(self):
         self.playlist.add(os.path.join(self.path, 'playlist.pls'))
-        self.assertListEqual(
+        self.assertEqual(
             [entry.pathname for entry in self.playlist.buffer],
             ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav'])
 
@@ -291,14 +291,14 @@ dir/file3.wav""",
         expected = [os.path.join(self.path, p) for p in
                     ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav']]
         actual = [entry.pathname for entry in self.playlist.buffer]
-        self.assertListEqual(actual, expected)
+        self.assertEqual(actual, expected)
 
     def test_add_dir(self):
         self.playlist.add(os.path.join(self.path, 'dir'))
         expected = [os.path.join(self.path, p) for p in
                     ['dir/file1.mp3', 'dir/file2.ogg', 'dir/file3.wav']]
         actual = [entry.pathname for entry in self.playlist.buffer]
-        self.assertListEqual(actual, expected)
+        self.assertEqual(actual, expected)
 
     def _test_change_active_entry(self):
         # when the list is empty, no entry should be active
@@ -424,16 +424,16 @@ class TestTimeout(unittest.TestCase):
     def test_timeout(self):
         state = []
         self.timeout.add(5, lambda: state.append('foo'))
-        self.assertListEqual(state, [])
+        self.assertEqual(state, [])
 
         self.timeout.check(time.time() + 5)
-        self.assertListEqual(state, ['foo'])
+        self.assertEqual(state, ['foo'])
 
     def test_timeout_with_args(self):
         state = []
         self.timeout.add(5, lambda x, y: state.append(x + y), (1, 2))
         self.timeout.check(time.time() + 5)
-        self.assertListEqual(state, [3])
+        self.assertEqual(state, [3])
 
 
 class TestFIFOControl(unittest.TestCase):
@@ -449,9 +449,9 @@ class TestFIFOControl(unittest.TestCase):
             'test': [lambda x: state.append(x), ['foo']],
         }
         self.control.fd = BytesIO(b'test\n')
-        self.assertListEqual(state, [])
+        self.assertEqual(state, [])
         self.control.handle_command()
-        self.assertListEqual(state, ['foo'])
+        self.assertEqual(state, ['foo'])
 
     def test_command_with_args(self):
         state = []
@@ -459,9 +459,9 @@ class TestFIFOControl(unittest.TestCase):
             'test': [lambda x: state.append(x), None],
         }
         self.control.fd = BytesIO(b'test bar\n')
-        self.assertListEqual(state, [])
+        self.assertEqual(state, [])
         self.control.handle_command()
-        self.assertListEqual(state, ['bar'])
+        self.assertEqual(state, ['bar'])
 
 
 class TestPlayer(unittest.TestCase): pass
@@ -516,7 +516,7 @@ class TestInput(unittest.TestCase):
         self.input.do(ord('a'))
         self.input.do(ord('b'))
         self.input.do(9)
-        self.assertListEqual(state, ['ab'])
+        self.assertEqual(state, ['ab'])
         self.assertTrue(self.input.active)
 
     def test_stop_hook(self):
@@ -524,7 +524,7 @@ class TestInput(unittest.TestCase):
         self.input.stop_hook = lambda s: state.append(s)
         self.input.do(ord('a'))
         self.input.stop()
-        self.assertListEqual(state, ['a'])
+        self.assertEqual(state, ['a'])
 
 
 class TestApplication(unittest.TestCase): pass
