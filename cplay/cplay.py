@@ -142,12 +142,15 @@ class Application:
                         self.quit()
                     else:
                         self.player.stop()
-            R = [sys.stdin, self.player.backend.stdout_r,
-                 self.player.backend.stderr_r]
+            streams = [
+                sys.stdin,
+                self.player.backend.stdout_r,
+                self.player.backend.stderr_r,
+            ]
             if self.control.fd:
-                R.append(self.control.fd)
+                streams.append(self.control.fd)
             try:
-                r, _w, _e = select.select(R, [], [], timeout)
+                r, _w, _e = select.select(streams, [], [], timeout)
             except select.error:
                 continue
             # user
