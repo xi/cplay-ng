@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- python -*-
 
-"""cplay - A curses front-end for various audio players
+"""cplay - A curses front-end for various audio players.
+
 Copyright (C) 1998-2005 Ulf Betlehem <flu@iki.fi>
               2005-2019 see AUTHORS
 
@@ -1936,8 +1937,8 @@ class Keymap:
         return True
 
 
-# FIXME: Metadata gathering seems a bit slow now. Perhaps it could be done
-#        in background so it wouldn't slow down responsiveness
+# FIXME: Metadata gathering seems a bit slow now. Perhaps it could be
+# done in background so it wouldn't slow down responsiveness
 def get_tag(pathname):
     fallback = os.path.basename(pathname)
     is_url = re.compile(r'^https?://').match(pathname)
