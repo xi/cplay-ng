@@ -67,6 +67,8 @@ FINISHED = 3
 PAUSED = 4
 PLAYING = 5
 
+METADATA = ('artist', 'album', 'tracknumber', 'title')
+
 
 class Application:
     def __init__(self):
@@ -858,7 +860,8 @@ class PlaylistEntry(ListEntry):
 
     def vp_metadata(self):
         if self.metadata is None:
-            self.metadata = get_tag(self.pathname)
+            data = get_metadata(self.pathname)
+            self.metadata = ' - '.join(data[k] for k in METADATA if k in data)
             logging.debug(self.metadata)
         return self.metadata
 
@@ -1939,41 +1942,33 @@ class Keymap:
 
 # FIXME: Metadata gathering seems a bit slow now. Perhaps it could be
 # done in background so it wouldn't slow down responsiveness
-def get_tag(pathname):
-    fallback = os.path.basename(pathname)
+def get_metadata(pathname):
+    metadata = {
+        'title': os.path.basename(pathname) or pathname,
+    }
+
     is_url = re.compile(r'^https?://').match(pathname)
     if is_url or not os.path.exists(pathname):
-        return fallback
+        return metadata
+
     try:
         import mutagen
     except ImportError:
         logging.debug('No mutagen available')
         APP.status.status(
             _('Can\'t read metadata, module mutagen not available'), 2)
-        return fallback
+        return metadata
 
     try:
-        metadata = mutagen.File(pathname, easy=True)
+        data = mutagen.File(pathname, easy=True)
+        for key in METADATA:
+            if data and key in data:
+                metadata[key] = ' '.join(data[key]).strip()
     except:
         logging.debug('Error reading metadata')
         logging.debug(traceback.format_exc())
         APP.status.status('Error reading metadata', 1)
-        return fallback
-
-    def get(key):
-        return ' '.join(metadata.get(key, ('?', )))
-
-    # FIXME: Allow user to configure metadata view
-    try:
-        s = '%s - %s - %s %s' % (
-            get('artist'),
-            get('album'),
-            get('tracknumber'),
-            get('title'))
-        return s
-    except:
-        logging.debug(traceback.format_exc())
-        return fallback
+    return metadata
 
 
 def valid_song(name):
