@@ -1875,28 +1875,32 @@ class AlsaMixer(Mixer):
 class PulseMixer(Mixer):
     def __init__(self):
         super().__init__()
-        import pulsectl
-        self.pulse = pulsectl.Pulse('cplay')
-        self._channels = [
-            (sink.description, sink) for sink in self.pulse.sink_list()]
+        self._channels = [('Master', sink) for sink in self._list_sinks()]
         if not self._channels:
             raise ValueError
         self.set(self.get())
 
+    def _list_sinks(self):
+        result = subprocess.Popen(
+            ['pactl', 'list', 'sinks'],
+            shell=False, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).communicate()[0].split(b'\n\n')
+        return dict(
+            (re.match(b'Sink #([0-9]+)', a).group(1), a) for a in result)
+
     def get(self):
-        return int(self.channel.volume.value_flat * 100)
+        sink = self._list_sinks()[self.channel]
+        return int(re.search(
+            br'^\s+Volume: .* ([0-9]+)%', sink, flags=re.MULTILINE
+        ).group(1))
 
     def set(self, vol):
-        try:
-            self.pulse.volume_set_all_chans(self.channel, vol / 100)
-        except:
-            pass
+        subprocess.check_call([
+            'pactl', '--', 'set-sink-volume', self.channel, '%s%%' % vol
+        ])
 
-    def cue(self, increment):
-        try:
-            self.pulse.volume_change_all_chans(self.channel, increment / 100)
-        except:
-            pass
+    def cue(self, inc):
+        self.set('%+d' % inc)
 
 
 class KeymapStack(list):

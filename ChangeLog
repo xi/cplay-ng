@@ -12,7 +12,6 @@ unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
 	- drop support for vlc backend
 	- drop support for deprecated python-oss
 	- drop "stop after each track" feature
-	- new dependency: pulsectl for pulse mixer
 
 	* new features:
 	- add --autoexit option to close at the end of the playlist
