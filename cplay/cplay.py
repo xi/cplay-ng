@@ -1187,77 +1187,16 @@ class PlaylistWindow(TagListWindow):
         for pathname in subdirs:
             self.add_dir(pathname)
 
-    def add_m3u(self, line):
-        if re.match(r'^(#.*)?$', line):
-            return
-        if re.match(r'^(/|https?://)', line):
-            self.append(PlaylistEntry(line))
-        else:
-            dirname = os.path.dirname(self.pathname)
-            self.append(PlaylistEntry(os.path.join(dirname, line)))
-
-    def add_pls(self, line):
-        # FIXME: support title & length
-        m = re.match(r'File(\d+)=(.*)', line)
-        if m:
-            self.append(PlaylistEntry(m.group(2)))
-
-    def add_cue(self, pathname):
-        tracks = []
-        artist = ''
-        album = ''
-        dirname = os.path.dirname(pathname)
-        with open(pathname) as inp:
-            for line in inp:
-                keyword, args = line.strip().split(' ', 1)
-                if keyword == 'FILE':
-                    filename = args.rsplit(' ', 1)[0].strip('"\'')
-                elif keyword == 'TRACK':
-                    trackno = args.split(' ', 1)[0]
-                    tracks.append({'filename': filename, 'no': trackno})
-                elif keyword == 'TITLE':
-                    if tracks:
-                        tracks[-1]['title'] = args.strip('"\'')
-                    else:
-                        album = args.strip('"\'')
-                elif keyword == 'PERFORMER':
-                    if tracks:
-                        tracks[-1]['artist'] = args.strip('"\'')
-                    else:
-                        artist = args.strip('"\'')
-                elif line.strip().startswith('INDEX 01') and tracks:
-                    mins, secs, frames = args.split(' ')[1].split(':')
-                    tracks[-1]['start'] = (
-                        int(mins) * 60 + int(secs) + float(frames) / 75)
-                    if len(tracks) > 1 and tracks[-2].get('end') is None:
-                        tracks[-2]['end'] = tracks[-1]['start']
-        for n, track in enumerate(tracks):
-            trackno = track.get('no', '%2d' % (n + 1))
-            title = track.get('title', track['filename'])
-            pathname = os.path.join(dirname, track['filename'])
-            if os.path.exists(pathname):
-                entry = PlaylistEntry(
-                    pathname,
-                    displayname=title,
-                    offset=track.get('start', 0),
-                    maxoffset=track.get('end', None))
-                artist = track.get('artist', artist)
-                entry.metadata = ' - '.join(
-                    a for a in (trackno, artist, title, album) if a)
-                self.append(entry)
-
-    def add_playlist(self, pathname):
-        self.pathname = pathname
-        if re.search(r'\.cue$', pathname, re.IGNORECASE):
-            self.add_cue(pathname)
-            return
-        elif re.search(r'\.m3u$', pathname, re.IGNORECASE):
-            f = self.add_m3u
-        elif re.search(r'\.pls$', pathname, re.IGNORECASE):
-            f = self.add_pls
-        with open(pathname) as inp:
-            for line in inp:
-                f(line.strip())
+    def add_playlist(self, path):
+        dirname = os.path.dirname(path)
+        with open(path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line[0] == '#':
+                    continue
+                if not re.match(r'^(/|https?://)', line):
+                    line = os.path.join(dirname, line)
+                self.append(PlaylistEntry(line))
 
     def _add(self, pathname, filename=None, quiet=False):
         if os.path.isdir(pathname):
@@ -1789,7 +1728,7 @@ def valid_song(name):
 
 
 def valid_playlist(name):
-    return re.search(r'\.(m3u|pls|cue)$', name, re.IGNORECASE)
+    return re.search(r'\.m3u$', name, re.IGNORECASE)
 
 
 def which(program):
