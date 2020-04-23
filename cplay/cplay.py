@@ -1167,23 +1167,13 @@ class PlaylistWindow(TagListWindow):
             self.random_left.append(item)
 
     def add_dir(self, directory):
-        # heuristic: if there are any playlists,
-        # do not add individual files to avoid duplicates
-        foundplaylist = False
-        songs = []
         subdirs = []
         for filename in sorted(os.listdir(directory)):
             pathname = os.path.join(directory, filename)
-            if valid_playlist(filename) and not foundplaylist:
-                self.add_playlist(pathname)
-                foundplaylist = True
-            elif valid_song(filename):
-                songs.append(pathname)
+            if valid_song(filename):
+                self._add(pathname, quiet=True)
             elif os.path.isdir(pathname):
                 subdirs.append(pathname)
-        if not foundplaylist:
-            for pathname in songs:
-                self._add(pathname, quiet=True)
         for pathname in subdirs:
             self.add_dir(pathname)
 
