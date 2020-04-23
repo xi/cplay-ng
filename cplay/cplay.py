@@ -218,32 +218,13 @@ class Application:
 
 class Player:
     def __init__(self):
-        self.backend = BACKENDS[0]
+        self.backend = Backend()
         self.play_tid = None
         self._mixer = None
-        for mixer in MIXERS:
-            try:
-                self._mixer = mixer()
-                logging.debug('Chose mixer %s', mixer.__name__)
-                break
-            except Exception as e:
-                logging.debug('Mixer %s not available: %s', mixer.__name__, e)
-                pass
-
-    def pick_backend(self, entry):
-        if entry is None:
-            return False
-        logging.debug('Setting up backend for %s' % str(entry))
-        self.backend.stop(quiet=True)
-        for backend in BACKENDS:
-            if backend.re_files.search(entry.pathname):
-                if backend.installed:
-                    self.backend = backend
-                    return True
-        # FIXME: Needs to report suitable backends
-        logging.debug('Backend not found')
-        APP.status.status(_('Backend not found!'), 1)
-        return False
+        try:
+            self._mixer = PulseMixer()
+        except Exception as e:
+            logging.debug('Mixer not available: %s', e)
 
     def play(self, entry, offset=0):
         # Play executed, remove from queue
@@ -251,10 +232,7 @@ class Player:
         if entry is None or offset is None:
             return
         logging.debug('Starting to play %s' % str(entry))
-        if self.pick_backend(entry):
-            self.backend.play(entry, offset or entry.offset)
-        else:
-            APP.timeout.add(1, self.next_prev_song, (1, ))
+        self.backend.play(entry, offset or entry.offset)
 
     def delayed_play(self, entry, offset):
         if self.play_tid:
@@ -1477,16 +1455,19 @@ class PlaylistWindow(TagListWindow):
 
 
 class Backend:
+    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
+    commandline = 'mpv --audio-display=no --start {offset} {file}'
+    re_files = re.compile(
+        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
+        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$',
+        re.IGNORECASE,
+    )
 
     stdin_r, stdin_w = os.pipe()
     stdout_r, stdout_w = os.pipe()
     stderr_r, stderr_w = os.pipe()
 
-    def __init__(self, commandline, files, fps=1):
-        self.commandline = commandline
-        self.installed = bool(which(commandline.split()[0]))
-        self.re_files = re.compile(files, re.IGNORECASE)
-        self.fps = fps
+    def __init__(self):
         self.entry = None
         self.paused = False
         self.offset = 0
@@ -1503,7 +1484,7 @@ class Backend:
             if argv[i] == '{file}':
                 argv[i] = entry.pathname
             if argv[i] == '{offset}':
-                argv[i] = str(offset * self.fps)
+                argv[i] = str(offset)
 
         if entry != self.entry:
             self.entry = entry
@@ -1572,7 +1553,12 @@ class Backend:
             self._proc.terminate()
 
     def parse_buf(self, buf):
-        raise NotImplementedError
+        match = self.re_progress.search(buf)
+        if match:
+            ph, pm, ps, lh, lm, ls = map(int, match.groups())
+            offset = ph * 3600 + pm * 60 + ps
+            length = lh * 3600 + lm * 60 + ls
+            return offset, length
 
     def get_state(self):
         if self.entry is None:
@@ -1611,126 +1597,6 @@ class Backend:
             APP.status.set_default_status(_('Playing: %s') % self.entry.vp())
         else:
             APP.status.set_default_status('')
-
-
-class FrameOffsetBackend(Backend):
-    re_progress = re.compile(br'Time.*\s((\d+:)+\d+).*\[((\d+:)+\d+)')
-
-    def parse_buf(self, buf):
-        def parse_time(s):
-            parts = reversed(s.split(b':'))
-            return sum([int(x) * 60 ** i for i, x in enumerate(parts)])
-
-        match = self.re_progress.search(buf)
-        if match:
-            head = parse_time(match.group(1))
-            tail = parse_time(match.group(3))
-            return head, head + tail
-
-
-class FrameOffsetBackendMpp(Backend):
-    re_progress = re.compile(br'.*\s(\d+):(\d+).*\s(\d+):(\d+)')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            m1, s1, m2, s2 = map(int, match.groups())
-            offset = m1 * 60 + s1
-            length = m2 * 60 + s2
-            return offset, length
-
-
-class TimeOffsetBackend(Backend):
-    re_progress = re.compile(br'(\d+):(\d+):(\d+)')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            h, m, s = map(int, match.groups())
-            tail = h * 3600 + m * 60 + s
-            length = max(self.length, tail)
-            offset = length - tail
-            return offset, length
-
-
-class SoxBackend(Backend):
-    re_progress = re.compile(
-        br'(\d+):(\d+):(\d+)\.\d+ \[(\d+):(\d+):(\d+)\.\d+\]')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            h, m, s, h2, m2, s2 = map(int, match.groups())
-            head = h * 3600 + m * 60 + s
-            tail = h2 * 3600 + m2 * 60 + s2
-            return head, head + tail
-
-
-class GSTBackend(Backend):
-    re_progress = re.compile(
-        br'Time: (\d+):(\d+):(\d+).(\d+) of (\d+):(\d+):(\d+).(\d+)')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            ph, pm, ps, us, lh, lm, ls, lus = map(int, match.groups())
-            offset = ph * 3600 + pm * 60 + ps
-            length = lh * 3600 + lm * 60 + ls
-            return offset, length
-
-
-class FFPlay(Backend):
-    re_progress = re.compile(br' *(\d+)\.')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.match(buf)
-        if match:
-            offset = int(match.groups()[0])
-            return offset, None
-
-
-class NoOffsetBackend(Backend):
-
-    def parse_buf(self, buf):
-        pass
-
-    def seek(self, *dummy):
-        pass
-
-
-class NoBufferBackend(Backend):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._starttime = 0
-
-    def play(self, entry, offset):
-        self._starttime = time.time()
-        super().play(entry, offset)
-
-    def parse_buf(self, buf):
-        offset = time.time() - self._starttime + self.offset
-        return offset, None
-
-
-class MPlayer(Backend):
-    re_progress = re.compile(br'^A:.*?(\d+)\.\d \([^)]+\) of (\d+)\.\d')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            return map(int, match.groups())
-
-
-class MPV(Backend):
-    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
-
-    def parse_buf(self, buf):
-        match = self.re_progress.search(buf)
-        if match:
-            ph, pm, ps, lh, lm, ls = map(int, match.groups())
-            offset = ph * 3600 + pm * 60 + ps
-            length = lh * 3600 + lm * 60 + ls
-            return offset, length
 
 
 class Timeout:
@@ -1821,59 +1687,6 @@ class Mixer:
 
     def close(self):
         pass
-
-
-class OssMixer(Mixer):
-    def __init__(self):
-        super().__init__()
-        import ossaudiodev as oss
-        self._mixer = oss.openmixer()
-        self._channels = [
-            ('PCM', oss.SOUND_MIXER_PCM),
-            ('MASTER', oss.SOUND_MIXER_VOLUME),
-        ]
-
-    def get(self):
-        return self._mixer.get(self.channel)[0]
-
-    def set(self, level):
-        self._mixer.set(self.channel, (level, level))
-
-    def close(self):
-        self._mixer.close()
-
-
-class AlsaMixer(Mixer):
-    def __init__(self):
-        super().__init__()
-        import alsaaudio
-        self._channels = []
-        # HACK: guess valid card indexes (0 could be disabled)
-        for cardindex in range(3):
-            try:
-                for name in alsaaudio.mixers(cardindex):
-                    mixer = alsaaudio.Mixer(name, cardindex=cardindex)
-                    volumecap = mixer.volumecap()
-                    if volumecap and 'Capture Volume' not in volumecap:
-                        full_name = '%i %s' % (cardindex, name)
-                        self._channels.append((full_name, mixer))
-            except alsaaudio.ALSAAudioError:
-                pass
-        if not self._channels:
-            raise ValueError
-
-    def get(self):
-        return self._channels[0][1].getvolume()[0]
-
-    def set(self, level):
-        try:
-            self._channels[0][1].setvolume(level)
-        except:
-            pass
-
-    def close(self):
-        for ch in self._channels:
-            ch[1].close()
 
 
 class PulseMixer(Mixer):
@@ -1972,7 +1785,7 @@ def get_metadata(pathname):
 
 
 def valid_song(name):
-    return any(backend.re_files.search(name) for backend in BACKENDS)
+    return Backend.re_files.search(name)
 
 
 def valid_playlist(name):
@@ -2099,47 +1912,6 @@ def main():
     except:
         APP.cleanup()
         traceback.print_exc()
-
-
-MIXERS = [PulseMixer, AlsaMixer, OssMixer]
-BACKENDS = [
-    FrameOffsetBackend('ogg123 -q -v -k {offset} {file}', r'\.ogg$'),
-    FrameOffsetBackend(
-        'splay -f -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
-    FrameOffsetBackend(
-        'mpg123 -q -v -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
-    FrameOffsetBackend(
-        'mpg321 -q -v -k {offset} {file}', r'(^https?://|\.mp[123]$)', 38.28),
-    FrameOffsetBackendMpp(
-        'mppdec --gain 2 --start {offset} {file}', r'\.mp[cp+]$'),
-    TimeOffsetBackend(
-        'madplay -v --display-time=remaining -s {offset} {file}',
-        r'\.mp[123]$'),
-    MPlayer(
-        'mplayer -ss {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
-    MPV('mpv --audio-display=no --start {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|spx|mp[cp+]|mod|xm|fm|s3m|'
-        r'med|col|669|it|mtm|stm|aiff|au|cdr|wav|wma|m4a|m4b|webm)$'),
-    GSTBackend(
-        'gst123 -k {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
-    SoxBackend('play {file} trim {offset}', r'\.(aiff|au|cdr|mp3|ogg|wav)$'),
-    FFPlay(
-        'ffplay -nodisp -autoexit -ss {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff|webm)$'),
-    FFPlay(
-        'avplay -nodisp -autoexit -ss {offset} {file}',
-        r'^https?://|\.(mp[1234]|ogg|oga|opus|flac|wav|m4a|m4b|aiff)$'),
-    NoOffsetBackend(
-        'mikmod -q -p0 {file}', r'\.(mod|xm|fm|s3m|med|col|669|it|mtm)$'),
-    NoOffsetBackend(
-        'xmp -q {file}', r'\.(mod|xm|fm|s3m|med|col|669|it|mtm|stm)$'),
-    NoOffsetBackend('speexdec {file}', r'\.spx$'),
-    NoOffsetBackend(
-        'timidity {file}', r'\.(mid|rmi|rcp|r36|g18|g36|mfi|kar|mod|wrd)$'),
-]
 
 
 if __name__ == '__main__':
