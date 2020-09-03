@@ -245,7 +245,7 @@ class List:
 
     def format_item(self, item):
         if app.verbose:
-            name = item
+            name = os.path.relpath(item, filelist.path)
         else:
             name = os.path.basename(item)
         if os.path.isdir(item):
@@ -547,7 +547,7 @@ class Application:
         if self.input.active:
             status = '/%s' % self.input.str
         elif player.path and player._proc:
-            status = 'Playing %s' % player.path
+            status = 'Playing %s' % os.path.relpath(player.path, filelist.path)
         else:
             status = 'Stopped'
 
