@@ -25,7 +25,7 @@ End, G       : move to bottom
 Enter        : chdir or play
 Tab          : switch between filelist/playlist
 n            : next track
-x            : toggle play/pause
+x, Space     : toggle play/pause
 Left, Right  : seek backward/forward
 Esc          : cancel
 0..9         : volume control
@@ -531,7 +531,7 @@ class Application:
             player.seek(1)
         elif key == curses.KEY_LEFT:
             player.seek(-1)
-        elif key == 'x':
+        elif key in ['x', ' ']:
             player.toggle()
         elif key == 'n':
             player.play(playlist.next())
