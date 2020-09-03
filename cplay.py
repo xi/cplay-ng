@@ -604,7 +604,7 @@ class Application:
         elif player.path and player._proc:
             status = 'Playing %s' % os.path.relpath(player.path, filelist.path)
         else:
-            status = 'Stopped'
+            status = ''
 
         counter = '%s / %s' % (
             format_time(player.position),
