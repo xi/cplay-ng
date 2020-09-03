@@ -6,7 +6,9 @@ import select
 import signal
 import subprocess
 import sys
+import termios
 import time
+from contextlib import contextmanager
 
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'
@@ -75,6 +77,19 @@ def resize(*args):
     app.refresh_dimensions()
     app.tab.set_cursor(app.tab.cursor)
     app.render()
+
+
+@contextmanager
+def enable_ctrl_keys():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tcattr = termios.tcgetattr(fd)
+        tcattr[0] = tcattr[0] & ~(termios.IXON)
+        termios.tcsetattr(fd, termios.TCSANOW, tcattr)
+        yield
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
 def listdir(path):
@@ -577,7 +592,8 @@ def main():
     signal.signal(signal.SIGWINCH, resize)
 
     try:
-        app.run()
+        with enable_ctrl_keys():
+            app.run()
     finally:
         curses.endwin()
 
