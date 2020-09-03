@@ -142,6 +142,8 @@ class Player:
                 'mpv',
                 '--audio-display=no',
                 '--start=%i' % self.position,
+                '--volume=100',
+                '--replaygain=track',
                 self.path,
             ],
             stdout=self.stdout_w,
