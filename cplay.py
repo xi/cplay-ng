@@ -278,9 +278,13 @@ class Filelist(List):
 
     def process_key(self, key):
         if key == 'a':
+            if not self.items:
+                return True
             if playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
         elif key == '\n':
+            if not self.items:
+                return True
             item = self.items[self.cursor]
             ext = item.rsplit('.', 1)[-1]
             if os.path.isdir(item):
@@ -318,6 +322,8 @@ class Playlist(List):
         self._played = set()
 
     def reorder(self, fn):
+        if not self.items:
+            return
         cursor_item = self.items[self.cursor]
         try:
             active_item = self.items[self.active]
@@ -425,6 +431,8 @@ class Playlist(List):
         elif key == 'D':
             self.clear()
         elif key == '\n':
+            if not self.items:
+                return True
             self.active = self.cursor
             player.play(self.items[self.active])
         elif key == '@':
