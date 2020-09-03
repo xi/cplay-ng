@@ -77,6 +77,13 @@ def resize(*args):
     app.render()
 
 
+def listdir(path):
+    with os.scandir(path) as it:
+        for entry in sorted(it, key=lambda e: e.name):
+            if entry.name[0] != '.':
+                yield entry.path, entry.is_dir()
+
+
 class Player:
     re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
 
@@ -255,12 +262,9 @@ class Filelist(List):
         self.path = path
         self.items = []
 
-        for filename in sorted(os.listdir(path)):
-            if filename[0] == '.':
-                continue
-            p = os.path.join(path, filename)
-            ext = filename.rsplit('.', 1)[-1]
-            if os.path.isdir(p) or ext == 'm3u' or ext in AUDIO_EXTENSIONS:
+        for p, is_dir in listdir(path):
+            ext = p.rsplit('.', 1)[-1]
+            if is_dir or ext == 'm3u' or ext in AUDIO_EXTENSIONS:
                 self.items.append(p)
 
         if prev:
@@ -378,10 +382,7 @@ class Playlist(List):
 
     def add_dir(self, path):
         count = 0
-        for filename in sorted(os.listdir(path)):
-            if filename[0] == '.':
-                continue
-            p = os.path.join(path, filename)
+        for p, is_dir in listdir(path):
             count += self.add(p, recursive=True)
         return count
 
