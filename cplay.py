@@ -81,7 +81,10 @@ def listdir(path):
     with os.scandir(path) as it:
         for entry in sorted(it, key=lambda e: e.name):
             if entry.name[0] != '.':
-                yield entry.path, entry.is_dir()
+                yield (
+                    entry.path,
+                    entry.is_dir(follow_symlinks=False),
+                )
 
 
 class Player:
