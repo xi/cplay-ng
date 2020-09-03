@@ -1,8 +1,5 @@
-*.mo
 *.egg-info
 build
 dist
 *.egg
-.tox
 cover
-.cplay.rec
