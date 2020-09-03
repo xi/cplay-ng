@@ -248,8 +248,8 @@ class List:
                 return True
         return False
 
-    def format_item(self, item):
-        if app.verbose:
+    def format_item(self, item, force_verbose=False):
+        if app.verbose or force_verbose:
             name = os.path.relpath(item, filelist.path)
         else:
             name = os.path.basename(item)
@@ -311,6 +311,7 @@ class HelpList(List):
 class Filelist(List):
     def __init__(self):
         super().__init__()
+        self.path = None
         self.input = Input()
         self.set_path(os.getcwd())
 
@@ -320,8 +321,13 @@ class Filelist(List):
             title += 'search "%s"/' % self.input.str
         return title
 
+    def format_item(self, item):
+        return super().format_item(item, force_verbose=self.input.str)
+
     def set_path(self, path, prev=None):
-        self.path = path
+        if path != self.path:
+            self.path = path
+            self.search_cache = []
         self.all_items = []
         self.input.str = ''
 
@@ -338,10 +344,26 @@ class Filelist(List):
             self.position = 0
             self.cursor = 0
 
+    def build_search_cache(self, root):
+        results = []
+        for path, is_dir in listdir(root):
+            ext = path.rsplit('.', 1)[-1]
+            if is_dir:
+                children = self.build_search_cache(path)
+                if children:
+                    results.append(path)
+                    results += children
+            elif ext in AUDIO_EXTENSIONS or ext == 'm3u':
+                results.append(path)
+        return results
+
     def filter(self, query):
+        if not self.search_cache:
+            self.search_cache = self.build_search_cache(self.path)
+
         if query:
             self.items = []
-            for path in self.all_items:
+            for path in self.search_cache:
                 if str_match(query, self.format_item(path)):
                     self.items.append(path)
         else:
