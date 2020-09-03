@@ -27,6 +27,8 @@ Tab          : switch between filelist/playlist
 n            : next track
 x, Space     : toggle play/pause
 Left, Right  : seek backward/forward
+/            : search
+C-s, C-r     : next/previous search match
 Esc          : cancel
 0..9         : volume control
 l            : list mode
@@ -187,6 +189,29 @@ class Player:
         return self._proc is not None and self._proc.poll() is not None
 
 
+class Input:
+    def __init__(self):
+        self.active = False
+        self.str = ''
+
+    def process_key(self, key):
+        if not self.active:
+            return False
+        if key == chr(27):
+            self.str = ''
+            self.active = False
+        elif key == '\n':
+            self.active = False
+        elif key == curses.KEY_BACKSPACE:
+            self.str = self.str[:-1]
+        elif isinstance(key, str):
+            self.str += key
+        else:
+            self.active = False
+            return False
+        return True
+
+
 class List:
     def __init__(self):
         self.items = []
@@ -209,6 +234,14 @@ class List:
 
     def move_cursor(self, diff):
         self.set_cursor(self.cursor + diff)
+
+    def search(self, q, diff=1, offset=0):
+        for i in range(len(self.items)):
+            pos = (self.cursor + (i + offset) * diff) % len(self.items)
+            if q.lower() in self.format_item(self.items[pos]).lower():
+                self.set_cursor(pos)
+                return True
+        return False
 
     def format_item(self, item):
         if app.verbose:
@@ -472,6 +505,7 @@ class Application:
         self.tabs = [filelist, playlist]
         self.verbose = False
         self.help = False
+        self.input = Input()
         self.old_lines = []
 
     def refresh_dimensions(self):
@@ -510,7 +544,9 @@ class Application:
         yield from self.tab.render()
         yield self.format_progress()
 
-        if player.path and player._proc:
+        if self.input.active:
+            status = '/%s' % self.input.str
+        elif player.path and player._proc:
             status = 'Playing %s' % player.path
         else:
             status = 'Stopped'
@@ -525,7 +561,9 @@ class Application:
         self.apply(list(self._render()))
 
     def process_key(self, key):
-        if self.tab.process_key(key):
+        if self.input.process_key(key):
+            self.tab.search(self.input.str)
+        elif self.tab.process_key(key):
             pass
         elif key in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
             set_volume(int(key, 10) / 9.0)
@@ -537,6 +575,15 @@ class Application:
             player.toggle()
         elif key == 'n':
             player.play(playlist.next())
+        elif key == '/':
+            self.input.str = ''
+            self.input.active = True
+        elif key == chr(19):
+            if self.input.str:
+                self.tab.search(self.input.str, 1, 1)
+        elif key == chr(18):
+            if self.input.str:
+                self.tab.search(self.input.str, -1, 1)
         elif key == 'h':
             self.help = True
         elif key in ['q', 'Q']:
