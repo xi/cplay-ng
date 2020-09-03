@@ -49,6 +49,14 @@ def clamp(value, _min, _max):
     return max(_min, min(_max, value))
 
 
+def space_between(a, b, n):
+    d = n - (len(a) + len(b))
+    if d >= 0:
+        return a + ' ' * d + b
+    else:
+        return a[:d] + b
+
+
 def format_time(total):
     h, s = divmod(total, 3600)
     m, s = divmod(s, 60)
@@ -192,9 +200,9 @@ class List:
                 attr |= curses.A_REVERSE
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
-            screen.hline(2 + i, 0, ord(' '), app.cols, attr)
             item = self.format_item(item)
-            screen.insstr(2 + i, 2, item, attr)
+            item = space_between('  ' + item, '', app.cols)
+            screen.insstr(2 + i, 0, item, attr)
 
     def process_key(self, key):
         if key in [curses.KEY_DOWN, ord('j')]:
@@ -447,11 +455,9 @@ class Application:
     def toggle_tabs(self):
         self.tabs.append(self.tabs.pop(0))
 
-    def render_progress(self, y):
+    def format_progress(self):
         progress = min(int(self.cols * player.get_progress()), self.cols - 1)
-        screen.hline(y, 0, ord('-'), self.cols)
-        screen.hline(y, 0, ord('='), progress)
-        screen.addstr(y, progress, '|')
+        return '=' * (progress - 1) + '|' + '-' * (self.cols - progress)
 
     def render(self):
         screen.clear()
@@ -460,18 +466,18 @@ class Application:
         screen.hline(1, 0, ord('-'), self.cols)
 
         self.tab.render()
-        self.render_progress(self.rows - 2)
+        screen.insstr(self.rows - 2, 0, self.format_progress())
 
         if player.path and player._proc:
-            screen.insstr(self.rows - 1, 0, 'Playing %s' % player.path)
+            status = 'Playing %s' % player.path
         else:
-            screen.insstr(self.rows - 1, 0, 'Stopped')
+            status = 'Stopped'
 
         counter = '%s / %s' % (
             format_time(player.position),
             format_time(player.length),
         )
-        screen.insstr(self.rows - 1, self.cols - len(counter), counter)
+        screen.insstr(self.rows - 1, 0, space_between(status, counter, self.cols))
 
         screen.refresh()
 
