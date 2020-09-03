@@ -250,7 +250,7 @@ class List:
 
     def format_item(self, item, force_verbose=False):
         if app.verbose or force_verbose:
-            name = os.path.relpath(item, filelist.path)
+            name = os.path.relpath(item)
         else:
             name = os.path.basename(item)
         if os.path.isdir(item):
@@ -327,6 +327,7 @@ class Filelist(List):
     def set_path(self, path, prev=None):
         if path != self.path:
             self.path = path
+            os.chdir(path)
             self.search_cache = []
         self.all_items = []
         self.input.str = ''
@@ -602,7 +603,7 @@ class Application:
         elif self.tab == filelist and filelist.input.active:
             status = 'search: %s' % filelist.input.str
         elif player.path and player._proc:
-            status = 'Playing %s' % os.path.relpath(player.path, filelist.path)
+            status = 'Playing %s' % os.path.relpath(player.path)
         else:
             status = ''
 
