@@ -38,6 +38,7 @@ q, Q         : quit
 Filelist
 --------
 a            : add to playlist
+s            : recursive search
 BS           : go to parent dir
 
 Playlist
@@ -306,32 +307,55 @@ class HelpList(List):
 class Filelist(List):
     def __init__(self):
         super().__init__()
+        self.input = Input()
         self.set_path(os.getcwd())
 
     def get_title(self):
-        return 'Filelist: %s/' % self.path.rstrip('/')
+        title = 'Filelist: %s/' % self.path
+        if self.input.str:
+            title += 'search "%s"/' % self.input.str
+        return title
 
     def set_path(self, path, prev=None):
         self.path = path
-        self.items = []
+        self.all_items = []
+        self.input.str = ''
 
         for p, is_dir in listdir(path):
             ext = p.rsplit('.', 1)[-1]
             if is_dir or ext == 'm3u' or ext in AUDIO_EXTENSIONS:
-                self.items.append(p)
+                self.all_items.append(p)
 
-        if prev:
+        self.items = self.all_items
+
+        if prev and prev in self.items:
             self.set_cursor(self.items.index(prev))
         else:
             self.position = 0
             self.cursor = 0
 
+    def filter(self, query):
+        if query:
+            self.items = []
+            for path in self.all_items:
+                if query.lowwer() in self.format_item(path).lower():
+                    self.items.append(path)
+        else:
+            self.items = self.all_items
+
+        self.set_cursor(self.cursor)
+
     def process_key(self, key):
-        if key == 'a':
+        if self.input.process_key(key):
+            self.filter(self.input.str)
+        elif key == 'a':
             if not self.items:
                 return True
             if playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
+        elif key == 's':
+            self.input.active = True
+            self.filter(self.input.str)
         elif key == '\n':
             if not self.items:
                 return True
@@ -343,7 +367,10 @@ class Filelist(List):
                 playlist.active = -1
                 player.play(item)
         elif key == curses.KEY_BACKSPACE:
-            self.set_path(os.path.dirname(self.path), prev=self.path)
+            if self.input.str:
+                self.set_path(self.path)
+            else:
+                self.set_path(os.path.dirname(self.path), prev=self.path)
         else:
             return super().process_key(key)
         return True
@@ -546,6 +573,8 @@ class Application:
 
         if self.input.active:
             status = '/%s' % self.input.str
+        elif self.tab == filelist and filelist.input.active:
+            status = 'search: %s' % filelist.input.str
         elif player.path and player._proc:
             status = 'Playing %s' % os.path.relpath(player.path, filelist.path)
         else:
