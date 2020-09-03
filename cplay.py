@@ -68,6 +68,10 @@ def format_time(total):
     return '%02d:%02d:%02d' % (h, m, s)
 
 
+def str_match(query, s):
+    return all(q in s.lower() for q in query.lower().split())
+
+
 def set_volume(vol):
     subprocess.check_call([
         'pactl', '--', 'set-sink-volume', '0', '%i%%' % int(vol * 100)
@@ -239,7 +243,7 @@ class List:
     def search(self, q, diff=1, offset=0):
         for i in range(len(self.items)):
             pos = (self.cursor + (i + offset) * diff) % len(self.items)
-            if q.lower() in self.format_item(self.items[pos]).lower():
+            if str_match(q, self.format_item(self.items[pos])):
                 self.set_cursor(pos)
                 return True
         return False
@@ -338,7 +342,7 @@ class Filelist(List):
         if query:
             self.items = []
             for path in self.all_items:
-                if query.lowwer() in self.format_item(path).lower():
+                if str_match(query, self.format_item(path)):
                     self.items.append(path)
         else:
             self.items = self.all_items
