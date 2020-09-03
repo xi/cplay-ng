@@ -207,17 +207,17 @@ class List:
             yield ''
 
     def process_key(self, key):
-        if key in [curses.KEY_DOWN, ord('j')]:
+        if key in [curses.KEY_DOWN, 'j']:
             self.move_cursor(1)
-        elif key in [curses.KEY_UP, ord('k')]:
+        elif key in [curses.KEY_UP, 'k']:
             self.move_cursor(-1)
-        elif key in [curses.KEY_NPAGE, ord('J')]:
+        elif key in [curses.KEY_NPAGE, 'J']:
             self.move_cursor(self.rows - 2)
-        elif key in [curses.KEY_PPAGE, ord('K')]:
+        elif key in [curses.KEY_PPAGE, 'K']:
             self.move_cursor(-(self.rows - 2))
-        elif key in [curses.KEY_END, ord('G')]:
+        elif key in [curses.KEY_END, 'G']:
             self.set_cursor(len(self.items))
-        elif key in [curses.KEY_HOME, ord('g')]:
+        elif key in [curses.KEY_HOME, 'g']:
             self.set_cursor(0)
         else:
             return False
@@ -236,7 +236,7 @@ class HelpList(List):
         return item
 
     def process_key(self, key):
-        if key in [ord('q'), ord('h')]:
+        if key in ['q', 'h']:
             app.help = False
         else:
             return super().process_key(key)
@@ -270,10 +270,10 @@ class Filelist(List):
             self.cursor = 0
 
     def process_key(self, key):
-        if key == ord('a'):
+        if key == 'a':
             if playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
-        elif key == ord('\n'):
+        elif key == '\n':
             item = self.items[self.cursor]
             ext = item.rsplit('.', 1)[-1]
             if os.path.isdir(item):
@@ -412,26 +412,26 @@ class Playlist(List):
             return 0
 
     def process_key(self, key):
-        if key == ord('m'):
+        if key == 'm':
             self.move_item(1)
-        elif key == ord('M'):
+        elif key == 'M':
             self.move_item(-1)
-        elif key == ord('d'):
+        elif key == 'd':
             self.remove_item()
-        elif key == ord('D'):
+        elif key == 'D':
             self.clear()
-        elif key == ord('\n'):
+        elif key == '\n':
             self.active = self.cursor
             player.play(self.items[self.active])
-        elif key == ord('@'):
+        elif key == '@':
             self.set_cursor(self.active)
-        elif key == ord('s'):
+        elif key == 's':
             self.shuffle()
-        elif key == ord('S'):
+        elif key == 'S':
             self.sort()
-        elif key == ord('r'):
+        elif key == 'r':
             self.repeat = not self.repeat
-        elif key == ord('R'):
+        elif key == 'R':
             self.random = not self.random
         else:
             return super().process_key(key)
@@ -498,23 +498,23 @@ class Application:
     def process_key(self, key):
         if self.tab.process_key(key):
             pass
-        elif key in range(48, 58):
-            set_volume((key & 0x0f) / 9.0)
+        elif key in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            set_volume(int(key, 10) / 9.0)
         elif key == curses.KEY_RIGHT:
             player.seek(1)
         elif key == curses.KEY_LEFT:
             player.seek(-1)
-        elif key == ord('x'):
+        elif key == 'x':
             player.toggle()
-        elif key == ord('n'):
+        elif key == 'n':
             player.play(playlist.next())
-        elif key == ord('h'):
+        elif key == 'h':
             self.help = True
-        elif key in [ord('q'), ord('Q')]:
+        elif key in ['q', 'Q']:
             sys.exit(0)
-        elif key == ord('\t'):
+        elif key == '\t':
             app.toggle_tabs()
-        elif key == ord('l'):
+        elif key == 'l':
             self.verbose = not self.verbose
         else:
             return False
@@ -536,7 +536,7 @@ class Application:
                 continue
 
             if sys.stdin in r:
-                self.process_key(screen.getch())
+                self.process_key(screen.get_wch())
             if player.stderr_r in r:
                 player.parse_progress(player.stderr_r)
 
