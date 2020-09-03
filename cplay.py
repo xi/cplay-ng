@@ -49,7 +49,7 @@ def clamp(value, _min, _max):
     return max(_min, min(_max, value))
 
 
-def render_time(total):
+def format_time(total):
     h, s = divmod(total, 3600)
     m, s = divmod(s, 60)
     return '%02d:%02d:%02d' % (h, m, s)
@@ -175,7 +175,7 @@ class List:
     def move_cursor(self, diff):
         self.set_cursor(self.cursor + diff)
 
-    def render_item(self, item):
+    def format_item(self, item):
         if app.verbose:
             name = item
         else:
@@ -193,7 +193,7 @@ class List:
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
             screen.hline(2 + i, 0, ord(' '), app.cols, attr)
-            item = self.render_item(item)
+            item = self.format_item(item)
             screen.insstr(2 + i, 2, item, attr)
 
     def process_key(self, key):
@@ -468,8 +468,8 @@ class Application:
             screen.insstr(self.rows - 1, 0, 'Stopped')
 
         counter = '%s / %s' % (
-            render_time(player.position),
-            render_time(player.length),
+            format_time(player.position),
+            format_time(player.length),
         )
         screen.insstr(self.rows - 1, self.cols - len(counter), counter)
 
