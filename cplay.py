@@ -202,7 +202,9 @@ class List:
                 attr |= curses.A_BOLD
             item = self.format_item(item)
             item = space_between('  ' + item, '', app.cols)
-            screen.insstr(2 + i, 0, item, attr)
+            yield (item, attr)
+        for i in range(max(0, self.rows - len(items))):
+            yield ''
 
     def process_key(self, key):
         if key in [curses.KEY_DOWN, ord('j')]:
@@ -441,6 +443,7 @@ class Application:
         self.tabs = [filelist, playlist]
         self.verbose = False
         self.help = False
+        self.old_lines = []
 
     def refresh_dimensions(self):
         self.rows, self.cols = screen.getmaxyx()
@@ -455,18 +458,28 @@ class Application:
     def toggle_tabs(self):
         self.tabs.append(self.tabs.pop(0))
 
+    def apply(self, lines):
+        for i, line in enumerate(lines):
+            if len(self.old_lines) > i and line == self.old_lines[i]:
+                continue
+            screen.move(i, 0)
+            screen.clrtoeol()
+            if isinstance(line, str):
+                line = (line, 0)
+            screen.insstr(i, 0, *line)
+        screen.refresh()
+        self.old_lines = lines
+
     def format_progress(self):
         progress = min(int(self.cols * player.get_progress()), self.cols - 1)
         return '=' * (progress - 1) + '|' + '-' * (self.cols - progress)
 
-    def render(self):
-        screen.clear()
+    def _render(self):
+        yield (self.tab.get_title(), curses.A_BOLD)
+        yield '-' * self.cols
 
-        screen.insstr(0, 0, self.tab.get_title(), curses.A_BOLD)
-        screen.hline(1, 0, ord('-'), self.cols)
-
-        self.tab.render()
-        screen.insstr(self.rows - 2, 0, self.format_progress())
+        yield from self.tab.render()
+        yield self.format_progress()
 
         if player.path and player._proc:
             status = 'Playing %s' % player.path
@@ -477,9 +490,10 @@ class Application:
             format_time(player.position),
             format_time(player.length),
         )
-        screen.insstr(self.rows - 1, 0, space_between(status, counter, self.cols))
+        yield space_between(status, counter, self.cols)
 
-        screen.refresh()
+    def render(self):
+        self.apply(list(self._render()))
 
     def process_key(self, key):
         if self.tab.process_key(key):
