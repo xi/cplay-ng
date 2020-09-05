@@ -616,18 +616,6 @@ class Application:
     def toggle_tabs(self):
         self.tabs.append(self.tabs.pop(0))
 
-    def apply(self, lines):
-        for i, line in enumerate(lines):
-            if len(self.old_lines) > i and line == self.old_lines[i]:
-                continue
-            screen.move(i, 0)
-            screen.clrtoeol()
-            if isinstance(line, str):
-                line = (line, 0)
-            screen.insstr(i, 0, *line)
-        screen.refresh()
-        self.old_lines = lines
-
     def format_progress(self):
         progress = min(int(self.cols * player.get_progress()), self.cols - 1)
         return '=' * (progress - 1) + '|' + '-' * (self.cols - progress)
@@ -653,7 +641,17 @@ class Application:
         yield space_between(status, counter, self.cols)
 
     def render(self):
-        self.apply(list(self._render()))
+        lines = list(self._render())
+        for i, line in enumerate(lines):
+            if len(self.old_lines) > i and line == self.old_lines[i]:
+                continue
+            screen.move(i, 0)
+            screen.clrtoeol()
+            if isinstance(line, str):
+                line = (line, 0)
+            screen.insstr(i, 0, *line)
+        screen.refresh()
+        self.old_lines = lines
 
     def process_key(self, key):
         if self.input.process_key(key):
