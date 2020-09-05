@@ -268,8 +268,6 @@ class List:
             name = os.path.relpath(item)
         else:
             name = os.path.basename(item)
-        if os.path.isdir(item):
-            name += '/'
         return name
 
     def render(self):
@@ -345,7 +343,11 @@ class Filelist(List):
         return title
 
     def format_item(self, item):
-        return super().format_item(item, force_verbose=self.rsearch_str)
+        s = super().format_item(item, force_verbose=self.rsearch_str)
+        ext = get_ext(item)
+        if not (ext in AUDIO_EXTENSIONS or ext == 'm3u'):
+            s += '/'
+        return s
 
     def set_path(self, path, prev=None):
         if path != self.path:
