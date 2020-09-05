@@ -99,12 +99,17 @@ def enable_ctrl_keys():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
+def get_ext(path):
+    return os.path.splitext(path)[1].lstrip('.')
+
+
 def listdir(path):
     with os.scandir(path) as it:
         for entry in sorted(it, key=lambda e: e.name):
             if entry.name[0] != '.':
                 yield (
                     entry.path,
+                    get_ext(entry.name),
                     entry.is_dir(follow_symlinks=False),
                 )
 
@@ -350,8 +355,7 @@ class Filelist(List):
         self.all_items = []
         self.rsearch_str = ''
 
-        for p, is_dir in listdir(path):
-            ext = p.rsplit('.', 1)[-1]
+        for p, ext, is_dir in listdir(path):
             if is_dir or ext == 'm3u' or ext in AUDIO_EXTENSIONS:
                 self.all_items.append(p)
 
@@ -365,8 +369,7 @@ class Filelist(List):
 
     def build_search_cache(self, root):
         results = []
-        for path, is_dir in listdir(root):
-            ext = path.rsplit('.', 1)[-1]
+        for path, ext, is_dir in listdir(root):
             if is_dir:
                 children = self.build_search_cache(path)
                 if children:
@@ -513,7 +516,7 @@ class Playlist(List):
 
     def add_dir(self, path):
         count = 0
-        for p, is_dir in listdir(path):
+        for p, ext, is_dir in listdir(path):
             count += self.add(p, recursive=True)
         return count
 
