@@ -31,7 +31,6 @@ Left, Right  : seek backward/forward
 C-s, C-r     : next/previous search match
 Esc          : cancel
 0..9         : volume control
-l            : list mode
 h            : help
 q, Q         : quit
 
@@ -266,12 +265,8 @@ class List:
                 return True
         return False
 
-    def format_item(self, item, force_verbose=False):
-        if app.verbose or force_verbose:
-            name = os.path.relpath(item)
-        else:
-            name = os.path.basename(item)
-        return name
+    def format_item(self, item):
+        return os.path.relpath(item)
 
     def render(self):
         items = self.items[self.position:self.position + self.rows]
@@ -346,7 +341,7 @@ class Filelist(List):
         return title
 
     def format_item(self, item):
-        s = super().format_item(item, force_verbose=self.rsearch_str)
+        s = super().format_item(item)
         ext = get_ext(item)
         if not (ext in AUDIO_EXTENSIONS or ext == 'm3u'):
             s += '/'
@@ -583,7 +578,6 @@ class Playlist(List):
 class Application:
     def __init__(self):
         self.tabs = [filelist, playlist]
-        self.verbose = False
         self.help = False
         self.input = Input()
         self.old_lines = []
@@ -661,8 +655,6 @@ class Application:
             sys.exit(0)
         elif key == '\t':
             app.toggle_tabs()
-        elif key == 'l':
-            self.verbose = not self.verbose
         else:
             return False
         return True
