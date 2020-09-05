@@ -640,10 +640,14 @@ class Application:
         )
         yield space_between(status, counter, self.cols)
 
-    def render(self):
+    def render(self, force=False):
         lines = list(self._render())
         for i, line in enumerate(lines):
-            if len(self.old_lines) > i and line == self.old_lines[i]:
+            if (
+                not force
+                and len(self.old_lines) > i
+                and line == self.old_lines[i]
+            ):
                 continue
             screen.move(i, 0)
             screen.clrtoeol()
@@ -695,6 +699,7 @@ class Application:
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
                         self.on_resize()
+                        self.render(force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(screen.get_wch())
                     elif key.fileobj is player.stderr_r:
