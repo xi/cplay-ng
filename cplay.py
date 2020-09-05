@@ -47,6 +47,7 @@ d, D         : delete item/all
 m, M         : move item down/up
 r, R         : toggle repeat/random
 s, S         : shuffle/sort playlist
+C            : close current playlist
 @            : jump to current track"""
 
 
@@ -586,6 +587,9 @@ class Playlist(List):
             self.remove_item()
         elif key == 'D':
             self.clear()
+        elif key == 'C':
+            self.clear()
+            self.path = None
         elif key == '\n':
             if not self.items:
                 return True
