@@ -199,6 +199,13 @@ class Input:
         self.active = False
         self.str = ''
 
+    def start(self, prompt, on_input):
+        self.str = ''
+        self.prompt = prompt
+        self.on_input = on_input
+        self.active = True
+        self.on_input(self.str)
+
     def process_key(self, key):
         if not self.active:
             return False
@@ -214,6 +221,7 @@ class Input:
         else:
             self.active = False
             return False
+        self.on_input(self.str)
         return True
 
 
@@ -223,6 +231,7 @@ class List:
         self.position = 0
         self.cursor = 0
         self.active = -1
+        self.search_str = ''
 
     @property
     def rows(self):
@@ -241,6 +250,7 @@ class List:
         self.set_cursor(self.cursor + diff)
 
     def search(self, q, diff=1, offset=0):
+        self.search_str = q
         for i in range(len(self.items)):
             pos = (self.cursor + (i + offset) * diff) % len(self.items)
             if str_match(q, self.format_item(self.items[pos])):
@@ -284,6 +294,14 @@ class List:
             self.set_cursor(len(self.items))
         elif key in [curses.KEY_HOME, 'g']:
             self.set_cursor(0)
+        elif key == '/':
+            app.input.start('/', self.search)
+        elif key == chr(19):
+            if self.search_str:
+                self.search(self.search_str, 1, 1)
+        elif key == chr(18):
+            if self.search_str:
+                self.search(self.search_str, -1, 1)
         else:
             return False
         return True
@@ -312,17 +330,17 @@ class Filelist(List):
     def __init__(self):
         super().__init__()
         self.path = None
-        self.input = Input()
+        self.rsearch_str = ''
         self.set_path(os.getcwd())
 
     def get_title(self):
         title = 'Filelist: %s/' % self.path
-        if self.input.str:
-            title += 'search "%s"/' % self.input.str
+        if self.rsearch_str:
+            title += 'search "%s"/' % self.rsearch_str
         return title
 
     def format_item(self, item):
-        return super().format_item(item, force_verbose=self.input.str)
+        return super().format_item(item, force_verbose=self.rsearch_str)
 
     def set_path(self, path, prev=None):
         if path != self.path:
@@ -330,7 +348,7 @@ class Filelist(List):
             os.chdir(path)
             self.search_cache = []
         self.all_items = []
-        self.input.str = ''
+        self.rsearch_str = ''
 
         for p, is_dir in listdir(path):
             ext = p.rsplit('.', 1)[-1]
@@ -359,6 +377,8 @@ class Filelist(List):
         return results
 
     def filter(self, query):
+        self.rsearch_str = query
+
         if not self.search_cache:
             self.search_cache = self.build_search_cache(self.path)
 
@@ -373,16 +393,14 @@ class Filelist(List):
         self.set_cursor(self.cursor)
 
     def process_key(self, key):
-        if self.input.process_key(key):
-            self.filter(self.input.str)
-        elif key == 'a':
+        if key == 'a':
             if not self.items:
                 return True
             if playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
         elif key == 's':
-            self.input.active = True
-            self.filter(self.input.str)
+            app.input.start('search: ', self.filter)
+            self.filter(self.rsearch_str)
         elif key == '\n':
             if not self.items:
                 return True
@@ -394,7 +412,7 @@ class Filelist(List):
                 playlist.active = -1
                 player.play(item)
         elif key == curses.KEY_BACKSPACE:
-            if self.input.str:
+            if self.rsearch_str:
                 self.set_path(self.path)
             else:
                 self.set_path(os.path.dirname(self.path), prev=self.path)
@@ -599,9 +617,7 @@ class Application:
         yield self.format_progress()
 
         if self.input.active:
-            status = '/%s' % self.input.str
-        elif self.tab == filelist and filelist.input.active:
-            status = 'search: %s' % filelist.input.str
+            status = self.input.prompt + self.input.str
         elif player.path and player._proc:
             status = 'Playing %s' % os.path.relpath(player.path)
         else:
@@ -618,7 +634,7 @@ class Application:
 
     def process_key(self, key):
         if self.input.process_key(key):
-            self.tab.search(self.input.str)
+            pass
         elif self.tab.process_key(key):
             pass
         elif key in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
@@ -631,15 +647,6 @@ class Application:
             player.toggle()
         elif key == 'n':
             player.play(playlist.next())
-        elif key == '/':
-            self.input.str = ''
-            self.input.active = True
-        elif key == chr(19):
-            if self.input.str:
-                self.tab.search(self.input.str, 1, 1)
-        elif key == chr(18):
-            if self.input.str:
-                self.tab.search(self.input.str, -1, 1)
         elif key == 'h':
             self.help = True
         elif key in ['q', 'Q']:
