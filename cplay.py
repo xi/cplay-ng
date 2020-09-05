@@ -195,6 +195,9 @@ class Player:
             if self._proc:
                 self._play()
 
+    def is_playing(self):
+        return self._proc is not None
+
     def is_finished(self):
         return self._proc is not None and self._proc.poll() is not None
 
@@ -623,7 +626,7 @@ class Application:
 
         if self.input.active:
             status = self.input.prompt + self.input.str
-        elif player.path and player._proc:
+        elif player.is_playing():
             status = 'Playing %s' % os.path.relpath(player.path)
         else:
             status = ''
