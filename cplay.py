@@ -3,7 +3,7 @@ import functools
 import os
 import random
 import re
-import select
+import selectors
 import signal
 import subprocess
 import sys
@@ -678,31 +678,28 @@ class Application:
         self.refresh_dimensions()
         self.render()
 
-        while True:
-            player.finish_seek()
+        with selectors.DefaultSelector() as sel:
+            sel.register(sys.stdin, selectors.EVENT_READ)
+            sel.register(self.resize_in, selectors.EVENT_READ)
+            sel.register(player.stderr_r, selectors.EVENT_READ)
 
-            timeout = 0.5 if player.is_playing() else None
-            try:
-                r, _w, _e = select.select([
-                    sys.stdin,
-                    self.resize_in,
-                    player.stderr_r,
-                ], [], [], timeout)
-            except select.error:
-                continue
+            while True:
+                player.finish_seek()
 
-            if self.resize_in in r:
-                os.read(self.resize_in, 8)
-                self.on_resize()
-            if sys.stdin in r:
-                self.process_key(screen.get_wch())
-            if player.stderr_r in r:
-                player.parse_progress(player.stderr_r)
+                timeout = 0.5 if player.is_playing() else None
+                for key, mask in sel.select(timeout):
+                    if key.fileobj is self.resize_in:
+                        os.read(self.resize_in, 8)
+                        self.on_resize()
+                    elif key.fileobj is sys.stdin:
+                        self.process_key(screen.get_wch())
+                    elif key.fileobj is player.stderr_r:
+                        player.parse_progress(player.stderr_r)
 
-            if player.is_finished():
-                player.play(playlist.next())
+                if player.is_finished():
+                    player.play(playlist.next())
 
-            self.render()
+                self.render()
 
 
 player = Player()
