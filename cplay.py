@@ -1,4 +1,5 @@
 import curses
+import functools
 import os
 import random
 import re
@@ -79,6 +80,14 @@ def set_volume(vol):
 
 def resize(*args):
     os.write(app.resize_out, b'.')
+
+
+@functools.lru_cache()
+def relpath(path):
+    if path.startswith(filelist.path):
+        return path[len(filelist.path) + 1:]
+    else:
+        return os.path.relpath(path)
 
 
 @contextmanager
@@ -262,7 +271,7 @@ class List:
         return False
 
     def format_item(self, item):
-        return os.path.relpath(item)
+        return relpath(item)
 
     def render(self):
         items = self.items[self.position:self.position + self.rows]
@@ -347,6 +356,7 @@ class Filelist(List):
         if path != self.path:
             self.path = path
             os.chdir(path)
+            relpath.cache_clear()
             self.search_cache = []
         self.all_items = []
         self.rsearch_str = ''
@@ -626,7 +636,7 @@ class Application:
         if self.input.active:
             status = self.input.prompt + self.input.str
         elif player.is_playing():
-            status = 'Playing %s' % os.path.relpath(player.path)
+            status = 'Playing %s' % relpath(player.path)
         else:
             status = ''
 
