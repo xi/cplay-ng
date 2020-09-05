@@ -681,12 +681,13 @@ class Application:
         while True:
             player.finish_seek()
 
+            timeout = 0.5 if player.is_playing() else None
             try:
                 r, _w, _e = select.select([
                     sys.stdin,
                     self.resize_in,
                     player.stderr_r,
-                ], [], [], 0.5)
+                ], [], [], timeout)
             except select.error:
                 continue
 
