@@ -47,6 +47,7 @@ d, D         : delete item/all
 m, M         : move item down/up
 r, R         : toggle repeat/random
 s, S         : shuffle/sort playlist
+w            : enter filename for current playlist
 C            : close current playlist
 @            : jump to current track"""
 
@@ -212,8 +213,8 @@ class Input:
         self.active = False
         self.str = ''
 
-    def start(self, prompt, on_input):
-        self.str = ''
+    def start(self, prompt, on_input, initial=''):
+        self.str = initial
         self.prompt = prompt
         self.on_input = on_input
         self.active = True
@@ -578,6 +579,9 @@ class Playlist(List):
         except IOError:
             pass
 
+    def set_path(self, path):
+        self.path = path
+
     def process_key(self, key):
         if key == 'm':
             self.move_item(1)
@@ -605,6 +609,10 @@ class Playlist(List):
             self.repeat = not self.repeat
         elif key == 'R':
             self.random = not self.random
+        elif key == 'w':
+            app.input.start(
+                'playlist path: ', self.set_path, self.path or filelist.path
+            )
         else:
             return super().process_key(key)
         self.write()
