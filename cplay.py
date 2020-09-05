@@ -427,6 +427,11 @@ class Filelist(List):
             elif ext in AUDIO_EXTENSIONS:
                 playlist.active = -1
                 player.play(item)
+            elif ext == 'm3u':
+                playlist.clear()
+                playlist.add_playlist(item)
+                playlist.path = item
+                app.toggle_tabs()
         elif key == curses.KEY_BACKSPACE:
             if self.rsearch_str:
                 self.set_path(self.path)
