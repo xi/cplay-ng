@@ -412,6 +412,7 @@ class Filelist(List):
             if not self.items:
                 return True
             if playlist.add(self.items[self.cursor]):
+                playlist.write()
                 self.move_cursor(1)
         elif key == 's':
             app.input.start('search: ', self.filter)
@@ -442,9 +443,12 @@ class Playlist(List):
         self.repeat = False
         self.random = False
         self._played = set()
+        self.path = None
 
     def get_title(self):
         title = 'Playlist'
+        if self.path:
+            title += ' ' + os.path.basename(self.path)
         if self.repeat:
             title += ' [repeat all]'
         if self.random:
@@ -558,6 +562,16 @@ class Playlist(List):
         else:
             return 0
 
+    def write(self):
+        if not self.path:
+            return
+        try:
+            with open(self.path, 'w') as fh:
+                for item in self.items:
+                    fh.write('%s\n' % item)
+        except IOError:
+            pass
+
     def process_key(self, key):
         if key == 'm':
             self.move_item(1)
@@ -584,6 +598,7 @@ class Playlist(List):
             self.random = not self.random
         else:
             return super().process_key(key)
+        self.write()
         return True
 
 
