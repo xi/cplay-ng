@@ -78,11 +78,7 @@ def set_volume(vol):
 
 
 def resize(*args):
-    curses.endwin()
-    screen.refresh()
-    app.refresh_dimensions()
-    app.tab.set_cursor(app.tab.cursor)
-    app.render()
+    os.write(app.resize_out, b'.')
 
 
 @contextmanager
@@ -582,8 +578,17 @@ class Application:
         self.input = Input()
         self.old_lines = []
 
+        # self-pipe to avoid concurrency issues with signal
+        self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
+
     def refresh_dimensions(self):
         self.rows, self.cols = screen.getmaxyx()
+
+    def on_resize(self):
+        curses.endwin()
+        screen.refresh()
+        self.refresh_dimensions()
+        self.tab.set_cursor(app.tab.cursor)
 
     @property
     def tab(self):
@@ -669,11 +674,15 @@ class Application:
             try:
                 r, _w, _e = select.select([
                     sys.stdin,
+                    self.resize_in,
                     player.stderr_r,
                 ], [], [], 0.5)
             except select.error:
                 continue
 
+            if self.resize_in in r:
+                os.read(self.resize_in, 8)
+                self.on_resize()
             if sys.stdin in r:
                 self.process_key(screen.get_wch())
             if player.stderr_r in r:
