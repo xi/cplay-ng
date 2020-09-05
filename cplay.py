@@ -388,19 +388,23 @@ class Filelist(List):
         return results
 
     def filter(self, query):
-        self.rsearch_str = query
-
         if not self.search_cache:
             self.search_cache = self.build_search_cache(self.path)
 
         if query:
+            if self.rsearch_str and query.startswith(self.rsearch_str):
+                base = self.items
+            else:
+                base = self.search_cache
+
             self.items = []
-            for path in self.search_cache:
+            for path in base:
                 if str_match(query, self.format_item(path)):
                     self.items.append(path)
         else:
             self.items = self.all_items
 
+        self.rsearch_str = query
         self.set_cursor(self.cursor)
 
     def process_key(self, key):
