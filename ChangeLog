@@ -1,3 +1,36 @@
+2020-09-07  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 4.0.0 ***
+
+	This is a complete rewrite which massively simplifies the code
+	and intentionally breaks a lot of things in the process.
+
+	* breaking changes:
+	- drop support for all players except mpv
+	- drop support for all mixers except pulse
+	- drop support for all playlists except m3u
+	- drop support for translations
+	- drop support for fifo/cnq
+	- drop support for metadata (mutagen)
+	- rm all command line arguments
+	- rm some key bindings, most without replacement
+		- z for play/pause (use x or Space instead)
+		- p for previous track
+		- +/- for volume control (use 0..9 instead)
+		- </> for horizontal scrolling
+		- l for list mode
+		- t/T/u/U/i/Space for tagging
+		- o for open path
+		- anything involving the ctrl key
+		- Q no longer asks for confirmation
+
+	* new features:
+	- state and presentation have been decoupled, resulting in simpler code
+	- support for unicode input
+	- interactive recursive search
+	- it is now possible to open a playlist file and edit it rather than just
+	  adding its contents to the internal playlist
+
 2019-09-20  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 3.0.0 ***
