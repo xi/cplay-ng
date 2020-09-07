@@ -11,6 +11,8 @@ import termios
 import time
 from contextlib import contextmanager
 
+__version__ = 'cplay-ng 4.0.0'
+
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'
 ]
@@ -661,6 +663,8 @@ class Application:
 
         if self.input.active:
             status = self.input.prompt + self.input.str
+        elif self.tab == helplist:
+            status = __version__
         elif player.is_playing():
             status = 'Playing %s' % relpath(player.path)
         else:
