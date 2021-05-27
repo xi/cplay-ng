@@ -149,11 +149,13 @@ class Player:
             return 0
         return self.position / self.length
 
-    def _play(self):
+    def stop(self):
         if self._proc:
             self._proc.terminate()
             self._proc = None
 
+    def _play(self):
+        self.stop()
         if not self.path:
             return
 
@@ -180,8 +182,7 @@ class Player:
 
     def toggle(self):
         if self._proc:
-            self._proc.terminate()
-            self._proc = None
+            self.stop()
         elif self.path:
             self._play()
 
@@ -711,6 +712,7 @@ class Application:
         elif key == 'h':
             self.help = True
         elif key in ['q', 'Q']:
+            player.stop()
             sys.exit(0)
         elif key == '\t':
             app.toggle_tabs()
