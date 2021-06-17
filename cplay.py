@@ -712,7 +712,6 @@ class Application:
         elif key == 'h':
             self.help = True
         elif key in ['q', 'Q']:
-            player.stop()
             sys.exit(0)
         elif key == '\t':
             app.toggle_tabs()
@@ -771,6 +770,7 @@ def main():
         with enable_ctrl_keys():
             app.run()
     finally:
+        player.stop()
         curses.endwin()
 
 
