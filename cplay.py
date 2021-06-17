@@ -1,10 +1,12 @@
 import curses
 import functools
+import json
 import os
 import random
 import re
 import selectors
 import signal
+import socket
 import subprocess
 import sys
 import termios
@@ -86,6 +88,16 @@ def resize(*args):
     os.write(app.resize_out, b'.')
 
 
+def get_socket(path):
+    while True:
+        try:
+            sock = socket.socket(family=socket.AF_UNIX)
+            sock.connect(path)
+            return sock
+        except (FileNotFoundError, ConnectionRefusedError):
+            time.sleep(0.1)
+
+
 @functools.lru_cache()
 def relpath(path):
     if path.startswith(filelist.path):
@@ -123,26 +135,56 @@ def listdir(path):
 
 
 class Player:
-    re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
-
     def __init__(self):
-        self._proc = None
         self.path = None
         self.position = 0
         self.length = 0
         self._seek_step = 0
         self._seek_timeout = None
+        self.is_playing = False
+        self._playing = 0
+        self._buffer = b''
 
-        self.stdin_r, self.stdin_w = os.pipe()
-        self.stdout_r, self.stdout_w = os.pipe()
-        self.stderr_r, self.stderr_w = os.pipe()
+        self.socket_path = '/tmp/mpv-cplay-%i.sock' % os.getpid()
+        self._proc = subprocess.Popen(
+            [
+                'mpv',
+                '--input-ipc-server=%s' % self.socket_path,
+                '--idle',
+                '--audio-display=no',
+                '--replaygain=track',
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.socket = get_socket(self.socket_path)
 
-    def parse_progress(self, fd):
-        match = self.re_progress.search(os.read(fd, 512))
-        if match and not self._seek_step:
-            ph, pm, ps, lh, lm, ls = map(int, match.groups())
-            self.position = ph * 3600 + pm * 60 + ps
-            self.length = lh * 3600 + lm * 60 + ls
+        self._ipc('observe_property', 1, 'time-pos')
+        self._ipc('observe_property', 2, 'duration')
+
+    def _ipc(self, cmd, *args):
+        data = json.dumps({'command': [cmd, *args]})
+        msg = data.encode('utf-8') + b'\n'
+        self.socket.send(msg)
+
+    def handle_ipc(self, data):
+        if data.get('event') == 'property-change' and data['id'] == 1:
+            if data['data'] is not None and not self._seek_step:
+                self.position = data['data']
+        elif data.get('event') == 'property-change' and data['id'] == 2:
+            if data['data'] is not None:
+                self.length = data['data']
+        elif data.get('event') == 'end-file':
+            self._playing -= 1
+
+    def parse_progress(self):
+        self._buffer += self.socket.recv(1024)
+        msgs = self._buffer.split(b'\n')
+        self._buffer = msgs.pop()
+        for msg in msgs:
+            data = json.loads(msg.decode('utf-8'))
+            self.handle_ipc(data)
 
     def get_progress(self):
         if self.length == 0:
@@ -150,28 +192,16 @@ class Player:
         return self.position / self.length
 
     def stop(self):
-        if self._proc:
-            self._proc.terminate()
-            self._proc = None
+        self.is_playing = False
+        self._ipc('stop')
 
     def _play(self):
-        self.stop()
         if not self.path:
+            self.is_playing = False
             return
-
-        self._proc = subprocess.Popen(
-            [
-                'mpv',
-                '--audio-display=no',
-                '--start=%i' % self.position,
-                '--volume=100',
-                '--replaygain=track',
-                self.path,
-            ],
-            stdout=self.stdout_w,
-            stderr=self.stderr_w,
-            stdin=self.stdin_r,
-        )
+        self.is_playing = True
+        self._playing += 1
+        self._ipc('loadfile', self.path, 'replace', 'start=%i' % self.position)
 
     def play(self, path):
         self.path = path
@@ -181,7 +211,7 @@ class Player:
         self._play()
 
     def toggle(self):
-        if self._proc:
+        if self.is_playing:
             self.stop()
         elif self.path:
             self._play()
@@ -205,12 +235,12 @@ class Player:
                 self._play()
 
     @property
-    def is_playing(self):
-        return self._proc is not None
-
-    @property
     def is_finished(self):
-        return self._proc is not None and self._proc.poll() is not None
+        return self.is_playing and self._playing == 0
+
+    def cleanup(self):
+        self._proc.terminate()
+        os.remove(self.socket_path)
 
 
 class Input:
@@ -730,7 +760,7 @@ class Application:
         with selectors.DefaultSelector() as sel:
             sel.register(sys.stdin, selectors.EVENT_READ)
             sel.register(self.resize_in, selectors.EVENT_READ)
-            sel.register(player.stderr_r, selectors.EVENT_READ)
+            sel.register(player.socket, selectors.EVENT_READ)
 
             while True:
                 player.finish_seek()
@@ -743,8 +773,8 @@ class Application:
                         self.render(force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(screen.get_wch())
-                    elif key.fileobj is player.stderr_r:
-                        player.parse_progress(player.stderr_r)
+                    elif key.fileobj is player.socket:
+                        player.parse_progress()
 
                 if player.is_finished:
                     player.play(playlist.next())
@@ -774,7 +804,7 @@ def main():
         with enable_ctrl_keys():
             app.run()
     finally:
-        player.stop()
+        player.cleanup()
         curses.endwin()
 
 
