@@ -201,12 +201,14 @@ class Player:
         if self._seek_timeout and time.time() >= self._seek_timeout:
             self._seek_timeout = None
             self._seek_step = 0
-            if self.is_playing():
+            if self.is_playing:
                 self._play()
 
+    @property
     def is_playing(self):
         return self._proc is not None
 
+    @property
     def is_finished(self):
         return self._proc is not None and self._proc.poll() is not None
 
@@ -666,7 +668,7 @@ class Application:
             status = self.input.prompt + self.input.str
         elif self.tab == helplist:
             status = __version__
-        elif player.is_playing():
+        elif player.is_playing:
             status = 'Playing %s' % relpath(player.path)
         else:
             status = ''
@@ -731,7 +733,7 @@ class Application:
             while True:
                 player.finish_seek()
 
-                timeout = 0.5 if player.is_playing() else None
+                timeout = 0.5 if player.is_playing else None
                 for key, mask in sel.select(timeout):
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
@@ -742,7 +744,7 @@ class Application:
                     elif key.fileobj is player.stderr_r:
                         player.parse_progress(player.stderr_r)
 
-                if player.is_finished():
+                if player.is_finished:
                     player.play(playlist.next())
 
                 self.render()
