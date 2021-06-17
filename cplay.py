@@ -125,10 +125,6 @@ def listdir(path):
 class Player:
     re_progress = re.compile(br'AV?: (\d+):(\d+):(\d+) / (\d+):(\d+):(\d+)')
 
-    stdin_r, stdin_w = os.pipe()
-    stdout_r, stdout_w = os.pipe()
-    stderr_r, stderr_w = os.pipe()
-
     def __init__(self):
         self._proc = None
         self.path = None
@@ -136,6 +132,10 @@ class Player:
         self.length = 0
         self._seek_step = 0
         self._seek_timeout = None
+
+        self.stdin_r, self.stdin_w = os.pipe()
+        self.stdout_r, self.stdout_w = os.pipe()
+        self.stderr_r, self.stderr_w = os.pipe()
 
     def parse_progress(self, fd):
         match = self.re_progress.search(os.read(fd, 512))
