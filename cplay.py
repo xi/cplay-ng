@@ -693,6 +693,8 @@ class Application:
             if isinstance(line, str):
                 line = (line, 0)
             screen.insstr(i, 0, *line)
+        # make sure cursor is in a meaningful position for a11y
+        screen.move(self.tab.cursor - self.tab.position + 2, 0)
         screen.refresh()
         self.old_lines = lines
 
