@@ -89,7 +89,7 @@ def resize(*args):
 @functools.lru_cache()
 def relpath(path):
     if path.startswith(filelist.path):
-        return path[len(filelist.path) + 1:]
+        return path[len(filelist.path):].lstrip('/')
     else:
         return os.path.relpath(path)
 
@@ -347,7 +347,7 @@ class Filelist(List):
         self.set_path(os.getcwd())
 
     def get_title(self):
-        title = 'Filelist: %s/' % self.path
+        title = 'Filelist: %s/' % self.path.rstrip('/')
         if self.rsearch_str:
             title += 'search "%s"/' % self.rsearch_str
         return title
