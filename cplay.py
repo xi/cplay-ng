@@ -711,21 +711,24 @@ class Application:
 
     def render(self, force=False):
         lines = list(self._render())
-        for i, line in enumerate(lines):
-            if (
-                not force
-                and len(self.old_lines) > i
-                and line == self.old_lines[i]
-            ):
-                continue
-            screen.move(i, 0)
-            screen.clrtoeol()
-            if isinstance(line, str):
-                line = (line, 0)
-            screen.insstr(i, 0, *line)
-        # make sure cursor is in a meaningful position for a11y
-        screen.move(self.tab.cursor - self.tab.position + 2, 0)
-        screen.refresh()
+        try:
+            for i, line in enumerate(lines):
+                if (
+                    not force
+                    and len(self.old_lines) > i
+                    and line == self.old_lines[i]
+                ):
+                    continue
+                screen.move(i, 0)
+                screen.clrtoeol()
+                if isinstance(line, str):
+                    line = (line, 0)
+                screen.insstr(i, 0, *line)
+            # make sure cursor is in a meaningful position for a11y
+            screen.move(self.tab.cursor - self.tab.position + 2, 0)
+            screen.refresh()
+        except curses.error:
+            pass
         self.old_lines = lines
 
     def process_key(self, key):
