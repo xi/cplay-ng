@@ -248,12 +248,14 @@ class Input:
         self.active = False
         self.str = ''
 
-    def start(self, prompt, on_input, initial=''):
+    def start(self, prompt, on_input=None, on_submit=None, initial=''):
         self.str = initial
         self.prompt = prompt
         self.on_input = on_input
+        self.on_submit = on_submit
         self.active = True
-        self.on_input(self.str)
+        if self.on_input:
+            self.on_input(self.str)
 
     def process_key(self, key):
         if not self.active:
@@ -263,6 +265,8 @@ class Input:
             self.active = False
         elif key == '\n':
             self.active = False
+            if self.on_submit:
+                self.on_submit(self.str)
         elif key == curses.KEY_BACKSPACE:
             self.str = self.str[:-1]
         elif isinstance(key, str):
@@ -270,7 +274,8 @@ class Input:
         else:
             self.active = False
             return False
-        self.on_input(self.str)
+        if self.on_input:
+            self.on_input(self.str)
         return True
 
 
@@ -338,7 +343,7 @@ class List:
         elif key in [curses.KEY_HOME, 'g']:
             self.set_cursor(0)
         elif key == '/':
-            app.input.start('/', self.search)
+            app.input.start('/', on_input=self.search)
         elif key == chr(19):
             if self.search_str:
                 self.search(self.search_str, 1, 1)
@@ -452,7 +457,7 @@ class Filelist(List):
                 playlist.write()
                 self.move_cursor(1)
         elif key == 's':
-            app.input.start('search: ', self.filter)
+            app.input.start('search: ', on_input=self.filter)
             self.filter(self.rsearch_str)
         elif key == '\n':
             if not self.items:
@@ -646,7 +651,9 @@ class Playlist(List):
             self.random = not self.random
         elif key == 'w':
             app.input.start(
-                'playlist path: ', self.set_path, self.path or filelist.path
+                'playlist path: ',
+                on_submit=self.set_path,
+                initial=self.path or filelist.path,
             )
         else:
             return super().process_key(key)
