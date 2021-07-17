@@ -470,9 +470,7 @@ class Filelist(List):
                 playlist.active = -1
                 player.play(item)
             elif ext == 'm3u':
-                playlist.clear()
-                playlist.add_playlist(item)
-                playlist.path = item
+                playlist.load(item)
                 app.toggle_tabs()
         elif key == curses.KEY_BACKSPACE:
             if self.rsearch_str:
@@ -608,6 +606,11 @@ class Playlist(List):
             return 1
         else:
             return 0
+
+    def load(self, path):
+        self.clear()
+        self.add_playlist(path)
+        self.path = path
 
     def write(self):
         if not self.path:
