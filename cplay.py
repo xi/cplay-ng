@@ -488,11 +488,14 @@ class Playlist(List):
         self.random = False
         self._played = set()
         self.path = None
+        self.items_written = []
 
     def get_title(self):
         title = 'Playlist'
         if self.path:
             title += ' ' + os.path.basename(self.path)
+            if self.items != self.items_written:
+                title += '*'
         if self.repeat:
             title += ' [repeat all]'
         if self.random:
@@ -610,6 +613,7 @@ class Playlist(List):
         self.clear()
         self.add_playlist(path)
         self.path = path
+        self.items_written = self.items.copy()
 
     def write(self, path):
         try:
@@ -633,6 +637,7 @@ class Playlist(List):
         elif key == 'C':
             self.clear()
             self.path = None
+            self.items_written = []
         elif key == '\n':
             if not self.items:
                 return True
