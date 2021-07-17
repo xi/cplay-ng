@@ -1,3 +1,15 @@
+unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 4.1.0 ***
+
+	- changes to playlists are no longer automatically written back to their
+	  files. Instead, a * is appended to the playlist title if there are unsaved
+	  modifications. They can be written to a file with the `w` key.
+	- cplay now uses a single instance of mpv and its IPC mechanism instead of
+	  parsing command line output.
+	- fix: stop playback when cplay crashes
+	- fix: do not crash on tiny screen size
+
 2020-09-07  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 4.0.0 ***
