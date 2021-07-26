@@ -9,6 +9,7 @@ unreleased  Tobias Bengfort <tobias.bengfort@posteo.de>
 	  parsing command line output.
 	- fix: stop playback when cplay crashes
 	- fix: do not crash on tiny screen size
+	- fix: mpv 0.33 compatibility
 
 2020-09-07  Tobias Bengfort <tobias.bengfort@posteo.de>
 

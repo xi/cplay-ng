@@ -170,10 +170,10 @@ class Player:
 
     def handle_ipc(self, data):
         if data.get('event') == 'property-change' and data['id'] == 1:
-            if data['data'] is not None and not self._seek_step:
+            if data.get('data') is not None and not self._seek_step:
                 self.position = data['data']
         elif data.get('event') == 'property-change' and data['id'] == 2:
-            if data['data'] is not None:
+            if data.get('data') is not None:
                 self.length = data['data']
         elif data.get('event') == 'end-file':
             self._playing -= 1
