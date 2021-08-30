@@ -1,5 +1,11 @@
 2021-08-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
+	*** 5.0.1 ***
+
+	- Fix in-app version number
+
+2021-08-30  Tobias Bengfort <tobias.bengfort@posteo.de>
+
 	*** 5.0.0 ***
 
 	- changes to playlists are no longer automatically written back to their

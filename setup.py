@@ -7,7 +7,7 @@ README = open('README.rst').read()
 
 setup(
     name='cplay-ng',
-    version='5.0.0',
+    version='5.0.1',
     description='A simple curses audio player',
     long_description=README,
     url='https://github.com/xi/cplay-ng',

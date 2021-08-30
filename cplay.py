@@ -13,7 +13,7 @@ import termios
 import time
 from contextlib import contextmanager
 
-__version__ = 'cplay-ng 4.0.0'
+__version__ = 'cplay-ng 5.0.1'
 
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'
