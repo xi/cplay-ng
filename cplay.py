@@ -80,7 +80,7 @@ def str_match(query, s):
 
 def set_volume(vol):
     subprocess.check_call([
-        'pactl', '--', 'set-sink-volume', '0', '%i%%' % int(vol * 100)
+        'pactl', 'set-sink-volume', '@DEFAULT_SINK@', '%i%%' % int(vol * 100)
     ])
 
 
