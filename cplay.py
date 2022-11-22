@@ -33,7 +33,7 @@ n            : next track
 x, Space     : toggle play/pause
 Left, Right  : seek backward/forward
 /            : search
-C-s, C-r     : next/previous search match
+[, ]         : previous/next search match
 Esc          : cancel
 0..9         : volume control
 h            : help
@@ -356,10 +356,10 @@ class List:
             self.set_cursor(0)
         elif key == '/':
             app.input.start('/', on_input=self.search)
-        elif key == chr(19):
+        elif key == ']':
             if self.search_str:
                 self.search(self.search_str, 1, 1)
-        elif key == chr(18):
+        elif key == '[':
             if self.search_str:
                 self.search(self.search_str, -1, 1)
         else:
