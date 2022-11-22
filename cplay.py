@@ -100,7 +100,9 @@ def get_socket(path):
 
 @functools.lru_cache()
 def relpath(path):
-    if path.startswith(filelist.path):
+    if path.startswith('http'):
+        return path
+    elif path.startswith(filelist.path):
         return path[len(filelist.path):].lstrip('/')
     else:
         return os.path.relpath(path)
