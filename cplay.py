@@ -717,7 +717,7 @@ class Application:
         yield self.format_progress()
 
         if self.input.active:
-            status = self.input.prompt + self.input.str
+            status = self.input.prompt + self.input.str + '█'
         elif self.tab == helplist:
             status = __version__
         elif player.is_playing:
