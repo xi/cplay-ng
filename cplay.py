@@ -141,6 +141,7 @@ class Player:
         self.path = None
         self.position = 0
         self.length = 0
+        self.metadata = None
         self._seek_step = 0
         self._seek_timeout = None
         self.is_playing = False
@@ -164,6 +165,7 @@ class Player:
 
         self._ipc('observe_property', 1, 'time-pos')
         self._ipc('observe_property', 2, 'duration')
+        self._ipc('observe_property', 3, 'metadata')
 
     def _ipc(self, cmd, *args):
         data = json.dumps({'command': [cmd, *args]})
@@ -177,6 +179,8 @@ class Player:
         elif data.get('event') == 'property-change' and data['id'] == 2:
             if data.get('data') is not None:
                 self.length = data['data']
+        elif data.get('event') == 'property-change' and data['id'] == 3:
+            self.metadata = data.get('data')
         elif data.get('event') == 'end-file':
             self._playing -= 1
 
@@ -192,6 +196,12 @@ class Player:
         if self.length == 0:
             return 0
         return self.position / self.length
+
+    def get_title(self):
+        title = relpath(self.path)
+        if self.metadata and 'icy-title' in self.metadata:
+            title = '{} [{}]'.format(title, self.metadata['icy-title'])
+        return title
 
     def stop(self):
         self.is_playing = False
@@ -711,7 +721,7 @@ class Application:
         elif self.tab == helplist:
             status = __version__
         elif player.is_playing:
-            status = 'Playing %s' % relpath(player.path)
+            status = 'Playing %s' % player.get_title()
         else:
             status = ''
 
