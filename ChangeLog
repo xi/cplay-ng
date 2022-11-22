@@ -1,3 +1,12 @@
+2022-11-22  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 5.1.0 ***
+
+	- change keys for previous/next search match to [ and ]
+	- if a stream contains metadata, display the name of the currently playing
+	  track
+	- use @DEFAULT_SINK@ instead of hardcoded index to set volume
+
 2021-08-30  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 5.0.1 ***
