@@ -189,7 +189,7 @@ class Player:
         msgs = self._buffer.split(b'\n')
         self._buffer = msgs.pop()
         for msg in msgs:
-            data = json.loads(msg.decode('utf-8'))
+            data = json.loads(msg.decode('utf-8', errors='replace'))
             self.handle_ipc(data)
 
     def get_progress(self):
