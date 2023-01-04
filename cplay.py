@@ -148,7 +148,9 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
-        self.socket_path = '/tmp/mpv-cplay-%i.sock' % os.getpid()
+        self.socket_path = '%s/mpv-cplay-%i.sock' % (
+            os.getenv('XDG_RUNTIME_DIR', '/tmp'), os.getpid()
+        )
         self._proc = subprocess.Popen(
             [
                 'mpv',
