@@ -78,12 +78,6 @@ def str_match(query, s):
     return all(q in s.lower() for q in query.lower().split())
 
 
-def set_volume(vol):
-    subprocess.check_call([
-        'pactl', 'set-sink-volume', '@DEFAULT_SINK@', '%i%%' % int(vol * 100)
-    ])
-
-
 def resize(*args):
     os.write(app.resize_out, b'.')
 
@@ -204,6 +198,9 @@ class Player:
         if self.metadata and 'icy-title' in self.metadata:
             title = '{} [{}]'.format(title, self.metadata['icy-title'])
         return title
+
+    def set_volume(self, vol):
+        self._ipc('set', 'volume', str(vol))
 
     def stop(self):
         self.is_playing = False
@@ -761,7 +758,7 @@ class Application:
         elif self.tab.process_key(key):
             pass
         elif key in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            set_volume(int(key, 10) / 9.0)
+            player.set_volume(int(key, 10) * 11)
         elif key == curses.KEY_RIGHT:
             player.seek(1)
         elif key == curses.KEY_LEFT:
