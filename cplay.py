@@ -36,6 +36,7 @@ Left, Right  : seek backward/forward
 [, ]         : previous/next search match
 Esc          : cancel
 0..9         : volume control
+v            : toggle softvol
 h            : help
 q, Q         : quit
 
@@ -78,10 +79,12 @@ def str_match(query, s):
     return all(q in s.lower() for q in query.lower().split())
 
 
-def set_volume(vol):
-    subprocess.check_call([
-        'pactl', 'set-sink-volume', '@DEFAULT_SINK@', '%i%%' % int(vol * 100)
-    ])
+def _test_pulseaudio():
+    _ = subprocess.run(['pactl', 'list'], capture_output=True)
+    if _.returncode != 0:
+        return False
+    else:
+        return True
 
 
 def resize(*args):
@@ -148,6 +151,8 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
+        self.softvol = not _test_pulseaudio()
+
         self.socket_path = '%s/mpv-cplay-%i.sock' % (
             os.getenv('XDG_RUNTIME_DIR', '/tmp'), os.getpid()
         )
@@ -204,6 +209,12 @@ class Player:
         if self.metadata and 'icy-title' in self.metadata:
             title = '{} [{}]'.format(title, self.metadata['icy-title'])
         return title
+
+    def set_volume(self, vol):
+        if self.softvol:
+            self._ipc('set', 'volume', str(vol))
+        else:
+            self._ipc('set', 'ao-volume', str(vol))
 
     def stop(self):
         self.is_playing = False
@@ -761,7 +772,9 @@ class Application:
         elif self.tab.process_key(key):
             pass
         elif key in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            set_volume(int(key, 10) / 9.0)
+            player.set_volume((int(key, 10) + 1) * 10)
+        elif key == 'v':
+            player.softvol = not player.softvol
         elif key == curses.KEY_RIGHT:
             player.seek(1)
         elif key == curses.KEY_LEFT:
