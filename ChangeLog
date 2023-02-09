@@ -1,3 +1,11 @@
+2023-03-09  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 5.2.0 ***
+
+	- use mpv's native volume controls (thanks to @AlkyoneAoide)
+	- use XDG_RUNTIME_DIR for mpv socket
+	- do not crash on invalid utf-8 from mpv
+
 2022-11-22  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 5.1.0 ***
