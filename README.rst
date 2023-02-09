@@ -21,7 +21,6 @@ Requirements
 
 - `python3 <http://www.python.org/>`_
 - `mpv <https://mpv.io/>`_
-- pulseaudio-utils, specifically the ``pactl`` command
 
 Installation
 ------------
