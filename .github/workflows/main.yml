@@ -3,18 +3,17 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
-    - run: pip install ruff
+    - run: python3 -m pip install ruff
     - name: linters
-      run: |
-        ruff cplay.py
+      run: ruff cplay.py
   publish:
     needs: [lint]
     if: startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
     - name: build
       run: python3 setup.py bdist_wheel sdist
