@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cplay-ng"
+version = "5.2.0"
+description = "A simple curses audio player"
+readme = "README.rst"
+license = {text = "GPLv2+"}
+keywords = ["music-player", "curses"]
+authors = [
+    {name = "Ulf Betlehem", email = "flu@iki.fi"}
+]
+maintainers = [
+    {name = "Tobias Bengfort", email = "tobias.bengfort@posteo.de"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+]
+
+[project.urls]
+Homepage = "https://github.com/xi/cplay-ng"
+
+[project.scripts]
+cplay-ng = "cplay:main"
+
+[tool.setuptools]
+py-modules = ["cplay"]
