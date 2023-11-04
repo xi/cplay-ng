@@ -92,7 +92,7 @@ def get_socket(path):
             time.sleep(0.1)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def relpath(path):
     if path.startswith('http'):
         return path
@@ -398,7 +398,7 @@ class Filelist(List):
             title += 'search "%s"/' % self.rsearch_str
         return title
 
-    @functools.lru_cache()
+    @functools.lru_cache
     def format_item(self, item):
         s = super().format_item(item)
         ext = get_ext(item)
