@@ -399,7 +399,6 @@ class Filelist(List):
             title += 'search "%s"/' % self.rsearch_str
         return title
 
-    @functools.lru_cache
     def format_item(self, item):
         s = super().format_item(item)
         ext = get_ext(item)
@@ -412,7 +411,6 @@ class Filelist(List):
             self.path = path
             os.chdir(path)
             relpath.cache_clear()
-            self.format_item.cache_clear()
             self.search_cache = []
         self.all_items = []
         self.rsearch_str = ''
