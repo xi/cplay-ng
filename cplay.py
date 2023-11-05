@@ -78,7 +78,7 @@ def str_match(query, s):
     return all(q in s.lower() for q in query.lower().split())
 
 
-def resize(*args):
+def resize(*_args):
     os.write(app.resize_out, b'.')
 
 
@@ -87,9 +87,10 @@ def get_socket(path):
         try:
             sock = socket.socket(family=socket.AF_UNIX)
             sock.connect(path)
-            return sock
         except (FileNotFoundError, ConnectionRefusedError):
             time.sleep(0.1)
+        else:
+            return sock
 
 
 @functools.lru_cache
@@ -148,7 +149,7 @@ class Player:
         self._proc = subprocess.Popen(
             [
                 'mpv',
-                '--input-ipc-server=%s' % self.socket_path,
+                f'--input-ipc-server={self.socket_path}',
                 '--idle',
                 '--audio-display=no',
                 '--replaygain=track',
@@ -334,13 +335,13 @@ class List:
                 attr |= curses.A_REVERSE
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
-            item = self.format_item(item)
-            item = space_between('  ' + item, '', app.cols)
-            yield (item, attr)
-        for i in range(max(0, self.rows - len(items))):
+            s_item = self.format_item(item)
+            s_item = space_between('  ' + s_item, '', app.cols)
+            yield (s_item, attr)
+        for _i in range(max(0, self.rows - len(items))):
             yield ''
 
-    def process_key(self, key):
+    def process_key(self, key):  # noqa: C901
         if key in [curses.KEY_DOWN, 'j']:
             self.move_cursor(1)
         elif key in [curses.KEY_UP, 'k']:
@@ -460,28 +461,27 @@ class Filelist(List):
         self.rsearch_str = query
         self.set_cursor(self.cursor)
 
+    def activate(self, item):
+        ext = item.rsplit('.', 1)[-1]
+        if os.path.isdir(item):
+            self.set_path(item)
+        elif ext in AUDIO_EXTENSIONS:
+            playlist.active = -1
+            player.play(item)
+        elif ext == 'm3u':
+            playlist.load(item)
+            app.toggle_tabs()
+
     def process_key(self, key):
         if key == 'a':
-            if not self.items:
-                return True
-            if playlist.add(self.items[self.cursor]):
+            if self.items and playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
         elif key == 's':
             app.input.start('search: ', on_input=self.filter)
             self.filter(self.rsearch_str)
         elif key == '\n':
-            if not self.items:
-                return True
-            item = self.items[self.cursor]
-            ext = item.rsplit('.', 1)[-1]
-            if os.path.isdir(item):
-                self.set_path(item)
-            elif ext in AUDIO_EXTENSIONS:
-                playlist.active = -1
-                player.play(item)
-            elif ext == 'm3u':
-                playlist.load(item)
-                app.toggle_tabs()
+            if self.items:
+                self.activate(self.items[self.cursor])
         elif key == curses.KEY_BACKSPACE:
             if self.rsearch_str:
                 self.set_path(self.path)
@@ -590,7 +590,7 @@ class Playlist(List):
 
     def add_dir(self, path):
         count = 0
-        for p, ext, is_dir in listdir(path):
+        for p, _ext, _is_dir in listdir(path):
             count += self.add(p, recursive=True)
         return count
 
@@ -598,8 +598,8 @@ class Playlist(List):
         count = 0
         dirname = os.path.dirname(path)
         with open(path, errors='replace') as fh:
-            for line in fh:
-                line = line.strip()
+            for _line in fh:
+                line = _line.strip()
                 if not line or line[0] == '#':
                     continue
                 if not re.match(r'^(/|https?://)', line):
@@ -608,7 +608,7 @@ class Playlist(List):
                 count += 1
         return count
 
-    def add(self, path, recursive=False):
+    def add(self, path, *, recursive=False):
         ext = path.rsplit('.', 1)[-1]
         if os.path.isdir(path):
             return self.add_dir(path)
@@ -633,10 +633,10 @@ class Playlist(List):
                     fh.write('%s\n' % item)
                 self.path = path
                 self.items_written = self.items.copy()
-        except IOError:
+        except OSError:
             pass
 
-    def process_key(self, key):
+    def process_key(self, key):  # noqa: C901
         if key == 'm':
             self.move_item(1)
         elif key == 'M':
@@ -724,13 +724,13 @@ class Application:
         else:
             status = ''
 
-        counter = '%s / %s' % (
+        counter = ' / '.join([
             format_time(player.position),
             format_time(player.length),
-        )
+        ])
         yield space_between(status, counter, self.cols)
 
-    def render(self, force=False):
+    def render(self, *, force=False):
         lines = list(self._render())
         try:
             for i, line in enumerate(lines):
@@ -743,8 +743,9 @@ class Application:
                 screen.move(i, 0)
                 screen.clrtoeol()
                 if isinstance(line, str):
-                    line = (line, 0)
-                screen.insstr(i, 0, *line)
+                    screen.insstr(i, 0, line, 0)
+                else:
+                    screen.insstr(i, 0, *line)
             # make sure cursor is in a meaningful position for a11y
             screen.move(self.tab.cursor - self.tab.position + 2, 0)
             screen.refresh()
@@ -752,7 +753,7 @@ class Application:
             pass
         self.old_lines = lines
 
-    def process_key(self, key):
+    def process_key(self, key):  # noqa: C901
         if self.input.process_key(key):
             pass
         elif self.tab.process_key(key):
@@ -790,7 +791,7 @@ class Application:
                 player.finish_seek()
 
                 timeout = 0.5 if player.is_playing else None
-                for key, mask in sel.select(timeout):
+                for key, _mask in sel.select(timeout):
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
                         self.on_resize()
@@ -816,10 +817,10 @@ screen = curses.initscr()
 
 
 def main():
-    screen.keypad(True)
+    screen.keypad(flag=True)
     curses.cbreak()
     curses.noecho()
-    curses.meta(True)
+    curses.meta(flag=True)
     curses.curs_set(0)
 
     signal.signal(signal.SIGWINCH, resize)
