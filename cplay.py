@@ -815,10 +815,10 @@ screen = curses.initscr()
 
 
 def main():
-    screen.keypad(flag=True)
+    screen.keypad(True)  # noqa: FBT003
     curses.cbreak()
     curses.noecho()
-    curses.meta(flag=True)
+    curses.meta(True)  # noqa: FBT003
     curses.curs_set(0)
 
     signal.signal(signal.SIGWINCH, resize)
