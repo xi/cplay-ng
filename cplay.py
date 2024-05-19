@@ -213,7 +213,7 @@ class Player:
             return
         self.is_playing = True
         self._playing += 1
-        self._ipc('loadfile', self.path, 'replace', 'start=%i' % self.position)
+        self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
 
     def play(self, path):
         if path and (m := re.match(r'^(http.*)#t=([0-9]+)$', path)):
