@@ -203,17 +203,13 @@ class Player:
     def set_volume(self, vol):
         self._ipc('set', 'volume', str(vol))
 
-    def stop(self):
-        self.is_playing = False
-        self._ipc('stop')
-
-    def _play(self):
+    def _play(self, *args):
         if not self.path:
             self.is_playing = False
             return
         self.is_playing = True
         self._playing += 1
-        self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
+        self._ipc(*args)
 
     def play(self, path):
         if path and (m := re.match(r'^(http.*)#t=([0-9]+)$', path)):
@@ -224,13 +220,14 @@ class Player:
             self.position = 0
         self.length = 0
         self._seek_step = 0
-        self._play()
+        self._play('loadfile', self.path, 'replace')
 
     def toggle(self):
         if self.is_playing:
-            self.stop()
+            self.is_playing = False
+            self._ipc('set_property', 'pause', True)
         elif self.path:
-            self._play()
+            self._play('set_property', 'pause', False)
 
     def seek(self, direction):
         d = direction * self.length * 0.002
@@ -248,7 +245,7 @@ class Player:
             self._seek_timeout = None
             self._seek_step = 0
             if self.is_playing:
-                self._play()
+                self._play('seek', self.position, 'absolute+keyframes')
 
     @property
     def is_finished(self):
