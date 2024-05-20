@@ -244,8 +244,7 @@ class Player:
         if self._seek_timeout and time.time() >= self._seek_timeout:
             self._seek_timeout = None
             self._seek_step = 0
-            if self.is_playing:
-                self._play('seek', self.position, 'absolute+keyframes')
+            self._ipc('seek', self.position, 'absolute+keyframes')
 
     @property
     def is_finished(self):
