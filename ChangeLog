@@ -1,3 +1,10 @@
+2024-05-20  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 5.3.0 ***
+
+	- allow to start URLs with offset (see https://www.w3.org/TR/media-frags/)
+	- fix compatibility with mpv 0.38 and above (thanks to @AlkyoneAoide)
+
 2023-03-09  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 5.2.0 ***
