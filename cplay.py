@@ -93,6 +93,13 @@ def get_socket(path):
             return sock
 
 
+@functools.cache
+def get_mpv_version():
+    p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE)
+    s = p.stdout.split(b' ', 2)[1].decode()
+    return tuple(int(i) for i in s.split('.'))
+
+
 @functools.lru_cache
 def relpath(path):
     if path.startswith('http'):
@@ -213,7 +220,10 @@ class Player:
             return
         self.is_playing = True
         self._playing += 1
-        self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
+        if get_mpv_version() > (0, 38, 0):
+            self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
+        else:
+            self._ipc('loadfile', self.path, 'replace', 'start=%i' % self.position)
 
     def play(self, path):
         if path and (m := re.match(r'^(http.*)#t=([0-9]+)$', path)):
