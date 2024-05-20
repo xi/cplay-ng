@@ -226,6 +226,7 @@ class Player:
     def toggle(self):
         if self.is_playing:
             self.is_playing = False
+            self._playing -= 1
             self._ipc('set_property', 'pause', True)
         elif self.path:
             self._play('set_property', 'pause', False)
