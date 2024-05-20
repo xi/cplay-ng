@@ -203,6 +203,11 @@ class Player:
     def set_volume(self, vol):
         self._ipc('set', 'volume', str(vol))
 
+    def stop(self):
+        self.is_playing = False
+        self._playing -= 1
+        self._ipc('set_property', 'pause', True)
+
     def _play(self, *args):
         if not self.path:
             self.is_playing = False
@@ -225,9 +230,7 @@ class Player:
 
     def toggle(self):
         if self.is_playing:
-            self.is_playing = False
-            self._playing -= 1
-            self._ipc('set_property', 'pause', True)
+            self.stop()
         elif self.path:
             self._play('set_property', 'pause', False)
 
