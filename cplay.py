@@ -221,6 +221,7 @@ class Player:
         self.length = 0
         self._seek_step = 0
         self._play('loadfile', self.path, 'replace')
+        self._ipc('set_property', 'pause', False)
 
     def toggle(self):
         if self.is_playing:
