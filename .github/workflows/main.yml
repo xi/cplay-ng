@@ -7,7 +7,7 @@ jobs:
     - uses: actions/setup-python@v5
     - run: python3 -m pip install ruff
     - name: linters
-      run: ruff cplay.py
+      run: ruff check cplay.py
   publish:
     needs: [lint]
     if: startsWith(github.ref, 'refs/tags')
