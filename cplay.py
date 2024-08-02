@@ -220,7 +220,7 @@ class Player:
             return
         self.is_playing = True
         self._playing += 1
-        if get_mpv_version() > (0, 38, 0):
+        if get_mpv_version() >= (0, 38, 0):
             self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
         else:
             self._ipc('loadfile', self.path, 'replace', 'start=%i' % self.position)
