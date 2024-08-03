@@ -698,11 +698,11 @@ class Application:
         self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
 
     def refresh_dimensions(self):
-        self.rows, self.cols = screen.getmaxyx()
+        self.rows, self.cols = self.screen.getmaxyx()
 
     def on_resize(self):
         curses.endwin()
-        screen.refresh()
+        self.screen.refresh()
         self.refresh_dimensions()
         self.tab.set_cursor(app.tab.cursor)
 
@@ -752,15 +752,15 @@ class Application:
                     and line == self.old_lines[i]
                 ):
                     continue
-                screen.move(i, 0)
-                screen.clrtoeol()
+                self.screen.move(i, 0)
+                self.screen.clrtoeol()
                 if isinstance(line, str):
-                    screen.insstr(i, 0, line, 0)
+                    self.screen.insstr(i, 0, line, 0)
                 else:
-                    screen.insstr(i, 0, *line)
+                    self.screen.insstr(i, 0, *line)
             # make sure cursor is in a meaningful position for a11y
-            screen.move(self.tab.cursor - self.tab.position + 2, 0)
-            screen.refresh()
+            self.screen.move(self.tab.cursor - self.tab.position + 2, 0)
+            self.screen.refresh()
         except curses.error:
             pass
         self.old_lines = lines
@@ -809,7 +809,7 @@ class Application:
                         self.on_resize()
                         self.render(force=True)
                     elif key.fileobj is sys.stdin:
-                        self.process_key(screen.get_wch())
+                        self.process_key(self.screen.get_wch())
                     elif key.fileobj is player.socket:
                         player.parse_progress()
 
@@ -825,11 +825,10 @@ filelist = Filelist()
 helplist = HelpList()
 app = Application()
 
-screen = curses.initscr()
-
 
 def main():
-    screen.keypad(True)  # noqa: FBT003
+    app.screen = curses.initscr()
+    app.screen.keypad(True)  # noqa: FBT003
     curses.cbreak()
     curses.noecho()
     curses.meta(True)  # noqa: FBT003
