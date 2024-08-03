@@ -13,7 +13,7 @@ import termios
 import time
 from contextlib import contextmanager
 
-__version__ = 'cplay-ng 5.3.0'
+__version__ = '5.3.1'
 
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'
@@ -730,7 +730,7 @@ class Application:
         if self.input.active:
             status = f'{self.input.prompt}{self.input.str}█'
         elif self.tab == helplist:
-            status = __version__
+            status = f'cplay-ng {__version__}'
         elif player.is_playing:
             status = f'Playing {player.get_title()}'
         else:
