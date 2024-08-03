@@ -350,7 +350,7 @@ class List:
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
             s_item = self.format_item(item)
-            s_item = space_between('  ' + s_item, '', app.cols)
+            s_item = space_between(f'  {s_item}', '', app.cols)
             yield (s_item, attr)
         for _i in range(max(0, self.rows - len(items))):
             yield ''
@@ -408,9 +408,9 @@ class Filelist(List):
         self.set_path(os.getcwd())
 
     def get_title(self):
-        title = 'Filelist: %s/' % self.path.rstrip('/')
+        title = f'Filelist: {self.path.rstrip("/")}/'
         if self.rsearch_str:
-            title += 'search "%s"/' % self.rsearch_str
+            title += f'search "{self.rsearch_str}"/'
         return title
 
     def format_item(self, item):
@@ -516,7 +516,7 @@ class Playlist(List):
     def get_title(self):
         title = 'Playlist'
         if self.path:
-            title += ' ' + os.path.basename(self.path)
+            title += f' {os.path.basename(self.path)}'
             if self.items != self.items_written:
                 title += '*'
         if self.repeat:
@@ -642,7 +642,7 @@ class Playlist(List):
         try:
             with open(path, 'w') as fh:
                 for item in self.items:
-                    fh.write('%s\n' % item)
+                    fh.write(f'{item}\n')
                 self.path = path
                 self.items_written = self.items.copy()
         except OSError:
@@ -728,11 +728,11 @@ class Application:
         yield self.format_progress()
 
         if self.input.active:
-            status = self.input.prompt + self.input.str + '█'
+            status = f'{self.input.prompt}{self.input.str}█'
         elif self.tab == helplist:
             status = __version__
         elif player.is_playing:
-            status = 'Playing %s' % player.get_title()
+            status = f'Playing {player.get_title()}'
         else:
             status = ''
 
