@@ -798,12 +798,20 @@ class Application:
             sel.register(sys.stdin, selectors.EVENT_READ)
             sel.register(self.resize_in, selectors.EVENT_READ)
             sel.register(player.socket, selectors.EVENT_READ)
+            prev = time.time()
 
             while True:
                 player.finish_seek()
 
                 timeout = 0.5 if player.is_playing else None
                 for key, _mask in sel.select(timeout):
+                    # if we have skipped multiple seconds, it is probably
+                    # because the system was suspended. This heuristic is much
+                    # simpler than detecting suspend via dbus.
+                    if player.is_playing and time.time() - prev > 5:
+                        player.stop()
+                    prev = time.time()
+
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
                         self.on_resize()
