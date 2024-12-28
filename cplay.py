@@ -13,7 +13,7 @@ import termios
 import time
 from contextlib import contextmanager
 
-__version__ = '5.3.1'
+__version__ = '5.4.0'
 
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'

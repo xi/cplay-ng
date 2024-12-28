@@ -1,3 +1,12 @@
+2024-12-28  Tobias Bengfort <tobias.bengfort@posteo.de>
+
+	*** 5.4.0 ***
+
+	- allow to refresh file list
+	- automatically pause when playback was interrupted (e.g. because the
+	  device was suspended)
+	- strip leading v when parsing mpv version
+
 2024-08-03  Tobias Bengfort <tobias.bengfort@posteo.de>
 
 	*** 5.3.1 ***
