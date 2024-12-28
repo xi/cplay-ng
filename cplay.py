@@ -44,6 +44,7 @@ Filelist
 a            : add to playlist
 s            : recursive search
 BS           : go to parent dir
+r            : refresh
 
 Playlist
 --------
@@ -420,11 +421,13 @@ class Filelist(List):
             s += '/'
         return s
 
-    def set_path(self, path, prev=None):
+    def set_path(self, path, *, prev=None, refresh=False):
         if path != self.path:
             self.path = path
             os.chdir(path)
             relpath.cache_clear()
+            self.search_cache = []
+        elif refresh:
             self.search_cache = []
         self.all_items = []
         self.rsearch_str = ''
@@ -494,6 +497,8 @@ class Filelist(List):
         elif key == '\n':
             if self.items:
                 self.activate(self.items[self.cursor])
+        elif key == 'r':
+            self.set_path(self.path, refresh=True)
         elif key == curses.KEY_BACKSPACE:
             if self.rsearch_str:
                 self.set_path(self.path)
