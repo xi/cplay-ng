@@ -129,14 +129,17 @@ def get_ext(path):
 
 
 def listdir(path):
-    with os.scandir(path) as it:
-        for entry in sorted(it, key=lambda e: e.name):
-            if entry.name[0] != '.':
-                yield (
-                    entry.path,
-                    get_ext(entry.name),
-                    entry.is_dir(follow_symlinks=False),
-                )
+    try:
+        with os.scandir(path) as it:
+            for entry in sorted(it, key=lambda e: e.name):
+                if entry.name[0] != '.':
+                    yield (
+                        entry.path,
+                        get_ext(entry.name),
+                        entry.is_dir(follow_symlinks=False),
+                    )
+    except OSError:
+        pass
 
 
 class Player:
@@ -406,7 +409,7 @@ class Filelist(List):
         super().__init__()
         self.path = None
         self.rsearch_str = ''
-        self.set_path(os.getcwd())
+        self.set_path(os.getcwd(), fail_silently=False)
 
     def get_title(self):
         title = f'Filelist: {self.path.rstrip("/")}/'
@@ -421,10 +424,15 @@ class Filelist(List):
             s += '/'
         return s
 
-    def set_path(self, path, *, prev=None, refresh=False):
+    def set_path(self, path, *, prev=None, refresh=False, fail_silently=True):
         if path != self.path:
+            try:
+                os.chdir(path)
+            except Exception:
+                if fail_silently:
+                    return
+                raise
             self.path = path
-            os.chdir(path)
             relpath.cache_clear()
             self.search_cache = []
         elif refresh:
