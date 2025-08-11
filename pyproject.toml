@@ -7,7 +7,7 @@ name = "cplay-ng"
 version = "5.4.0"
 description = "A simple curses audio player"
 readme = "README.md"
-license = {text = "GPLv2+"}
+license = "GPL-2.0-or-later"
 keywords = ["music-player", "curses"]
 authors = [
     {name = "Ulf Betlehem", email = "flu@iki.fi"}
