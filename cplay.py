@@ -76,7 +76,7 @@ def format_time(total):
 
 
 def str_match(query, s):
-    return all(q in s.lower() for q in query.lower().split())
+    return all(q in s.casefold() for q in query.casefold().split())
 
 
 def resize(*_args):
