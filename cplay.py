@@ -572,6 +572,8 @@ class Playlist(List):
         elif self.active > self.cursor:
             self.active -= 1
 
+        self.move_cursor(0)
+
     def move_item(self, direction):
         new_cursor = clamp(self.cursor + direction, 0, len(self.items) - 1)
 
