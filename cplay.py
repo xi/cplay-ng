@@ -476,11 +476,11 @@ class Filelist(List):
             for path in base:
                 if str_match(query, self.format_item(path)):
                     self.items.append(path)
+            self.set_cursor(0)
         else:
             self.items = self.all_items
 
         self.rsearch_str = query
-        self.set_cursor(self.cursor)
 
     def activate(self, item):
         ext = item.rsplit('.', 1)[-1]
