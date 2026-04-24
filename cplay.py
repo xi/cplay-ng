@@ -107,8 +107,6 @@ def get_mpv_version():
 def relpath(path):
     if path.startswith('http'):
         return path
-    elif path.startswith(filelist.path):
-        return path[len(filelist.path):].lstrip('/')
     else:
         return os.path.relpath(path)
 
