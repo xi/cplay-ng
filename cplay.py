@@ -324,9 +324,14 @@ class List:
 
     def set_cursor(self, cursor):
         self.cursor = clamp(cursor, 0, len(self.items) - 1)
-        self.position = clamp(
-            self.position, self.cursor - self.rows + 1, self.cursor
-        )
+        if len(self.items) < self.rows:
+            self.position = 0
+        else:
+            self.position = clamp(
+                self.position, self.cursor - self.rows + 1, self.cursor
+            )
+            if len(self.items) < self.rows + self.position:
+                self.position = len(self.items) - self.rows
 
     def move_cursor(self, diff):
         self.set_cursor(self.cursor + diff)
