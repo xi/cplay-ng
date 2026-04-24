@@ -768,9 +768,9 @@ class Application:
                 self.screen.move(i, 0)
                 self.screen.clrtoeol()
                 if isinstance(line, str):
-                    self.screen.insstr(i, 0, line, 0)
+                    self.screen.insstr(line, 0)
                 else:
-                    self.screen.insstr(i, 0, *line)
+                    self.screen.insstr(*line)
             # make sure cursor is in a meaningful position for a11y
             self.screen.move(self.tab.cursor - self.tab.position + 2, 0)
             self.screen.refresh()
