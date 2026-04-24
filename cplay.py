@@ -15,6 +15,8 @@ from contextlib import contextmanager
 
 __version__ = '5.4.0'
 
+XDG_RUNTIME_DIR = os.getenv('XDG_RUNTIME_DIR', '/tmp')
+
 AUDIO_EXTENSIONS = [
     'mp3', 'ogg', 'oga', 'opus', 'flac', 'm4a', 'm4b', 'wav', 'mid', 'wma'
 ]
@@ -70,9 +72,9 @@ def space_between(a, b, n):
 
 
 def format_time(total):
-    h, s = divmod(total, 3600)
+    h, s = divmod(int(total), 3600)
     m, s = divmod(s, 60)
-    return '%02d:%02d:%02d' % (h, m, s)
+    return f'{h:02d}:{m:02d}:{s:02d}'
 
 
 def str_match(query, s):
@@ -154,9 +156,7 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
-        self.socket_path = '%s/mpv-cplay-%i.sock' % (
-            os.getenv('XDG_RUNTIME_DIR', '/tmp'), os.getpid()
-        )
+        self.socket_path = f'{XDG_RUNTIME_DIR}/mpv-cplay-{os.getpid()}.sock'
         self._proc = subprocess.Popen(
             [
                 'mpv',
@@ -225,9 +225,9 @@ class Player:
         self.is_playing = True
         self._playing += 1
         if get_mpv_version() >= (0, 38, 0):
-            self._ipc('loadfile', self.path, 'replace', 0, 'start=%i' % self.position)
+            self._ipc('loadfile', self.path, 'replace', 0, f'start={self.position}')
         else:
-            self._ipc('loadfile', self.path, 'replace', 'start=%i' % self.position)
+            self._ipc('loadfile', self.path, 'replace', f'start={self.position}')
 
     def play(self, path):
         if path and (m := re.match(r'^(http.*)#t=([0-9]+)$', path)):
