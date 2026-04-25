@@ -1,3 +1,15 @@
+# 5.5.0 (2026-04-25)
+
+- include symlink dirs in directory listings
+- ignore symlink loops when adding a directory
+- shift scroll position if space is available at the bottom
+- move cursor to top on recursive search
+- fix: move cursor when deleting the last item
+- use casefold for string comparison
+- pyproject.toml: update license format
+- handle file system errors (e.g. PermissionError)
+- convert changelog to markdown
+
 # 5.4.0 (2024-12-28)
 
 - allow to refresh file list

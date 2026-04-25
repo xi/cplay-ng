@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cplay-ng"
-version = "5.4.0"
+version = "5.5.0"
 description = "A simple curses audio player"
 readme = "README.md"
 license = "GPL-2.0-or-later"

@@ -13,7 +13,7 @@ import termios
 import time
 from contextlib import contextmanager
 
-__version__ = '5.4.0'
+__version__ = '5.5.0'
 
 XDG_RUNTIME_DIR = os.getenv('XDG_RUNTIME_DIR', '/tmp')
 
