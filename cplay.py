@@ -108,7 +108,7 @@ def relpath(path):
     if path.startswith('http'):
         return path
     else:
-        return os.path.relpath(path)
+        return os.path.relpath(path, filelist.path)
 
 
 @contextmanager
@@ -132,14 +132,32 @@ def listdir(path):
     try:
         with os.scandir(path) as it:
             for entry in sorted(it, key=lambda e: e.name):
-                if entry.name[0] != '.':
-                    yield (
-                        entry.path,
-                        get_ext(entry.name),
-                        entry.is_dir(follow_symlinks=False),
-                    )
+                if entry.name.startswith('.'):
+                    continue
+                ext = get_ext(entry.name)
+                if entry.is_dir() or ext in AUDIO_EXTENSIONS or ext == 'm3u':
+                    yield entry
     except OSError:
         pass
+
+
+def walk(path, seen=None):
+    realpath = os.path.realpath(path)
+    seen = seen or set()
+    if realpath in seen:
+        return []
+    seen.add(realpath)
+
+    result = []
+    for entry in listdir(path):
+        if entry.is_dir():
+            children = walk(entry.path, seen)
+            if children:
+                result.append(entry.path)
+                result += children
+        else:
+            result.append(entry.path)
+    return result
 
 
 class Player:
@@ -443,10 +461,7 @@ class Filelist(List):
         self.all_items = []
         self.rsearch_str = ''
 
-        for p, ext, is_dir in listdir(path):
-            if is_dir or ext == 'm3u' or ext in AUDIO_EXTENSIONS:
-                self.all_items.append(p)
-
+        self.all_items = [entry.path for entry in listdir(path)]
         self.items = self.all_items
 
         if prev and prev in self.items:
@@ -455,21 +470,9 @@ class Filelist(List):
             self.position = 0
             self.cursor = 0
 
-    def build_search_cache(self, root):
-        results = []
-        for path, ext, is_dir in listdir(root):
-            if is_dir:
-                children = self.build_search_cache(path)
-                if children:
-                    results.append(path)
-                    results += children
-            elif ext in AUDIO_EXTENSIONS or ext == 'm3u':
-                results.append(path)
-        return results
-
     def filter(self, query):
         if not self.search_cache:
-            self.search_cache = self.build_search_cache(self.path)
+            self.search_cache = walk(self.path)
 
         if query:
             if self.rsearch_str and query.startswith(self.rsearch_str):
@@ -618,10 +621,11 @@ class Playlist(List):
         except IndexError:
             self.active = -1
 
-    def add_dir(self, path):
+    def add_dir(self, root):
         count = 0
-        for p, _ext, _is_dir in listdir(path):
-            count += self.add(p, recursive=True)
+        for path in walk(root):
+            if get_ext(path) in AUDIO_EXTENSIONS:
+                count += self.add(path)
         return count
 
     def add_playlist(self, path):
@@ -638,11 +642,11 @@ class Playlist(List):
                 count += 1
         return count
 
-    def add(self, path, *, recursive=False):
+    def add(self, path):
         ext = get_ext(path)
         if os.path.isdir(path):
             return self.add_dir(path)
-        elif ext == 'm3u' and not recursive:
+        elif ext == 'm3u':
             return self.add_playlist(path)
         elif ext in AUDIO_EXTENSIONS:
             self.items.append(path)
