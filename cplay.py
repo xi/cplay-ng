@@ -760,7 +760,7 @@ class Application:
         elif self.tab == helplist:
             status = f'cplay-ng {__version__}'
         elif player.is_playing:
-            status = f'Playing {player.get_title()}'
+            status = f'Playing: {player.get_title()}'
         else:
             status = ''
 
