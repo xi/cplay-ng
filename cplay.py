@@ -428,9 +428,14 @@ class HelpList(List):
 class Filelist(List):
     def __init__(self):
         super().__init__()
-        self.path = None
+        self.path = os.getcwd()
+        self.all_items = []
+        self.items = []
+        self.search_cache = []
+        self.position = 0
+        self.cursor = 0
         self.rsearch_str = ''
-        self.set_path(os.getcwd(), fail_silently=False)
+        self.set_path(self.path, fail_silently=False)
 
     def get_title(self):
         title = f'Filelist: {self.path.rstrip("/")}/'
@@ -715,6 +720,7 @@ class Application:
         self.help = False
         self.input = Input()
         self.old_lines = []
+        self.screen: curses.window
 
         # self-pipe to avoid concurrency issues with signal
         self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
