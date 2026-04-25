@@ -488,7 +488,7 @@ class Filelist(List):
         self.rsearch_str = query
 
     def activate(self, item):
-        ext = item.rsplit('.', 1)[-1]
+        ext = get_ext(item)
         if os.path.isdir(item):
             self.set_path(item)
         elif ext in AUDIO_EXTENSIONS:
@@ -639,7 +639,7 @@ class Playlist(List):
         return count
 
     def add(self, path, *, recursive=False):
-        ext = path.rsplit('.', 1)[-1]
+        ext = get_ext(path)
         if os.path.isdir(path):
             return self.add_dir(path)
         elif ext == 'm3u' and not recursive:
