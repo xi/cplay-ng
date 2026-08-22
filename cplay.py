@@ -85,17 +85,6 @@ def resize(*_args):
     os.write(app.resize_out, b'.')
 
 
-def get_socket(path):
-    while True:
-        try:
-            sock = socket.socket(family=socket.AF_UNIX)
-            sock.connect(path)
-        except (FileNotFoundError, ConnectionRefusedError):
-            time.sleep(0.1)
-        else:
-            return sock
-
-
 @functools.cache
 def get_mpv_version():
     p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE)
@@ -172,11 +161,11 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
-        self.socket_path = f'{XDG_RUNTIME_DIR}/mpv-cplay-{os.getpid()}.sock'
+        self.socket, self.socket_mpv = socket.socketpair()
         self._proc = subprocess.Popen(
             [
                 'mpv',
-                f'--input-ipc-server={self.socket_path}',
+                f'--input-ipc-client=fd://{self.socket_mpv.fileno()}',
                 '--idle',
                 '--audio-display=no',
                 '--replaygain=track',
@@ -184,8 +173,8 @@ class Player:
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            pass_fds=[self.socket_mpv.fileno()],
         )
-        self.socket = get_socket(self.socket_path)
 
         self._ipc('observe_property', 1, 'time-pos')
         self._ipc('observe_property', 2, 'duration')
@@ -286,7 +275,8 @@ class Player:
 
     def cleanup(self):
         self._proc.terminate()
-        os.remove(self.socket_path)
+        self.socket.close()
+        self.socket_mpv.close()
 
 
 class Input:
