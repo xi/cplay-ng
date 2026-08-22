@@ -32,3 +32,6 @@ cplay-ng = "cplay:main"
 
 [tool.setuptools]
 py-modules = ["cplay"]
+
+[tool.ruff.lint]
+extend-select = ["C9", "FBT"]
