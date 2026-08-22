@@ -87,7 +87,7 @@ def resize(*_args):
 
 @functools.cache
 def get_mpv_version():
-    p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE)
+    p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE, check=True)
     s = p.stdout.split(b' ', 2)[1].decode().lstrip('v')
     return tuple(int(i) for i in s.split('.'))
 
@@ -658,8 +658,7 @@ class Playlist(List):
     def write(self, path):
         try:
             with open(path, 'w') as fh:
-                for item in self.items:
-                    fh.write(f'{item}\n')
+                fh.writelines(self.items)
                 self.path = path
                 self.items_written = self.items.copy()
         except OSError:
@@ -784,7 +783,7 @@ class Application:
         self.old_lines = lines
 
     def process_key(self, key):  # noqa: C901
-        if self.input.process_key(key):
+        if self.input.process_key(key):  # noqa: SIM114
             pass
         elif self.tab.process_key(key):
             pass
