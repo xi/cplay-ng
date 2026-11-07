@@ -323,10 +323,6 @@ class List:
         self.active = -1
         self.search_str = ''
 
-    @property
-    def rows(self):
-        return app.rows - 4
-
     def get_title(self):
         raise NotImplementedError
 
@@ -348,17 +344,17 @@ class List:
     def format_item(self, item):
         return relpath(item)
 
-    def render(self):
-        if len(self.items) < self.rows:
+    def render(self, rows, cols):
+        if len(self.items) < rows:
             self.position = 0
         else:
             self.position = clamp(
-                self.position, self.cursor - self.rows + 1, self.cursor
+                self.position, self.cursor - rows + 1, self.cursor
             )
-            if len(self.items) < self.rows + self.position:
-                self.position = len(self.items) - self.rows
+            if len(self.items) < rows + self.position:
+                self.position = len(self.items) - rows
 
-        items = self.items[self.position:self.position + self.rows]
+        items = self.items[self.position:self.position + rows]
         for i, item in enumerate(items):
             attr = 0
             if self.position + i == self.cursor:
@@ -366,9 +362,9 @@ class List:
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
             s_item = self.format_item(item)
-            s_item = space_between(f'  {s_item}', '', app.cols)
+            s_item = space_between(f'  {s_item}', '', cols)
             yield (s_item, attr)
-        for _i in range(max(0, self.rows - len(items))):
+        for _i in range(max(0, rows - len(items))):
             yield ''
 
     def process_key(self, key):  # noqa: C901
@@ -377,9 +373,9 @@ class List:
         elif key in [curses.KEY_UP, 'k']:
             self.move_cursor(-1)
         elif key in [curses.KEY_NPAGE, 'J']:
-            self.move_cursor(self.rows - 2)
+            self.move_cursor(app.rows - 6)
         elif key in [curses.KEY_PPAGE, 'K']:
-            self.move_cursor(-(self.rows - 2))
+            self.move_cursor(-(app.rows - 6))
         elif key in [curses.KEY_END, 'G']:
             self.set_cursor(len(self.items))
         elif key in [curses.KEY_HOME, 'g']:
@@ -733,16 +729,16 @@ class Application:
     def toggle_tabs(self):
         self.tabs.append(self.tabs.pop(0))
 
-    def format_progress(self):
-        progress = min(int(self.cols * player.get_progress()), self.cols - 1)
-        return '=' * (progress - 1) + '|' + '-' * (self.cols - progress)
+    def format_progress(self, cols):
+        progress = min(int(cols * player.get_progress()), cols - 1)
+        return '=' * (progress - 1) + '|' + '-' * (cols - progress)
 
-    def _render(self):
+    def _render(self, rows, cols):
         yield (self.tab.get_title(), curses.A_BOLD)
-        yield '-' * self.cols
+        yield '-' * cols
 
-        yield from self.tab.render()
-        yield self.format_progress()
+        yield from self.tab.render(rows - 4, cols)
+        yield self.format_progress(cols)
 
         if self.input.active:
             status = f'{self.input.prompt}{self.input.str}█'
@@ -757,10 +753,10 @@ class Application:
             format_time(player.position),
             format_time(player.length),
         ])
-        yield space_between(status, counter, self.cols)
+        yield space_between(status, counter, cols)
 
     def render(self, *, force=False):
-        lines = list(self._render())
+        lines = list(self._render(self.rows, self.cols))
         try:
             for i, line in enumerate(lines):
                 if (
