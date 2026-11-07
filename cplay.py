@@ -176,6 +176,7 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
+    def __enter__(self):
         self.socket, self.socket_mpv = socket.socketpair()
         self._proc = subprocess.Popen(
             [
@@ -194,6 +195,13 @@ class Player:
         self._ipc('observe_property', 1, 'time-pos')
         self._ipc('observe_property', 2, 'duration')
         self._ipc('observe_property', 3, 'metadata')
+
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._proc.terminate()
+        self.socket.close()
+        self.socket_mpv.close()
 
     def _ipc(self, cmd, *args):
         data = json.dumps({'command': [cmd, *args]})
@@ -287,11 +295,6 @@ class Player:
     @property
     def is_finished(self):
         return self.is_playing and self._playing == 0
-
-    def cleanup(self):
-        self._proc.terminate()
-        self.socket.close()
-        self.socket_mpv.close()
 
 
 class Input:
@@ -865,12 +868,9 @@ app = Application()
 def main():
     signal.signal(signal.SIGWINCH, resize)
 
-    try:
-        with enable_ctrl_keys(), curses_screen() as screen:
-            app.screen = screen
-            app.run()
-    finally:
-        player.cleanup()
+    with enable_ctrl_keys(), curses_screen() as screen, player:
+        app.screen = screen
+        app.run()
 
 
 if __name__ == '__main__':
