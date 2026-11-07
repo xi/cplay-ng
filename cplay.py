@@ -113,6 +113,21 @@ def enable_ctrl_keys():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
+@contextmanager
+def curses_screen():
+    screen = curses.initscr()
+    screen.keypad(True)  # noqa: FBT003
+    curses.cbreak()
+    curses.noecho()
+    curses.meta(True)  # noqa: FBT003
+    curses.curs_set(0)
+
+    try:
+        yield screen
+    finally:
+        curses.endwin()
+
+
 def get_ext(path):
     return os.path.splitext(path)[1].lstrip('.')
 
@@ -848,21 +863,14 @@ app = Application()
 
 
 def main():
-    app.screen = curses.initscr()
-    app.screen.keypad(True)  # noqa: FBT003
-    curses.cbreak()
-    curses.noecho()
-    curses.meta(True)  # noqa: FBT003
-    curses.curs_set(0)
-
     signal.signal(signal.SIGWINCH, resize)
 
     try:
-        with enable_ctrl_keys():
+        with enable_ctrl_keys(), curses_screen() as screen:
+            app.screen = screen
             app.run()
     finally:
         player.cleanup()
-        curses.endwin()
 
 
 if __name__ == '__main__':
