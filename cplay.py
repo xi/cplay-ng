@@ -733,7 +733,7 @@ class Application:
         progress = min(int(cols * player.get_progress()), cols - 1)
         return '=' * (progress - 1) + '|' + '-' * (cols - progress)
 
-    def _render(self, rows, cols):
+    def render(self, rows, cols):
         yield (self.tab.get_title(), curses.A_BOLD)
         yield '-' * cols
 
@@ -755,8 +755,8 @@ class Application:
         ])
         yield space_between(status, counter, cols)
 
-    def render(self, *, force=False):
-        lines = list(self._render(self.rows, self.cols))
+    def update(self, *, force=False):
+        lines = list(self.render(self.rows, self.cols))
         try:
             for i, line in enumerate(lines):
                 if (
@@ -805,7 +805,7 @@ class Application:
 
     def run(self):
         self.refresh_dimensions()
-        self.render()
+        self.update()
 
         with selectors.DefaultSelector() as sel:
             sel.register(sys.stdin, selectors.EVENT_READ)
@@ -828,7 +828,7 @@ class Application:
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
                         self.on_resize()
-                        self.render(force=True)
+                        self.update(force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(self.screen.get_wch())
                     elif key.fileobj is player.socket:
@@ -837,7 +837,7 @@ class Application:
                 if player.is_finished:
                     player.play(playlist.next())
 
-                self.render()
+                self.update()
 
 
 player = Player()
