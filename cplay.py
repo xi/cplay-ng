@@ -808,15 +808,20 @@ class Application:
             return False
         return True
 
-    def run(self, screen):
-        self.rows, self.cols = screen.getmaxyx()
-        self.update(screen)
-
-        with selectors.DefaultSelector() as sel:
+    def run(self):
+        with (
+            selectors.DefaultSelector() as sel,
+            enable_ctrl_keys(),
+            curses_screen() as screen,
+            player,
+        ):
             sel.register(sys.stdin, selectors.EVENT_READ)
             sel.register(self.resize_in, selectors.EVENT_READ)
             sel.register(player.socket, selectors.EVENT_READ)
             prev = time.time()
+
+            self.rows, self.cols = screen.getmaxyx()
+            self.update(screen)
 
             while True:
                 player.finish_seek()
@@ -856,9 +861,7 @@ app = Application()
 
 def main():
     signal.signal(signal.SIGWINCH, lambda *_: os.write(app.resize_out, b'.'))
-
-    with enable_ctrl_keys(), curses_screen() as screen, player:
-        app.run(screen)
+    app.run()
 
 
 if __name__ == '__main__':
