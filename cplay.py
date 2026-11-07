@@ -720,7 +720,6 @@ class Application:
         self.help = False
         self.input = Input()
         self.old_lines = []
-        self.screen: curses.window
 
         # self-pipe to avoid concurrency issues with signal
         self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
@@ -761,7 +760,7 @@ class Application:
         ])
         yield space_between(status, counter, cols)
 
-    def update(self, *, force=False):
+    def update(self, screen, *, force=False):
         lines = list(self.render(self.rows, self.cols))
         try:
             for i, line in enumerate(lines):
@@ -771,15 +770,15 @@ class Application:
                     and line == self.old_lines[i]
                 ):
                     continue
-                self.screen.move(i, 0)
-                self.screen.clrtoeol()
+                screen.move(i, 0)
+                screen.clrtoeol()
                 if isinstance(line, str):
-                    self.screen.insstr(line, 0)
+                    screen.insstr(line, 0)
                 else:
-                    self.screen.insstr(*line)
+                    screen.insstr(*line)
             # make sure cursor is in a meaningful position for a11y
-            self.screen.move(self.tab.cursor - self.tab.position + 2, 0)
-            self.screen.refresh()
+            screen.move(self.tab.cursor - self.tab.position + 2, 0)
+            screen.refresh()
         except curses.error:
             pass
         self.old_lines = lines
@@ -809,9 +808,9 @@ class Application:
             return False
         return True
 
-    def run(self):
-        self.rows, self.cols = self.screen.getmaxyx()
-        self.update()
+    def run(self, screen):
+        self.rows, self.cols = screen.getmaxyx()
+        self.update(screen)
 
         with selectors.DefaultSelector() as sel:
             sel.register(sys.stdin, selectors.EVENT_READ)
@@ -834,18 +833,18 @@ class Application:
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
                         curses.endwin()
-                        self.screen.refresh()
-                        self.rows, self.cols = self.screen.getmaxyx()
-                        self.update(force=True)
+                        screen.refresh()
+                        self.rows, self.cols = screen.getmaxyx()
+                        self.update(screen, force=True)
                     elif key.fileobj is sys.stdin:
-                        self.process_key(self.screen.get_wch())
+                        self.process_key(screen.get_wch())
                     elif key.fileobj is player.socket:
                         player.parse_progress()
 
                 if player.is_finished:
                     player.play(playlist.next())
 
-                self.update()
+                self.update(screen)
 
 
 player = Player()
@@ -859,8 +858,7 @@ def main():
     signal.signal(signal.SIGWINCH, lambda *_: os.write(app.resize_out, b'.'))
 
     with enable_ctrl_keys(), curses_screen() as screen, player:
-        app.screen = screen
-        app.run()
+        app.run(screen)
 
 
 if __name__ == '__main__':
