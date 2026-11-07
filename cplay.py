@@ -81,10 +81,6 @@ def str_match(query, s):
     return all(q in s.casefold() for q in query.casefold().split())
 
 
-def resize(*_args):
-    os.write(app.resize_out, b'.')
-
-
 @functools.cache
 def get_mpv_version():
     p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE, check=True)
@@ -729,14 +725,6 @@ class Application:
         # self-pipe to avoid concurrency issues with signal
         self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
 
-    def refresh_dimensions(self):
-        self.rows, self.cols = self.screen.getmaxyx()
-
-    def on_resize(self):
-        curses.endwin()
-        self.screen.refresh()
-        self.refresh_dimensions()
-
     @property
     def tab(self):
         if self.help:
@@ -822,7 +810,7 @@ class Application:
         return True
 
     def run(self):
-        self.refresh_dimensions()
+        self.rows, self.cols = self.screen.getmaxyx()
         self.update()
 
         with selectors.DefaultSelector() as sel:
@@ -845,7 +833,9 @@ class Application:
 
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
-                        self.on_resize()
+                        curses.endwin()
+                        self.screen.refresh()
+                        self.rows, self.cols = self.screen.getmaxyx()
                         self.update(force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(self.screen.get_wch())
@@ -866,7 +856,7 @@ app = Application()
 
 
 def main():
-    signal.signal(signal.SIGWINCH, resize)
+    signal.signal(signal.SIGWINCH, lambda *_: os.write(app.resize_out, b'.'))
 
     with enable_ctrl_keys(), curses_screen() as screen, player:
         app.screen = screen
