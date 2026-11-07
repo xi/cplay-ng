@@ -332,14 +332,6 @@ class List:
 
     def set_cursor(self, cursor):
         self.cursor = clamp(cursor, 0, len(self.items) - 1)
-        if len(self.items) < self.rows:
-            self.position = 0
-        else:
-            self.position = clamp(
-                self.position, self.cursor - self.rows + 1, self.cursor
-            )
-            if len(self.items) < self.rows + self.position:
-                self.position = len(self.items) - self.rows
 
     def move_cursor(self, diff):
         self.set_cursor(self.cursor + diff)
@@ -357,6 +349,15 @@ class List:
         return relpath(item)
 
     def render(self):
+        if len(self.items) < self.rows:
+            self.position = 0
+        else:
+            self.position = clamp(
+                self.position, self.cursor - self.rows + 1, self.cursor
+            )
+            if len(self.items) < self.rows + self.position:
+                self.position = len(self.items) - self.rows
+
         items = self.items[self.position:self.position + self.rows]
         for i, item in enumerate(items):
             attr = 0
@@ -721,7 +722,6 @@ class Application:
         curses.endwin()
         self.screen.refresh()
         self.refresh_dimensions()
-        self.tab.set_cursor(app.tab.cursor)
 
     @property
     def tab(self):
