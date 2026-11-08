@@ -766,7 +766,7 @@ class Application:
         yield space_between(status, counter, cols)
 
     def update(self, screen, *, force=False):
-        lines = list(self.render(self.rows, self.cols))
+        lines = list(self.render(*screen.getmaxyx()))
         try:
             for i, line in enumerate(lines):
                 if (
@@ -825,7 +825,6 @@ class Application:
             sel.register(player.socket, selectors.EVENT_READ)
             prev = time.time()
 
-            self.rows, self.cols = screen.getmaxyx()
             self.update(screen)
 
             while True:
@@ -844,7 +843,6 @@ class Application:
                         os.read(self.resize_in, 8)
                         curses.endwin()
                         screen.refresh()
-                        self.rows, self.cols = screen.getmaxyx()
                         self.update(screen, force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(screen.get_wch())
