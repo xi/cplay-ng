@@ -747,7 +747,7 @@ class Application:
 
         if self.input.active:
             status = f'{self.input.prompt}{self.input.str}█'
-        elif self.tab == helplist:
+        elif self.help:
             status = f'cplay-ng {__version__}'
         elif player.is_playing:
             status = f'Playing: {player.get_title()}'
