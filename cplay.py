@@ -736,7 +736,7 @@ class Application:
         self.tabs.append(self.tabs.pop(0))
 
     def format_progress(self, cols):
-        progress = int((cols - 1) * player.get_progress())
+        progress = round((cols - 1) * player.get_progress())
         return '=' * progress + '|' + '-' * (cols - progress - 1)
 
     def render(self, rows, cols):
