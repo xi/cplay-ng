@@ -442,7 +442,7 @@ class Filelist(List):
         self.position = 0
         self.cursor = 0
         self.rsearch_str = ''
-        self.set_path(self.path, fail_silently=False)
+        self.set_path(self.path)
 
     def get_title(self):
         title = f'Filelist: {self.path.rstrip("/")}/'
@@ -457,30 +457,26 @@ class Filelist(List):
             s += '/'
         return s
 
-    def set_path(self, path, *, prev=None, refresh=False, fail_silently=True):
+    def set_path(self, path, *, prev=None, refresh=False):
         if path != self.path:
             try:
-                os.chdir(path)
-            except Exception:
-                if fail_silently:
-                    return
-                raise
+                os.scandir(path)
+            except OSError:
+                return
             self.path = path
             relpath.cache_clear()
             self.search_cache = []
         elif refresh:
             self.search_cache = []
-        self.all_items = []
-        self.rsearch_str = ''
 
         self.all_items = [entry.path for entry in listdir(path)]
         self.items = self.all_items
+        self.rsearch_str = ''
+        self.position = 0
+        self.cursor = 0
 
         if prev and prev in self.items:
             self.set_cursor(self.items.index(prev))
-        else:
-            self.position = 0
-            self.cursor = 0
 
     def filter(self, query):
         if not self.search_cache:
