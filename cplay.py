@@ -97,7 +97,7 @@ def relpath(path):
 
 
 @contextmanager
-def enable_ctrl_keys():
+def enable_ctrl_keys():  # pragma: nocover
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     try:
@@ -110,7 +110,7 @@ def enable_ctrl_keys():
 
 
 @contextmanager
-def curses_screen():
+def curses_screen():  # pragma: nocover
     screen = curses.initscr()
     screen.keypad(True)  # noqa: FBT003
     curses.cbreak()
@@ -172,7 +172,7 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
-    def __enter__(self):
+    def __enter__(self):  # pragma: nocover
         self.socket, self.socket_mpv = socket.socketpair()
         self._proc = subprocess.Popen(
             [
@@ -194,7 +194,7 @@ class Player:
 
         return self
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args, **kwargs):  # pragma: nocover
         self._proc.terminate()
         self.socket.close()
         self.socket_mpv.close()
@@ -460,7 +460,7 @@ class Filelist(List):
     def set_path(self, path, *, prev=None, refresh=False):
         if path != self.path:
             try:
-                os.scandir(path)
+                os.listdir(path)
             except OSError:
                 return
             self.path = path
@@ -761,7 +761,7 @@ class Application:
         ])
         yield space_between(status, counter, cols)
 
-    def update(self, screen, *, force=False):
+    def update(self, screen, *, force=False):  # pragma: nocover
         lines = list(self.render(*screen.getmaxyx()))
         try:
             for i, line in enumerate(lines):
@@ -809,7 +809,7 @@ class Application:
             return False
         return True
 
-    def run(self):
+    def run(self):  # pragma: nocover
         with (
             selectors.DefaultSelector() as sel,
             enable_ctrl_keys(),
@@ -859,10 +859,10 @@ prompt = Prompt()
 app = Application()
 
 
-def main():
+def main():  # pragma: nocover
     signal.signal(signal.SIGWINCH, lambda *_: os.write(app.resize_out, b'.'))
     app.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()
