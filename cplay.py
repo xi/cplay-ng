@@ -81,10 +81,6 @@ def str_match(query, s):
     return all(q in s.casefold() for q in query.casefold().split())
 
 
-def resize(*_args):
-    os.write(app.resize_out, b'.')
-
-
 @functools.cache
 def get_mpv_version():
     p = subprocess.run(['mpv', '--version'], stdout=subprocess.PIPE, check=True)
@@ -111,6 +107,21 @@ def enable_ctrl_keys():
         yield
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
+@contextmanager
+def curses_screen():
+    screen = curses.initscr()
+    screen.keypad(True)  # noqa: FBT003
+    curses.cbreak()
+    curses.noecho()
+    curses.meta(True)  # noqa: FBT003
+    curses.curs_set(0)
+
+    try:
+        yield screen
+    finally:
+        curses.endwin()
 
 
 def get_ext(path):
@@ -161,6 +172,7 @@ class Player:
         self._playing = 0
         self._buffer = b''
 
+    def __enter__(self):
         self.socket, self.socket_mpv = socket.socketpair()
         self._proc = subprocess.Popen(
             [
@@ -179,6 +191,13 @@ class Player:
         self._ipc('observe_property', 1, 'time-pos')
         self._ipc('observe_property', 2, 'duration')
         self._ipc('observe_property', 3, 'metadata')
+
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._proc.terminate()
+        self.socket.close()
+        self.socket_mpv.close()
 
     def _ipc(self, cmd, *args):
         data = json.dumps({'command': [cmd, *args]})
@@ -273,45 +292,44 @@ class Player:
     def is_finished(self):
         return self.is_playing and self._playing == 0
 
-    def cleanup(self):
-        self._proc.terminate()
-        self.socket.close()
-        self.socket_mpv.close()
 
-
-class Input:
+class Prompt:
     def __init__(self):
         self.active = False
-        self.str = ''
+        self.prefix = ''
+        self.value = ''
 
-    def start(self, prompt, on_input=None, on_submit=None, initial=''):
-        self.str = initial
-        self.prompt = prompt
+    def render(self):
+        return self.prefix + self.value
+
+    def start(self, prefix, on_input=None, on_submit=None, initial=''):
+        self.prefix = prefix
+        self.value = initial
         self.on_input = on_input
         self.on_submit = on_submit
         self.active = True
         if self.on_input:
-            self.on_input(self.str)
+            self.on_input(self.value)
 
     def process_key(self, key):
         if not self.active:
             return False
         if key == chr(27):
-            self.str = ''
+            self.value = ''
             self.active = False
         elif key == '\n':
             self.active = False
             if self.on_submit:
-                self.on_submit(self.str)
+                self.on_submit(self.value)
         elif key == curses.KEY_BACKSPACE:
-            self.str = self.str[:-1]
+            self.value = self.value[:-1]
         elif isinstance(key, str):
-            self.str += key
+            self.value += key
         else:
             self.active = False
             return False
         if self.on_input:
-            self.on_input(self.str)
+            self.on_input(self.value)
         return True
 
 
@@ -321,25 +339,14 @@ class List:
         self.position = 0
         self.cursor = 0
         self.active = -1
+        self.page_size = 10
         self.search_str = ''
-
-    @property
-    def rows(self):
-        return app.rows - 4
 
     def get_title(self):
         raise NotImplementedError
 
     def set_cursor(self, cursor):
         self.cursor = clamp(cursor, 0, len(self.items) - 1)
-        if len(self.items) < self.rows:
-            self.position = 0
-        else:
-            self.position = clamp(
-                self.position, self.cursor - self.rows + 1, self.cursor
-            )
-            if len(self.items) < self.rows + self.position:
-                self.position = len(self.items) - self.rows
 
     def move_cursor(self, diff):
         self.set_cursor(self.cursor + diff)
@@ -356,8 +363,18 @@ class List:
     def format_item(self, item):
         return relpath(item)
 
-    def render(self):
-        items = self.items[self.position:self.position + self.rows]
+    def render(self, rows, cols):
+        self.page_size = rows - 2
+        if len(self.items) < rows:
+            self.position = 0
+        else:
+            self.position = clamp(
+                self.position, self.cursor - rows + 1, self.cursor
+            )
+            if len(self.items) < rows + self.position:
+                self.position = len(self.items) - rows
+
+        items = self.items[self.position:self.position + rows]
         for i, item in enumerate(items):
             attr = 0
             if self.position + i == self.cursor:
@@ -365,9 +382,9 @@ class List:
             if self.position + i == self.active:
                 attr |= curses.A_BOLD
             s_item = self.format_item(item)
-            s_item = space_between(f'  {s_item}', '', app.cols)
+            s_item = space_between(f'  {s_item}', '', cols)
             yield (s_item, attr)
-        for _i in range(max(0, self.rows - len(items))):
+        for _i in range(max(0, rows - len(items))):
             yield ''
 
     def process_key(self, key):  # noqa: C901
@@ -376,15 +393,15 @@ class List:
         elif key in [curses.KEY_UP, 'k']:
             self.move_cursor(-1)
         elif key in [curses.KEY_NPAGE, 'J']:
-            self.move_cursor(self.rows - 2)
+            self.move_cursor(self.page_size)
         elif key in [curses.KEY_PPAGE, 'K']:
-            self.move_cursor(-(self.rows - 2))
+            self.move_cursor(-self.page_size)
         elif key in [curses.KEY_END, 'G']:
             self.set_cursor(len(self.items))
         elif key in [curses.KEY_HOME, 'g']:
             self.set_cursor(0)
         elif key == '/':
-            app.input.start('/', on_input=self.search)
+            prompt.start('/', on_input=self.search)
         elif key == ']':
             if self.search_str:
                 self.search(self.search_str, 1, 1)
@@ -425,7 +442,7 @@ class Filelist(List):
         self.position = 0
         self.cursor = 0
         self.rsearch_str = ''
-        self.set_path(self.path, fail_silently=False)
+        self.set_path(self.path)
 
     def get_title(self):
         title = f'Filelist: {self.path.rstrip("/")}/'
@@ -440,30 +457,26 @@ class Filelist(List):
             s += '/'
         return s
 
-    def set_path(self, path, *, prev=None, refresh=False, fail_silently=True):
+    def set_path(self, path, *, prev=None, refresh=False):
         if path != self.path:
             try:
-                os.chdir(path)
-            except Exception:
-                if fail_silently:
-                    return
-                raise
+                os.scandir(path)
+            except OSError:
+                return
             self.path = path
             relpath.cache_clear()
             self.search_cache = []
         elif refresh:
             self.search_cache = []
-        self.all_items = []
-        self.rsearch_str = ''
 
         self.all_items = [entry.path for entry in listdir(path)]
         self.items = self.all_items
+        self.rsearch_str = ''
+        self.position = 0
+        self.cursor = 0
 
         if prev and prev in self.items:
             self.set_cursor(self.items.index(prev))
-        else:
-            self.position = 0
-            self.cursor = 0
 
     def filter(self, query):
         if not self.search_cache:
@@ -501,7 +514,7 @@ class Filelist(List):
             if self.items and playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
         elif key == 's':
-            app.input.start('search: ', on_input=self.filter)
+            prompt.start('search: ', on_input=self.filter)
             self.filter(self.rsearch_str)
         elif key == '\n':
             if self.items:
@@ -693,7 +706,7 @@ class Playlist(List):
         elif key == 'R':
             self.random = not self.random
         elif key == 'w':
-            app.input.start(
+            prompt.start(
                 'write playlist to path: ',
                 on_submit=self.write,
                 initial=self.path or filelist.path,
@@ -707,21 +720,10 @@ class Application:
     def __init__(self):
         self.tabs = [filelist, playlist]
         self.help = False
-        self.input = Input()
         self.old_lines = []
-        self.screen: curses.window
 
         # self-pipe to avoid concurrency issues with signal
         self.resize_in, self.resize_out = os.pipe2(os.O_NONBLOCK)
-
-    def refresh_dimensions(self):
-        self.rows, self.cols = self.screen.getmaxyx()
-
-    def on_resize(self):
-        curses.endwin()
-        self.screen.refresh()
-        self.refresh_dimensions()
-        self.tab.set_cursor(app.tab.cursor)
 
     @property
     def tab(self):
@@ -733,20 +735,20 @@ class Application:
     def toggle_tabs(self):
         self.tabs.append(self.tabs.pop(0))
 
-    def format_progress(self):
-        progress = min(int(self.cols * player.get_progress()), self.cols - 1)
-        return '=' * (progress - 1) + '|' + '-' * (self.cols - progress)
+    def format_progress(self, cols):
+        progress = int((cols - 1) * player.get_progress())
+        return '=' * progress + '|' + '-' * (cols - progress - 1)
 
-    def _render(self):
+    def render(self, rows, cols):
         yield (self.tab.get_title(), curses.A_BOLD)
-        yield '-' * self.cols
+        yield '-' * cols
 
-        yield from self.tab.render()
-        yield self.format_progress()
+        yield from self.tab.render(rows - 4, cols)
+        yield self.format_progress(cols)
 
-        if self.input.active:
-            status = f'{self.input.prompt}{self.input.str}█'
-        elif self.tab == helplist:
+        if prompt.active:
+            status = prompt.render()
+        elif self.help:
             status = f'cplay-ng {__version__}'
         elif player.is_playing:
             status = f'Playing: {player.get_title()}'
@@ -757,10 +759,10 @@ class Application:
             format_time(player.position),
             format_time(player.length),
         ])
-        yield space_between(status, counter, self.cols)
+        yield space_between(status, counter, cols)
 
-    def render(self, *, force=False):
-        lines = list(self._render())
+    def update(self, screen, *, force=False):
+        lines = list(self.render(*screen.getmaxyx()))
         try:
             for i, line in enumerate(lines):
                 if (
@@ -769,21 +771,21 @@ class Application:
                     and line == self.old_lines[i]
                 ):
                     continue
-                self.screen.move(i, 0)
-                self.screen.clrtoeol()
+                screen.move(i, 0)
+                screen.clrtoeol()
                 if isinstance(line, str):
-                    self.screen.insstr(line, 0)
+                    screen.insstr(line, 0)
                 else:
-                    self.screen.insstr(*line)
+                    screen.insstr(*line)
             # make sure cursor is in a meaningful position for a11y
-            self.screen.move(self.tab.cursor - self.tab.position + 2, 0)
-            self.screen.refresh()
+            screen.move(self.tab.cursor - self.tab.position + 2, 0)
+            screen.refresh()
         except curses.error:
             pass
         self.old_lines = lines
 
     def process_key(self, key):  # noqa: C901
-        if self.input.process_key(key):  # noqa: SIM114
+        if prompt.process_key(key):  # noqa: SIM114
             pass
         elif self.tab.process_key(key):
             pass
@@ -802,20 +804,24 @@ class Application:
         elif key in ['q', 'Q']:
             sys.exit(0)
         elif key == '\t':
-            app.toggle_tabs()
+            self.toggle_tabs()
         else:
             return False
         return True
 
     def run(self):
-        self.refresh_dimensions()
-        self.render()
-
-        with selectors.DefaultSelector() as sel:
+        with (
+            selectors.DefaultSelector() as sel,
+            enable_ctrl_keys(),
+            curses_screen() as screen,
+            player,
+        ):
             sel.register(sys.stdin, selectors.EVENT_READ)
             sel.register(self.resize_in, selectors.EVENT_READ)
             sel.register(player.socket, selectors.EVENT_READ)
             prev = time.time()
+
+            self.update(screen)
 
             while True:
                 player.finish_seek()
@@ -831,42 +837,31 @@ class Application:
 
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
-                        self.on_resize()
-                        self.render(force=True)
+                        curses.endwin()
+                        screen.refresh()
+                        self.update(screen, force=True)
                     elif key.fileobj is sys.stdin:
-                        self.process_key(self.screen.get_wch())
+                        self.process_key(screen.get_wch())
                     elif key.fileobj is player.socket:
                         player.parse_progress()
 
                 if player.is_finished:
                     player.play(playlist.next())
 
-                self.render()
+                self.update(screen)
 
 
 player = Player()
 playlist = Playlist()
 filelist = Filelist()
 helplist = HelpList()
+prompt = Prompt()
 app = Application()
 
 
 def main():
-    app.screen = curses.initscr()
-    app.screen.keypad(True)  # noqa: FBT003
-    curses.cbreak()
-    curses.noecho()
-    curses.meta(True)  # noqa: FBT003
-    curses.curs_set(0)
-
-    signal.signal(signal.SIGWINCH, resize)
-
-    try:
-        with enable_ctrl_keys():
-            app.run()
-    finally:
-        player.cleanup()
-        curses.endwin()
+    signal.signal(signal.SIGWINCH, lambda *_: os.write(app.resize_out, b'.'))
+    app.run()
 
 
 if __name__ == '__main__':
