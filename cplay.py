@@ -837,8 +837,8 @@ class Application:
 
                     if key.fileobj is self.resize_in:
                         os.read(self.resize_in, 8)
-                        curses.endwin()
-                        screen.refresh()
+                        cols, rows = os.get_terminal_size()
+                        curses.resizeterm(rows, cols)
                         self.update(screen, force=True)
                     elif key.fileobj is sys.stdin:
                         self.process_key(screen.get_wch())
