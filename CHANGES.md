@@ -1,3 +1,10 @@
+# 5.6.0 (2026-11-08)
+
+- fix progress bar rendering
+- fix broken arrow keys after resizing
+- use anonymous sockets for mpv IPC
+- avoid side effects on import
+
 # 5.5.0 (2026-04-25)
 
 - include symlink dirs in directory listings
