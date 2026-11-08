@@ -335,6 +335,7 @@ class List:
         self.position = 0
         self.cursor = 0
         self.active = -1
+        self.page_size = 10
         self.search_str = ''
 
     def get_title(self):
@@ -359,6 +360,7 @@ class List:
         return relpath(item)
 
     def render(self, rows, cols):
+        self.page_size = rows - 2
         if len(self.items) < rows:
             self.position = 0
         else:
@@ -387,9 +389,9 @@ class List:
         elif key in [curses.KEY_UP, 'k']:
             self.move_cursor(-1)
         elif key in [curses.KEY_NPAGE, 'J']:
-            self.move_cursor(app.rows - 6)
+            self.move_cursor(self.page_size)
         elif key in [curses.KEY_PPAGE, 'K']:
-            self.move_cursor(-(app.rows - 6))
+            self.move_cursor(-self.page_size)
         elif key in [curses.KEY_END, 'G']:
             self.set_cursor(len(self.items))
         elif key in [curses.KEY_HOME, 'g']:
