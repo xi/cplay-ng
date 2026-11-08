@@ -293,39 +293,43 @@ class Player:
         return self.is_playing and self._playing == 0
 
 
-class Input:
+class Prompt:
     def __init__(self):
         self.active = False
-        self.str = ''
+        self.prefix = ''
+        self.value = ''
 
-    def start(self, prompt, on_input=None, on_submit=None, initial=''):
-        self.str = initial
-        self.prompt = prompt
+    def render(self):
+        return self.prefix + self.value
+
+    def start(self, prefix, on_input=None, on_submit=None, initial=''):
+        self.prefix = prefix
+        self.value = initial
         self.on_input = on_input
         self.on_submit = on_submit
         self.active = True
         if self.on_input:
-            self.on_input(self.str)
+            self.on_input(self.value)
 
     def process_key(self, key):
         if not self.active:
             return False
         if key == chr(27):
-            self.str = ''
+            self.value = ''
             self.active = False
         elif key == '\n':
             self.active = False
             if self.on_submit:
-                self.on_submit(self.str)
+                self.on_submit(self.value)
         elif key == curses.KEY_BACKSPACE:
-            self.str = self.str[:-1]
+            self.value = self.value[:-1]
         elif isinstance(key, str):
-            self.str += key
+            self.value += key
         else:
             self.active = False
             return False
         if self.on_input:
-            self.on_input(self.str)
+            self.on_input(self.value)
         return True
 
 
@@ -397,7 +401,7 @@ class List:
         elif key in [curses.KEY_HOME, 'g']:
             self.set_cursor(0)
         elif key == '/':
-            app.input.start('/', on_input=self.search)
+            prompt.start('/', on_input=self.search)
         elif key == ']':
             if self.search_str:
                 self.search(self.search_str, 1, 1)
@@ -514,7 +518,7 @@ class Filelist(List):
             if self.items and playlist.add(self.items[self.cursor]):
                 self.move_cursor(1)
         elif key == 's':
-            app.input.start('search: ', on_input=self.filter)
+            prompt.start('search: ', on_input=self.filter)
             self.filter(self.rsearch_str)
         elif key == '\n':
             if self.items:
@@ -706,7 +710,7 @@ class Playlist(List):
         elif key == 'R':
             self.random = not self.random
         elif key == 'w':
-            app.input.start(
+            prompt.start(
                 'write playlist to path: ',
                 on_submit=self.write,
                 initial=self.path or filelist.path,
@@ -720,7 +724,6 @@ class Application:
     def __init__(self):
         self.tabs = [filelist, playlist]
         self.help = False
-        self.input = Input()
         self.old_lines = []
 
         # self-pipe to avoid concurrency issues with signal
@@ -747,8 +750,8 @@ class Application:
         yield from self.tab.render(rows - 4, cols)
         yield self.format_progress(cols)
 
-        if self.input.active:
-            status = f'{self.input.prompt}{self.input.str}█'
+        if prompt.active:
+            status = prompt.render()
         elif self.help:
             status = f'cplay-ng {__version__}'
         elif player.is_playing:
@@ -786,7 +789,7 @@ class Application:
         self.old_lines = lines
 
     def process_key(self, key):  # noqa: C901
-        if self.input.process_key(key):  # noqa: SIM114
+        if prompt.process_key(key):  # noqa: SIM114
             pass
         elif self.tab.process_key(key):
             pass
@@ -858,6 +861,7 @@ player = Player()
 playlist = Playlist()
 filelist = Filelist()
 helplist = HelpList()
+prompt = Prompt()
 app = Application()
 
 
