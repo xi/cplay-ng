@@ -808,7 +808,7 @@ class Application:
         elif key in ['q', 'Q']:
             sys.exit(0)
         elif key == '\t':
-            app.toggle_tabs()
+            self.toggle_tabs()
         else:
             return False
         return True
